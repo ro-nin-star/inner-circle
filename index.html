@@ -560,6 +560,29 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Firebase status indicator */
+        .firebase-status {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.7em;
+            font-weight: 600;
+            z-index: 9998;
+            transition: all 0.3s ease;
+        }
+
+        .firebase-status.online {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .firebase-status.offline {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+        }
+
         /* Mobil optimalizálás */
         @media (max-width: 600px) {
             .game-container {
@@ -615,6 +638,13 @@
             .tab-btn {
                 font-size: 12px;
                 padding: 6px 12px;
+            }
+
+            .firebase-status {
+                top: 10px;
+                right: 10px;
+                font-size: 0.6em;
+                padding: 4px 8px;
             }
         }
 
@@ -686,6 +716,9 @@
     <div class="decoration-circle"></div>
     <div class="decoration-circle"></div>
     <div class="decoration-circle"></div>
+
+    <!-- Firebase status indicator -->
+    <div class="firebase-status offline" id="firebaseStatus">🔴 Offline</div>
 
     <div class="game-container" id="gameContainer">
         <h1>🎯 Perfect Circle</h1>
@@ -776,12 +809,10 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        //import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // Firebase konfiguráció (használj saját Firebase project adatokat)
+        // Firebase konfiguráció
         const firebaseConfig = {
             apiKey: "AIzaSyCsN0iILNbrGpofT5hGsaXtWrQ0WJpBDKM",
             authDomain: "perfectcircle-8f981.firebaseapp.com",
@@ -796,14 +827,42 @@
         let app, db;
         let firebaseReady = false;
 
+        function updateFirebaseStatus(isOnline) {
+            const statusEl = document.getElementById('firebaseStatus');
+            if (isOnline) {
+                statusEl.className = 'firebase-status online';
+                statusEl.innerHTML = '🟢 Online';
+            } else {
+                statusEl.className = 'firebase-status offline';
+                statusEl.innerHTML = '🔴 Offline';
+            }
+        }
+
         try {
+            console.log('🔥 Firebase inicializálása...');
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             firebaseReady = true;
-            console.log('Firebase inicializálva');
+            updateFirebaseStatus(true);
+            console.log('✅ Firebase sikeresen inicializálva');
+            
+            // Teszt kapcsolat
+            setTimeout(async () => {
+                try {
+                    const testQuery = query(collection(db, 'scores'), limit(1));
+                    await getDocs(testQuery);
+                    console.log('✅ Firebase kapcsolat tesztelve');
+                } catch (error) {
+                    console.warn('⚠️ Firebase kapcsolat teszt sikertelen:', error);
+                    firebaseReady = false;
+                    updateFirebaseStatus(false);
+                }
+            }, 1000);
+            
         } catch (error) {
-            console.warn('Firebase nem elérhető, csak helyi tárolás működik:', error);
+            console.error('❌ Firebase inicializálási hiba:', error);
             firebaseReady = false;
+            updateFirebaseStatus(false);
         }
 
         // Firebase függvények globálisan elérhetővé tétele
@@ -820,12 +879,15 @@
                         difficulty: difficulty,
                         transformation: transformation,
                         timestamp: serverTimestamp(),
-                        date: new Date().toLocaleDateString('hu-HU')
+                        date: new Date().toLocaleDateString('hu-HU'),
+                        created: new Date().toISOString()
                     });
-                    console.log('Pontszám mentve Firebase-be:', docRef.id);
+                    console.log('✅ Pontszám mentve Firebase-be:', docRef.id);
                     return docRef.id;
                 } catch (error) {
-                    console.error('Hiba a Firebase mentés során:', error);
+                    console.error('❌ Firebase mentési hiba:', error);
+                    firebaseReady = false;
+                    updateFirebaseStatus(false);
                     throw error;
                 }
             },
@@ -846,15 +908,21 @@
                     querySnapshot.forEach((doc) => {
                         scores.push({ id: doc.id, ...doc.data() });
                     });
+                    console.log(`📊 ${scores.length} globális eredmény betöltve`);
                     return scores;
                 } catch (error) {
-                    console.error('Hiba a Firebase lekérdezés során:', error);
+                    console.error('❌ Firebase lekérdezési hiba:', error);
+                    firebaseReady = false;
+                    updateFirebaseStatus(false);
                     throw error;
                 }
             },
 
             isReady: () => firebaseReady
         };
+
+        // Globális hozzáférés biztosítása
+        window.updateFirebaseStatus = updateFirebaseStatus;
     </script>
 
     <script>
@@ -885,9 +953,11 @@
             }
         }
 
-        // GLOBÁLIS LEADERBOARD KEZELŐ
+        // JAVÍTOTT GLOBÁLIS LEADERBOARD KEZELŐ
         class GlobalLeaderboard {
             static currentView = 'local';
+            static lastAttempt = 0;
+            static retryDelay = 5000; // 5 másodperc
             
             static async saveGlobalScore(playerName, score, difficulty, transformation) {
                 if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
@@ -900,12 +970,19 @@
                     await window.firebaseAPI.saveScore(sanitizedName, score, difficulty, transformation);
                     return true;
                 } catch (error) {
-                    console.error('Globális pontszám mentése sikertelen:', error);
+                    console.error('❌ Globális pontszám mentése sikertelen:', error);
                     throw error;
                 }
             }
             
             static async loadGlobalScores() {
+                const now = Date.now();
+                if (now - this.lastAttempt < this.retryDelay) {
+                    throw new Error('Túl gyakori próbálkozás');
+                }
+                
+                this.lastAttempt = now;
+                
                 if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
                     throw new Error('Firebase nem elérhető');
                 }
@@ -914,7 +991,7 @@
                     const scores = await window.firebaseAPI.getTopScores(10);
                     return scores;
                 } catch (error) {
-                    console.error('Globális pontszámok betöltése sikertelen:', error);
+                    console.error('❌ Globális pontszámok betöltése sikertelen:', error);
                     throw error;
                 }
             }
@@ -974,7 +1051,7 @@
             }
             
             localStorage.setItem('perfectcircle_playername', name);
-            alert(`Név mentve: ${name}`);
+            alert(`Név mentve: ${name} ✅`);
         }
 
         function loadPlayerName() {
@@ -1006,6 +1083,12 @@
         }
 
         async function loadGlobalLeaderboard() {
+            if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+                GlobalLeaderboard.updateStatus('❌ Firebase nem elérhető');
+                GlobalLeaderboard.displayScores([]);
+                return;
+            }
+
             GlobalLeaderboard.updateStatus('Globális eredmények betöltése...', true);
             
             try {
@@ -1015,7 +1098,7 @@
             } catch (error) {
                 GlobalLeaderboard.updateStatus('❌ Globális eredmények nem elérhetők');
                 GlobalLeaderboard.displayScores([]);
-                console.error('Globális leaderboard betöltési hiba:', error);
+                console.error('❌ Globális leaderboard betöltési hiba:', error);
             }
         }
 
@@ -1036,7 +1119,7 @@
         let audioContext;
         let currentTransformation = null;
 
-        // Kör transzformációs objektumok (rövidített verzió a hely miatt)
+        // Kör transzformációs objektumok
         const circleTransformations = [
             {
                 name: "Nap",
@@ -1233,7 +1316,7 @@
             }
         ];
 
-        // Hang inicializálás
+        // [Hang és effekt függvények - változatlan]
         function initAudio() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1681,7 +1764,7 @@
             ctx.setLineDash([]);
         }
 
-        // MÓDOSÍTOTT showScore függvény - globális mentéssel
+        // JAVÍTOTT showScore függvény - globális mentéssel
         async function showScore(score, analysis, transformationName = '') {
             document.getElementById('currentScore').textContent = Math.round(score);
             document.getElementById('finalScore').textContent = Math.round(score);
@@ -1739,14 +1822,14 @@
                 if (playerName !== 'Névtelen' && window.firebaseAPI && window.firebaseAPI.isReady()) {
                     try {
                         await GlobalLeaderboard.saveGlobalScore(playerName, Math.round(score), difficulty, transformationName);
-                        console.log('Pontszám mentve globálisan!');
+                        console.log('✅ Pontszám mentve globálisan!');
                         
                         // Ha globális tab aktív, frissítsük
                         if (GlobalLeaderboard.currentView === 'global') {
                             setTimeout(() => loadGlobalLeaderboard(), 1000);
                         }
                     } catch (error) {
-                        console.warn('Globális mentés sikertelen:', error);
+                        console.warn('❌ Globális mentés sikertelen:', error);
                     }
                 }
                 
@@ -1790,6 +1873,7 @@
 • Add meg a neved a globális ranglistához!
 • Versenyezz játékosokkal a világ minden tájáról!
 • Helyi és globális eredmények külön megtekinthetők!
+• Firebase státusz: jobb felső sarokban
 
 🎉 Ünneplési effektek:
 • 95+ pont: Konfetti + tűzijáték + fanfár
@@ -1800,6 +1884,7 @@
 • Lassan és egyenletesen rajzolj
 • Próbáld meg egy mozdulattal befejezni
 • Add meg a neved a globális ranglistához!
+• Figyeld a Firebase státuszt!
 
 Sok sikert! 🍀✨`);
         }
@@ -1811,11 +1896,12 @@ Sok sikert! 🍀✨`);
                 if (GlobalLeaderboard.currentView === 'local') {
                     loadLocalLeaderboard();
                 }
-                alert('Helyi eredmények törölve!');
+                alert('Helyi eredmények törölve! ✅');
             }
         }
 
         function init() {
+            console.log('🎮 Játék inicializálása...');
             VisitorCounter.init();
             loadPlayerName();
             updateStats();
@@ -1830,6 +1916,8 @@ Sok sikert! 🍀✨`);
             
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
+            
+            console.log('✅ Játék inicializálva');
         }
 
         window.addEventListener('resize', () => {
