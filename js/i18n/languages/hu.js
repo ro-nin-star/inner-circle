@@ -122,6 +122,14 @@ const translations = {
         diamond: 'Gyémánt',
         wave: 'Hullám',
         fire: 'Tűz',
+        emoji: 'Emoji',
+        földgömb : 'fg',
+        keksz : 'dasdas',
+        donut : 'dasdas',
+        óra : 'dasdas',
+        hold : 'dasdas',
+
+
         transformText: '🎨 Transzformáció alkalmazva: {name}',
         transforming: '✨ Varázslat történik... ✨'
     },
@@ -138,4 +146,6 @@ const translations = {
 // Globális hozzáférés
 if (typeof window !== 'undefined') {
     window.translations_hu = translations;
+
+
 }
