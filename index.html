@@ -127,8 +127,13 @@
     <h3 data-i18n="leaderboard.title">🏆 Ranglista</h3>
     <div class="leaderboard-tabs">
         <!-- CSAK EZ A KÉT GOMB KELL, TÖRÖLD A DUPLIKÁLTAT -->
-        <button class="tab-btn active" onclick="switchLeaderboard('local')" id="localTab">📱 Helyi</button>
-        <button class="tab-btn" onclick="switchLeaderboard('global')" id="globalTab">🌍 Globális</button>
+<!-- JÓ - data attribútumokkal -->
+    <button id="localTab" class="tab-btn active" onclick="switchLeaderboard('local')">
+        📱 Helyi
+    </button>
+    <button id="globalTab" class="tab-btn" onclick="switchLeaderboard('global')">
+        🌍 Globális
+    </button>
     </div>
 
     <div class="leaderboard-status" id="leaderboardStatus" data-i18n="leaderboard.localResults">

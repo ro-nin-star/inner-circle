@@ -1,5 +1,4 @@
 // Fő alkalmazás inicializáló és koordinátor - Biztonságos verzió
-import LeaderboardManager from './js/leaderboardManager.js'; // Ellenőrizd az útvonalat!
 
 class PerfectCircleApp {
     constructor() {
@@ -11,69 +10,68 @@ class PerfectCircleApp {
         this.leaderboardManager = null; // Ide kerül a példány
     }
 
-    async init() {
-        if (this.initialized) {
-            console.warn('Alkalmazás már inicializálva');
-            return;
-        }
-
-        console.log('🎮 Perfect Circle alkalmazás inicializálása...');
-
-        try {
-            // I18n Manager ellenőrzése és várakozás
-            await this.waitForI18nManager();
-
-            // I18n inicializálása
-            if (window.i18nManager && typeof window.i18nManager.init === 'function') {
-                await window.i18nManager.init();
-                this.currentLanguage = window.i18nManager.getCurrentLanguage();
-                console.log(`✅ I18n inicializálva - Nyelv: ${this.currentLanguage}`);
-            } else {
-                console.warn('⚠️ I18n Manager nem elérhető - folytatás alapértelmezett szövegekkel');
-                this.currentLanguage = 'hu';
-            }
-
-            // Nyelv változás esemény figyelése
-            if (window.i18nManager) {
-                window.addEventListener('languageChanged', (e) => {
-                    this.onLanguageChanged(e.detail);
-                });
-            }
-
-            // Alapvető inicializálás
-            this.loadPlayerName();
-            this.updateStats();
-
-            // Látogatásszámláló indítása
-            if (window.VisitorCounter && typeof window.VisitorCounter.init === 'function') {
-                await window.VisitorCounter.init();
-            } else {
-                console.warn('⚠️ VisitorCounter nem elérhető');
-            }
-
-            // LeaderboardManager inicializálása és első betöltése
-            this.leaderboardManager = new LeaderboardManager(this); // Átadjuk az app példányát
-            this.leaderboardManager.loadLocalLeaderboard(); // Betöltjük a helyi ranglistát
-            
-            // Event listener-ek beállítása
-            this.setupEventListeners();
-
-            // UI elemek inicializálása
-            this.initializeUI();
-
-            // Téma betöltése
-            this.loadTheme();
-
-            this.initialized = true;
-            console.log('✅ Perfect Circle alkalmazás sikeresen inicializálva');
-
-        } catch (error) {
-            console.error('❌ Alkalmazás inicializálási hiba:', error);
-
-            // Fallback inicializálás
-            this.initializeFallback();
-        }
+async init() {
+    if (this.initialized) {
+        console.warn('Alkalmazás már inicializálva');
+        return;
     }
+
+    console.log('🎮 Perfect Circle alkalmazás inicializálása...');
+
+    try {
+        // I18n Manager ellenőrzése és várakozás
+        await this.waitForI18nManager();
+
+        // I18n inicializálása
+        if (window.i18nManager && typeof window.i18nManager.init === 'function') {
+            await window.i18nManager.init();
+            this.currentLanguage = window.i18nManager.getCurrentLanguage();
+            console.log(`✅ I18n inicializálva - Nyelv: ${this.currentLanguage}`);
+        } else {
+            console.warn('⚠️ I18n Manager nem elérhető - folytatás alapértelmezett szövegekkel');
+            this.currentLanguage = 'hu';
+        }
+
+        // Nyelv változás esemény figyelése
+        if (window.i18nManager) {
+            window.addEventListener('languageChanged', (e) => {
+                this.onLanguageChanged(e.detail);
+            });
+        }
+
+        // Alapvető inicializálás
+        this.loadPlayerName();
+        this.updateStats();
+
+        // Látogatásszámláló indítása
+        if (window.VisitorCounter && typeof window.VisitorCounter.init === 'function') {
+            await window.VisitorCounter.init();
+        } else {
+            console.warn('⚠️ VisitorCounter nem elérhető');
+        }
+
+        // ✅ JAVÍTOTT LeaderboardManager inicializálása
+        await this.initializeLeaderboardManager();
+        
+        // Event listener-ek beállítása
+        this.setupEventListeners();
+
+        // UI elemek inicializálása
+        this.initializeUI();
+
+        // Téma betöltése
+        this.loadTheme();
+
+        this.initialized = true;
+        console.log('✅ Perfect Circle alkalmazás sikeresen inicializálva');
+
+    } catch (error) {
+        console.error('❌ Alkalmazás inicializálási hiba:', error);
+
+        // Fallback inicializálás
+        this.initializeFallback();
+    }
+}
 
     // I18n Manager várakozás
     async waitForI18nManager() {
@@ -96,6 +94,99 @@ class PerfectCircleApp {
             checkI18n();
         });
     }
+
+// LeaderboardManager biztonságos inicializálása
+async initializeLeaderboardManager() {
+    console.log('🏆 LeaderboardManager inicializálása...');
+    
+    // Várakozás a LeaderboardManager osztályra
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (!window.LeaderboardManager && attempts < maxAttempts) {
+        console.log(`🔄 LeaderboardManager várakozás... (${attempts + 1}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
+    if (!window.LeaderboardManager) {
+        console.warn('⚠️ LeaderboardManager osztály nem elérhető - folytatás nélküle');
+        this.leaderboardManager = null;
+        return;
+    }
+    
+    try {
+        // LeaderboardManager példány létrehozása
+        this.leaderboardManager = new window.LeaderboardManager(this);
+        console.log('✅ LeaderboardManager példány létrehozva');
+        
+        // Metódusok ellenőrzése
+        if (typeof this.leaderboardManager.loadLocalLeaderboard === 'function') {
+            // Helyi ranglista betöltése
+            this.leaderboardManager.loadLocalLeaderboard();
+            console.log('✅ Helyi ranglista betöltve');
+        } else {
+            console.error('❌ loadLocalLeaderboard metódus nem található');
+        }
+        
+    } catch (error) {
+        console.error('❌ LeaderboardManager inicializálási hiba:', error);
+        this.leaderboardManager = null;
+        
+        // Fallback - alapértelmezett ranglista megjelenítés
+        this.displayFallbackLeaderboard();
+    }
+}
+
+// Fallback ranglista megjelenítés LeaderboardManager nélkül
+displayFallbackLeaderboard() {
+    console.log('🔄 Fallback ranglista megjelenítés...');
+    
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
+    
+    if (statusContainer) {
+        statusContainer.textContent = '📱 Helyi eredmények';
+    }
+    
+    if (listContainer) {
+        if (window.ScoreManager) {
+            try {
+                const scores = window.ScoreManager.getTopScores(10);
+                
+                if (scores.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="score-entry">
+                            <span>${this.t('leaderboard.noResults')}</span>
+                        </div>
+                    `;
+                } else {
+                    listContainer.innerHTML = scores.map((score, index) => `
+                        <div class="score-entry">
+                            <span class="rank">#${index + 1}</span>
+                            <span class="name">${score.playerName || 'Névtelen'}</span>
+                            <span class="score">${score.score}</span>
+                            <span class="date">${new Date(score.timestamp).toLocaleDateString('hu-HU')}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('❌ Fallback ranglista hiba:', error);
+                listContainer.innerHTML = `
+                    <div class="score-entry error">
+                        <span style="color: #ff6b6b;">❌ Hiba az eredmények betöltésekor</span>
+                    </div>
+                `;
+            }
+        } else {
+            listContainer.innerHTML = `
+                <div class="score-entry">
+                    <span>${this.t('leaderboard.noResults')}</span>
+                </div>
+            `;
+        }
+    }
+}
 
     // Fallback inicializálás I18n nélkül
     initializeFallback() {
@@ -150,8 +241,8 @@ class PerfectCircleApp {
             'scoreBreakdown.size': '📏 Méret',
             'scoreBreakdown.transformation': '🎨 Transzformáció: {name}',
             'common.points': 'pont',
-            'common.players': 'játékos', // Új fordítási kulcs
-            'common.games': 'játék', // Új fordítási kulcs
+            'common.players': 'játékos',
+            'common.games': 'játék',
             'transformations.rainbow': 'Szivárvány',
             'transformations.galaxy': 'Galaxis',
             'transformations.flower': 'Virág',
@@ -163,13 +254,13 @@ class PerfectCircleApp {
             'transformations.wave': 'Hullám',
             'transformations.fire': 'Tűz',
             'transformations.transformText': '🎨 Transzformáció alkalmazva: {name}',
-            'leaderboard.noResults': 'Még nincsenek eredmények', // Új fordítási kulcs
-            'leaderboard.localResults': '📱 Helyi eredmények', // Új fordítási kulcs
-            'leaderboard.globalResults': '🌍 Globális toplista', // Új fordítási kulcs
-            'leaderboard.loading': 'Eredmények betöltése...', // Új fordítási kulcs
-            'leaderboard.tooFrequentAttempt': 'Túl gyakori próbálkozás - várj 10 másodpercet', // Új fordítási kulcs
-            'leaderboard.waitRetry': '⏳ Várj 10 másodpercet az újrapróbálkozás előtt', // Új fordítási kulcs
-            'leaderboard.globalNotAvailable': '❌ Globális eredmények nem elérhetők - Próbáld később', // Új fordítási kulcs
+            'leaderboard.noResults': 'Még nincsenek eredmények',
+            'leaderboard.localResults': '📱 Helyi eredmények',
+            'leaderboard.globalResults': '🌍 Globális toplista',
+            'leaderboard.loading': 'Eredmények betöltése...',
+            'leaderboard.tooFrequentAttempt': 'Túl gyakori próbálkozás - várj 10 másodpercet',
+            'leaderboard.waitRetry': '⏳ Várj 10 másodpercet az újrapróbálkozás előtt',
+            'leaderboard.globalNotAvailable': '❌ Globális eredmények nem elérhetők - Próbáld később',
             'firebase.online': '🟢 Online',
             'firebase.offline': '🔴 Offline',
             'firebase.connecting': '🟡 Kapcsolódás...',
@@ -178,9 +269,27 @@ class PerfectCircleApp {
             'firebase.reconnectFailed': 'Firebase újracsatlakozás sikertelen',
             'firebase.notAvailableCheckRules': '❌ Firebase nem elérhető - Ellenőrizd a Firestore Rules-t',
             'firebase.rulesErrorSolution': '❌ Firestore Rules hiba - Kattints a státuszra a megoldásért',
-            'errors.notImplemented': 'Ez a funkció még nincs implementálva.', // Új fordítási kulcs
-            'player.you': 'Te', // Fordítás a játékos nevéhez
-            'player.anonymous': 'Névtelen'
+            'errors.notImplemented': 'Ez a funkció még nincs implementálva.',
+            'player.you': 'Te',
+            'player.anonymous': 'Névtelen',
+            'advanced.clearAllConfirm': 'Biztosan törölni szeretnéd az összes adatot?',
+            'advanced.allDataCleared': 'Minden adat törölve!',
+            'advanced.clearError': 'Hiba a törlés során',
+            'advanced.exportSuccess': 'Eredmények sikeresen exportálva!',
+            'advanced.exportError': 'Hiba az exportálás során',
+            'advanced.importSuccess': '{imported}/{total} eredmény importálva!',
+            'advanced.importError': 'Hiba az importálás során',
+            'advanced.fileError': 'Fájl olvasási hiba',
+            'advanced.invalidChoice': 'Érvénytelen választás!',
+            'advanced.openConsole': 'Nyomd meg F12-t a fejlesztői konzol megnyitásához!',
+            'audio.enabled': 'Hang Be',
+            'audio.disabled': 'Hang Ki',
+            'audio.enabledMessage': 'Hang bekapcsolva!',
+            'audio.disabledMessage': 'Hang kikapcsolva!',
+            'theme.light': '☀️ Világos',
+            'theme.dark': '🌙 Sötét',
+            'theme.lightEnabled': 'Világos téma bekapcsolva!',
+            'theme.darkEnabled': 'Sötét téma bekapcsolva!'
         };
 
         let text = fallbackTexts[key] || key;
@@ -419,7 +528,6 @@ class PerfectCircleApp {
         }
     }
 
-
     addThemeToggleButton() {
         const controls = document.querySelector('.controls');
         if (controls && !document.getElementById('themeToggleBtn')) {
@@ -452,7 +560,6 @@ class PerfectCircleApp {
             controls.appendChild(advancedBtn);
         }
     }
-
 
     addLanguageInfoButton() {
         const controls = document.querySelector('.controls');
@@ -886,6 +993,79 @@ Sok sikert a tökéletes kör rajzolásához! 🍀✨
         const message = this.t(`success.${successKey}`, params);
         alert(message);
     }
+
+    // LeaderboardManager metódusok proxy-zása
+    getLeaderboardManager() {
+        return this.leaderboardManager;
+    }
+
+    // Leaderboard váltás
+    switchLeaderboard(type) {
+        if (this.leaderboardManager && typeof this.leaderboardManager.switchLeaderboard === 'function') {
+            this.leaderboardManager.switchLeaderboard(type);
+        } else {
+            console.warn('⚠️ LeaderboardManager switchLeaderboard metódus nem elérhető');
+            // Fallback kezelés
+            this.handleLeaderboardSwitch(type);
+        }
+    }
+
+    // Fallback leaderboard váltás
+    handleLeaderboardSwitch(type) {
+        console.log(`🔄 Fallback leaderboard váltás: ${type}`);
+        
+        // Tab gombok frissítése
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const targetTab = document.getElementById(type + 'Tab');
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+        
+        if (type === 'local') {
+            this.displayFallbackLeaderboard();
+        } else if (type === 'global') {
+            this.displayGlobalNotAvailable();
+        }
+    }
+
+    // Globális leaderboard nem elérhető üzenet
+    displayGlobalNotAvailable() {
+        const listContainer = document.getElementById('leaderboardList');
+        const statusContainer = document.getElementById('leaderboardStatus');
+        
+        if (statusContainer) {
+            statusContainer.textContent = this.t('leaderboard.globalNotAvailable');
+        }
+        
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="score-entry error">
+                    <span style="color: #ff6b6b;">❌ ${this.t('leaderboard.globalNotAvailable')}</span>
+                </div>
+            `;
+        }
+    }
+
+    // Globális leaderboard betöltése
+    async loadGlobalLeaderboard() {
+        if (this.leaderboardManager && typeof this.leaderboardManager.loadGlobalLeaderboard === 'function') {
+            await this.leaderboardManager.loadGlobalLeaderboard();
+        } else {
+            console.warn('⚠️ LeaderboardManager loadGlobalLeaderboard metódus nem elérhető');
+            this.displayGlobalNotAvailable();
+        }
+    }
+
+    // Helyi leaderboard betöltése
+    loadLocalLeaderboard(highlightId = null) {
+        if (this.leaderboardManager && typeof this.leaderboardManager.loadLocalLeaderboard === 'function') {
+            this.leaderboardManager.loadLocalLeaderboard(highlightId);
+        } else {
+            console.warn('⚠️ LeaderboardManager loadLocalLeaderboard metódus nem elérhető');
+            // Fallback megjelenítés
+            this.displayFallbackLeaderboard();
+        }
+    }
 }
 
 // Globális alkalmazás példány
@@ -924,15 +1104,45 @@ window.updateStats = () => {
     }
 };
 
-// Leaderboard switch funkció globalizálása
+// JAVÍTOTT Globális függvények - Leaderboard kezelés
 window.switchLeaderboard = (type) => {
-    if (window.perfectCircleApp && window.perfectCircleApp.leaderboardManager) {
-        window.perfectCircleApp.leaderboardManager.switchLeaderboard(type);
+    console.log(`🔄 Globális switchLeaderboard hívás: ${type}`);
+    
+    const app = window.perfectCircleApp;
+    if (app && typeof app.switchLeaderboard === 'function') {
+        app.switchLeaderboard(type);
     } else {
-        console.warn('⚠️ LeaderboardManager nem elérhető a switchLeaderboard hívásakor.');
+        console.error('❌ PerfectCircleApp switchLeaderboard metódus nem elérhető');
+        // Fallback - alapvető tab váltás
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const targetTab = document.getElementById(type + 'Tab');
+        if (targetTab) targetTab.classList.add('active');
     }
 };
 
+// Globális leaderboard betöltése - TISZTÍTOTT VERZIÓ
+window.loadGlobalLeaderboard = async () => {
+    console.log('🌍 Globális loadGlobalLeaderboard hívás');
+    
+    const app = window.perfectCircleApp;
+    if (app && typeof app.loadGlobalLeaderboard === 'function') {
+        await app.loadGlobalLeaderboard();
+    } else {
+        console.error('❌ PerfectCircleApp loadGlobalLeaderboard metódus nem elérhető');
+    }
+};
+
+// Helyi leaderboard betöltése - TISZTÍTOTT VERZIÓ
+window.loadLocalLeaderboard = (highlightId = null) => {
+    console.log('📱 Globális loadLocalLeaderboard hívás');
+    
+    const app = window.perfectCircleApp;
+    if (app && typeof app.loadLocalLeaderboard === 'function') {
+        app.loadLocalLeaderboard(highlightId);
+    } else {
+        console.error('❌ PerfectCircleApp loadLocalLeaderboard metódus nem elérhető');
+    }
+};
 
 // Score megjelenítő függvény - JAVÍTOTT VERZIÓ
 window.showScore = async (score, analysis, transformationName = '') => {
@@ -1136,7 +1346,7 @@ window.showScore = async (score, analysis, transformationName = '') => {
     }
 
     if (!analysis.error && roundedScore > 0) {
-        setTimeout(async () => { // async hozzáadva ide is
+        setTimeout(async () => {
             if (window.EffectsManager) {
                 window.EffectsManager.celebrateScore(roundedScore);
             }
@@ -1296,4 +1506,21 @@ window.addEventListener('error', (e) => {
     }
 });
 
-console.log('✅ App.js betöltve - Biztonságos inicializálás');
+// Hibakeresési függvény
+window.debugLeaderboard = () => {
+    console.log('🔍 Leaderboard hibakeresés:');
+    console.log('- perfectCircleApp:', !!window.perfectCircleApp);
+    console.log('- leaderboardManager:', !!window.perfectCircleApp?.leaderboardManager);
+    console.log('- switchLeaderboard függvény:', typeof window.switchLeaderboard);
+    console.log('- loadGlobalLeaderboard függvény:', typeof window.loadGlobalLeaderboard);
+    console.log('- loadLocalLeaderboard függvény:', typeof window.loadLocalLeaderboard);
+    
+    // Tab gombok ellenőrzése
+    const localTab = document.getElementById('localTab');
+    const globalTab = document.getElementById('globalTab');
+    console.log('- localTab elem:', !!localTab);
+    console.log('- globalTab elem:', !!globalTab);
+    
+    if (localTab) console.log('- localTab onclick:', localTab.onclick);
+    if (globalTab) console.log('- globalTab onclick:', globalTab.onclick);
+};
