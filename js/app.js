@@ -139,6 +139,7 @@ async initializeLeaderboardManager() {
 }
 
 // Fallback ranglista megjelenítés LeaderboardManager nélkül
+// Fallback ranglista megjelenítés LeaderboardManager nélkül
 displayFallbackLeaderboard() {
     console.log('🔄 Fallback ranglista megjelenítés...');
     
@@ -152,7 +153,10 @@ displayFallbackLeaderboard() {
     if (listContainer) {
         if (window.ScoreManager) {
             try {
-                const scores = window.ScoreManager.getTopScores(10);
+                // ✅ JAVÍTÁS: getScores() használata (nem getTopScores)
+                const scores = window.ScoreManager.getScores();
+                
+                console.log('📊 Betöltött eredmények:', scores);
                 
                 if (scores.length === 0) {
                     listContainer.innerHTML = `
@@ -161,24 +165,66 @@ displayFallbackLeaderboard() {
                         </div>
                     `;
                 } else {
-                    listContainer.innerHTML = scores.map((score, index) => `
-                        <div class="score-entry">
-                            <span class="rank">#${index + 1}</span>
-                            <span class="name">${score.playerName || 'Névtelen'}</span>
-                            <span class="score">${score.score}</span>
-                            <span class="date">${new Date(score.timestamp).toLocaleDateString('hu-HU')}</span>
-                        </div>
-                    `).join('');
+                    // A ScoreManager már rendezett listát ad vissza (score szerint csökkenő)
+                    listContainer.innerHTML = scores.map((score, index) => {
+                        // Játékos név meghatározása
+                        let playerName = 'Névtelen';
+                        if (score.playerName) {
+                            playerName = score.playerName;
+                        } else {
+                            // Ha nincs playerName, próbáljuk lekérni az aktuális játékos nevét
+                            const currentPlayer = this.getPlayerName();
+                            if (currentPlayer && currentPlayer !== this.t('player.anonymous')) {
+                                playerName = currentPlayer;
+                            }
+                        }
+                        
+                        // Dátum formázása
+                        let dateStr = '';
+                        if (score.date) {
+                            dateStr = score.date;
+                        } else if (score.timestamp) {
+                            dateStr = new Date(score.timestamp).toLocaleDateString('hu-HU');
+                        } else {
+                            dateStr = 'Ismeretlen';
+                        }
+                        
+                        // Nehézség és transzformáció megjelenítése
+                        let extraInfo = '';
+                        if (score.difficulty && score.difficulty !== 'easy') {
+                            extraInfo += ` (${score.difficulty})`;
+                        }
+                        if (score.transformation && score.transformation.trim() !== '') {
+                            extraInfo += ` ✨${score.transformation}`;
+                        }
+                        
+                        return `
+                            <div class="score-entry" data-score-id="${score.id}">
+                                <span class="rank">#${index + 1}</span>
+                                <span class="name">${playerName}</span>
+                                <span class="score">${score.score}${extraInfo}</span>
+                                <span class="date">${dateStr}</span>
+                            </div>
+                        `;
+                    }).join('');
                 }
+                
+                // Státusz frissítése a tényleges eredmények számával
+                if (statusContainer) {
+                    const gamesText = this.t('common.games') || 'játék';
+                    statusContainer.textContent = `📱 Helyi eredmények (${scores.length} ${gamesText})`;
+                }
+                
             } catch (error) {
                 console.error('❌ Fallback ranglista hiba:', error);
                 listContainer.innerHTML = `
                     <div class="score-entry error">
-                        <span style="color: #ff6b6b;">❌ Hiba az eredmények betöltésekor</span>
+                        <span style="color: #ff6b6b;">❌ Hiba az eredmények betöltésekor: ${error.message}</span>
                     </div>
                 `;
             }
         } else {
+            console.warn('⚠️ ScoreManager nem elérhető');
             listContainer.innerHTML = `
                 <div class="score-entry">
                     <span>${this.t('leaderboard.noResults')}</span>
@@ -187,6 +233,7 @@ displayFallbackLeaderboard() {
         }
     }
 }
+
 
     // Fallback inicializálás I18n nélkül
     initializeFallback() {
