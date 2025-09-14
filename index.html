@@ -404,29 +404,60 @@
             75% { transform: translateX(5px); }
         }
 
-        /* Látogatásszámláló */
+        /* Látogatásszámláló - JAVÍTOTT */
         .visitor-counter {
             position: fixed;
-            bottom: 10px;
+            bottom: 15px;
             right: 15px;
-            background: rgba(30, 60, 114, 0.8);
+            background: rgba(30, 60, 114, 0.9);
             color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 600;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            animation: visitorCounterPulse 2s ease-in-out;
+            transition: all 0.3s ease;
+        }
+
+        .visitor-counter:hover {
+            background: rgba(30, 60, 114, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         .visitor-counter::before {
             content: '👁️';
-            font-size: 0.9em;
+            font-size: 1.1em;
+            animation: blink 3s ease-in-out infinite;
+        }
+
+        @keyframes visitorCounterPulse {
+            0% { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.8); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { opacity: 1; }
+            95% { opacity: 0.3; }
+        }
+
+        .visitor-number {
+            font-weight: bold;
+            color: #4fc3f7;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         /* Mobil optimalizálás */
@@ -465,10 +496,10 @@
             }
 
             .visitor-counter {
-                bottom: 5px;
+                bottom: 10px;
                 right: 10px;
-                font-size: 0.7em;
-                padding: 4px 8px;
+                font-size: 0.75em;
+                padding: 6px 12px;
             }
         }
 
@@ -483,6 +514,11 @@
 
             .game-container {
                 border-radius: 25px;
+            }
+
+            .visitor-counter {
+                font-size: 0.7em;
+                padding: 5px 10px;
             }
         }
 
@@ -614,13 +650,13 @@
         </div>
     </div>
 
-    <!-- Látogatásszámláló -->
+    <!-- LÁTOGATÁSSZÁMLÁLÓ - JAVÍTOTT -->
     <div class="visitor-counter" id="visitorCounter">
-        Látogatások: <span id="visitCount">0</span>
+        Látogatások: <span class="visitor-number" id="visitCount">0</span>
     </div>
 
     <script>
-        // Látogatásszámláló kezelése
+        // Látogatásszámláló kezelése - JAVÍTOTT
         class VisitorCounter {
             static init() {
                 const visitKey = 'perfectcircle_visits';
@@ -633,14 +669,16 @@
                 visits = parseInt(visits) + 1;
                 localStorage.setItem(visitKey, visits.toString());
                 
+                // Magyar számformátum
                 document.getElementById('visitCount').textContent = visits.toLocaleString('hu-HU');
                 
                 // Animáció a számláló frissítésekor
-                const counter = document.getElementById('visitorCounter');
-                counter.style.animation = 'none';
                 setTimeout(() => {
-                    counter.style.animation = 'pulse 0.5s ease-in-out';
-                }, 10);
+                    const counter = document.getElementById('visitorCounter');
+                    counter.style.animation = 'visitorCounterPulse 2s ease-in-out';
+                }, 100);
+                
+                console.log('Látogatásszámláló inicializálva:', visits); // Debug
             }
             
             static getVisits() {
@@ -658,16 +696,29 @@
         let difficulty = 'easy';
         let currentGameId = null;
         let audioContext;
+        let currentTransformation = null; // ÚJDONSÁG: Aktuális transzformáció tárolása
 
-        // Kör transzformációs objektumok (ugyanazok mint előtte)
+        // Kör transzformációs objektumok
         const circleTransformations = [
             {
                 name: "Nap",
                 emoji: "☀️",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => { // ÚJDONSÁG: userPoints paraméter
                     ctx.save();
                     
-                    // Nap teste - kék témához igazított arany színek
+                    if (userPoints && userPoints.length > 0) {
+                        // ÚJDONSÁG: Felhasználó vonalának megrajzolása
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#FFD700';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Nap teste
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
                     ctx.fillStyle = '#FFD700';
@@ -715,10 +766,21 @@
             {
                 name: "Hold",
                 emoji: "🌙",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // Hold teste - kék témához igazított ezüst színek
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#4FC3F7';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Hold teste
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.8, 0, 2 * Math.PI);
                     ctx.fillStyle = '#E6F3FF';
@@ -762,10 +824,21 @@
             {
                 name: "Kerék",
                 emoji: "🚗",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // Kerék külső része - kék témához igazított
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#1E3C72';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Kerék külső része
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI);
                     ctx.fillStyle = '#1E3C72';
@@ -811,10 +884,21 @@
             {
                 name: "Kormány",
                 emoji: "🚙",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // Kormány külső köre - kék témához igazított barna
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#5D4E75';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Kormány külső köre
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.8, 0, 2 * Math.PI);
                     ctx.fillStyle = '#5D4E75';
@@ -860,8 +944,19 @@
             {
                 name: "Pizza",
                 emoji: "🍕",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
+                    
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#8B7355';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
                     
                     // Pizza alap
                     ctx.beginPath();
@@ -884,7 +979,7 @@
                     ctx.fillStyle = '#FFFF99';
                     ctx.fill();
                     
-                    // Pepperoni - kék témához igazított
+                    // Pepperoni
                     ctx.fillStyle = '#2A5298';
                     const pepperoniPositions = [
                         {x: -0.3, y: -0.2}, {x: 0.3, y: -0.3}, {x: -0.2, y: 0.3},
@@ -922,10 +1017,21 @@
             {
                 name: "Óra",
                 emoji: "🕐",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // Óra háttér - kék témához igazított
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#1E3C72';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Óra háttér
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI);
                     ctx.fillStyle = '#F0F8FF';
@@ -990,10 +1096,21 @@
             {
                 name: "Virág",
                 emoji: "🌸",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // Szirmok - kék témához igazított rózsaszín
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#4FC3F7';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                    
+                    // Szirmok
                     ctx.fillStyle = '#E1F5FE';
                     ctx.strokeStyle = '#4FC3F7';
                     ctx.lineWidth = 2;
@@ -1036,8 +1153,19 @@
             {
                 name: "Donut",
                 emoji: "🍩",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
+                    
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#8B7355';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
                     
                     // Donut teste
                     ctx.beginPath();
@@ -1048,7 +1176,7 @@
                     ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Mázas - kék témához igazított
+                    // Mázas
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.75, 0, 2 * Math.PI);
                     ctx.fillStyle = '#4FC3F7';
@@ -1063,7 +1191,7 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // Színes szórás - kék témához igazított színek
+                    // Színes szórás
                     const sprinkleColors = ['#1E3C72', '#2A5298', '#4FC3F7', '#FFD700', '#FF6B6B', '#FFFFFF'];
                     ctx.lineWidth = 3;
                     
@@ -1086,8 +1214,19 @@
             {
                 name: "Kompasz",
                 emoji: "🧭",
-                draw: (centerX, centerY, radius) => {
+                draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
+                    
+                    if (userPoints && userPoints.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
+                        for (let i = 1; i < userPoints.length; i++) {
+                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
+                        }
+                        ctx.strokeStyle = '#1E3C72';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
                     
                     // Kompasz háttér
                     ctx.beginPath();
@@ -1259,13 +1398,14 @@
             }
         }
 
-        // Kör transzformáció
+        // ÚJDONSÁG: Kör transzformáció a felhasználó vonalának megőrzésével
         function transformCircle(centerX, centerY, radius) {
             const overlay = document.getElementById('transformationOverlay');
             const transformationText = document.getElementById('transformationText');
             
             // Random transzformáció kiválasztása
             const randomTransformation = circleTransformations[Math.floor(Math.random() * circleTransformations.length)];
+            currentTransformation = randomTransformation; // Transzformáció tárolása
             
             // Overlay megjelenítése
             transformationText.textContent = `A köröd ${randomTransformation.name}-má/-vé alakul! ${randomTransformation.emoji}`;
@@ -1277,9 +1417,9 @@
             
             // 1.5 másodperc után transzformáció
             setTimeout(() => {
-                // Canvas törlése és új objektum rajzolása
+                // Canvas törlése és új objektum rajzolása a felhasználó vonalával
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                randomTransformation.draw(centerX, centerY, radius);
+                randomTransformation.draw(centerX, centerY, radius, points); // ÚJDONSÁG: points átadása
             }, 1500);
             
             // Overlay eltüntetése 3 másodperc után
@@ -1288,6 +1428,21 @@
             }, 3000);
             
             return randomTransformation.name;
+        }
+
+        // ÚJDONSÁG: Transzformáció újrarajzolása
+        function redrawTransformation() {
+            if (currentTransformation && points.length > 0) {
+                const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+                const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+                const distances = points.map(p => 
+                    Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2)
+                );
+                const avgRadius = distances.reduce((sum, d) => sum + d, 0) / distances.length;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                currentTransformation.draw(centerX, centerY, avgRadius, points);
+            }
         }
 
         // Konfetti effekt - kék színsémával
@@ -1438,6 +1593,7 @@
         function startDrawing() {
             gameActive = true;
             points = [];
+            currentTransformation = null; // ÚJDONSÁG: Reset transzformáció
             clearCanvas();
             
             document.getElementById('startBtn').disabled = true;
@@ -1451,6 +1607,7 @@
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             points = [];
+            currentTransformation = null; // ÚJDONSÁG: Reset transzformáció
             
             if (gameActive) {
                 document.getElementById('canvasOverlay').textContent = 'Rajzolj egy kört!';
@@ -1718,6 +1875,7 @@
 ✨ VARÁZSLAT: A köröd random átalakul!
 • Nap ☀️ • Hold 🌙 • Kerék 🚗 • Kormány 🚙
 • Pizza 🍕 • Óra 🕐 • Virág 🌸 • Donut 🍩 • Kompasz 🧭
+• ÚJDONSÁG: A rajzolt vonal megmarad a transzformációban!
 
 🎉 Ünneplési effektek:
 • 95+ pont: Konfetti + tűzijáték + fanfár
@@ -1745,7 +1903,8 @@ Sok sikert! 🍀✨`);
         }
 
         function init() {
-            // Látogatásszámláló inicializálása
+            // Látogatásszámláló inicializálása - JAVÍTOTT
+            console.log('Játék inicializálása...'); // Debug
             VisitorCounter.init();
             
             updateStats();
@@ -1761,6 +1920,11 @@ Sok sikert! 🍀✨`);
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
         }
+
+        // ÚJDONSÁG: Resize event listener a transzformáció újrarajzolásához
+        window.addEventListener('resize', () => {
+            redrawTransformation();
+        });
 
         init();
     </script>
