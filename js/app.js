@@ -1,22 +1,34 @@
 // Fő alkalmazás inicializáló és koordinátor - Teljes verzió
 // LeaderboardManager konstruktor és metódusok
+// JAVÍTOTT loadLocalLeaderboard metódus - cseréld le a meglévőt
+
+// loadLocalLeaderboard metódus
+// Fő alkalmazás inicializáló és koordinátor - Teljes verzió
+
+// ===== LEADERBOARD MANAGER KONSTRUKTOR ÉS METÓDUSOK =====
 function LeaderboardManager(element) {
     this.element = element || document.getElementById('leaderboard');
+    this.currentView = 'local'; // Alapértelmezett nézet
+    
     if (!this.element) {
-        // Hozd létre a leaderboard elemet ha nincs
-        this.element = document.createElement('div');
-        this.element.id = 'leaderboard';
-        this.element.innerHTML = '<h3>🏆 Rangsor</h3><div>Betöltés...</div>';
-        
-        const container = document.querySelector('.container') || document.body;
-        container.appendChild(this.element);
+        console.log('⚠️ Leaderboard elem nem található, használjuk a meglévő elemeket');
     }
 }
 
-// Metódusok hozzáadása a prototípushoz
+// switchLeaderboard metódus
 LeaderboardManager.prototype.switchLeaderboard = function(type) {
     console.log(`🔄 LeaderboardManager switchLeaderboard: ${type}`);
     
+    this.currentView = type;
+    
+    // Tab gombok frissítése
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const targetTab = document.getElementById(type + 'Tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // Megfelelő betöltő függvény hívása
     if (type === 'global') {
         this.loadGlobalLeaderboard();
     } else if (type === 'local') {
@@ -24,38 +36,143 @@ LeaderboardManager.prototype.switchLeaderboard = function(type) {
     }
 };
 
+// loadLocalLeaderboard metódus
+LeaderboardManager.prototype.loadLocalLeaderboard = function() {
+    // ... (a már meglévő kód)
+
+    console.log('📱 LeaderboardManager loadLocalLeaderboard');
+    
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
+    
+    if (!listContainer) {
+        console.error('❌ leaderboardList elem nem található');
+        return;
+    }
+    
+    try {
+        // Helyi eredmények lekérése
+        const scores = JSON.parse(localStorage.getItem('perfectcircle_scores') || '[]');
+        console.log('📊 Betöltött helyi eredmények:', scores.length);
+        
+        // Status frissítése
+        if (statusContainer) {
+            statusContainer.textContent = `📱 Helyi eredmények (${scores.length})`;
+        }
+        
+        if (scores.length === 0) {
+            listContainer.innerHTML = `
+                <div class="score-entry">
+                    <span>Még nincsenek helyi eredmények</span>
+                </div>
+                <div class="score-entry">
+                    <span style="font-size: 0.9em; color: #666;">💡 Rajzolj egy kört hogy eredmény legyen!</span>
+                </div>
+            `;
+            return;
+        }
+        
+        // Rendezés pontszám szerint
+        const sortedScores = scores
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
+            .slice(0, 10); // Top 10
+        
+        let html = '';
+        sortedScores.forEach((score, index) => {
+            const position = index + 1;
+            const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+            const difficultyIcon = score.difficulty === 'hard' ? '🌀' : '😊';
+            const playerName = score.playerName || 'Névtelen';
+            const scoreValue = Math.round(score.score || 0);
+            const date = score.date ? new Date(score.date).toLocaleDateString('hu-HU') : 
+                        score.created ? new Date(score.created).toLocaleDateString('hu-HU') : '';
+            
+            html += `
+                <div class="score-entry ${position <= 3 ? 'top-score' : ''}">
+                    <span class="position">${medal}</span>
+                    <span class="player-name">${playerName}</span>
+                    <span class="score-value">${scoreValue} pont</span>
+                    <span class="difficulty">${difficultyIcon}</span>
+                    ${date ? `<span class="date">${date}</span>` : ''}
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+        console.log('✅ Helyi ranglista betöltve');
+        
+    } catch (error) {
+        console.error('❌ Helyi ranglista betöltési hiba:', error);
+        listContainer.innerHTML = `
+            <div class="score-entry error">
+                <span>❌ Hiba a helyi eredmények betöltésekor</span>
+            </div>
+        `;
+    }
+};
+
+// loadGlobalLeaderboard metódus
 LeaderboardManager.prototype.loadGlobalLeaderboard = function() {
     console.log('🌍 LeaderboardManager loadGlobalLeaderboard');
     
-    if (!this.element) return;
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
     
-    this.element.innerHTML = `
-        <h3>🏆 Globális Rangsor</h3>
-        <div class="leaderboard-loading">Adatok betöltése...</div>
-    `;
+    if (!listContainer) {
+        console.error('❌ leaderboardList elem nem található');
+        return;
+    }
     
-    // Szimulált adatok betöltése
+    // Status frissítése
+    if (statusContainer) {
+        statusContainer.textContent = '🌍 Globális eredmények (offline mód)';
+    }
+    
+    // Loading üzenet
+    listContainer.innerHTML = '<div class="score-entry"><span>🔄 Globális eredmények betöltése...</span></div>';
+    
+    // Szimulált betöltés
     setTimeout(() => {
-        this.element.innerHTML = `
-            <h3>🏆 Globális Rangsor</h3>
-            <div class="leaderboard-entry">1. 🥇 Player1 - 15,420 pont</div>
-            <div class="leaderboard-entry">2. 🥈 Player2 - 12,350 pont</div>
-            <div class="leaderboard-entry">3. 🥉 Player3 - 11,200 pont</div>
-            <div class="leaderboard-entry">4. 👤 Te - 8,500 pont</div>
-            <div class="leaderboard-entry">5. 👤 Player5 - 7,800 pont</div>
-        `;
-    }, 1000);
+        // Placeholder globális eredmények
+        const globalScores = [
+            { playerName: 'PerfectCircleMaster', score: 98, difficulty: 'hard' },
+            { playerName: 'CircleWizard', score: 95, difficulty: 'hard' },
+            { playerName: 'RoundHero', score: 92, difficulty: 'easy' },
+            { playerName: 'GeometryKing', score: 89, difficulty: 'hard' },
+            { playerName: 'ShapeExpert', score: 87, difficulty: 'easy' },
+            { playerName: 'CircleChampion', score: 84, difficulty: 'easy' },
+            { playerName: 'PerfectShape', score: 81, difficulty: 'hard' },
+            { playerName: 'RoundMaster', score: 78, difficulty: 'easy' },
+            { playerName: 'CirclePro', score: 75, difficulty: 'hard' },
+            { playerName: 'ShapeArtist', score: 72, difficulty: 'easy' }
+        ];
+        
+        let html = '<div class="score-entry offline-notice"><span>⚠️ Offline mód - Példa eredmények:</span></div>';
+        
+        globalScores.forEach((score, index) => {
+            const position = index + 1;
+            const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+            const difficultyIcon = score.difficulty === 'hard' ? '🌀' : '😊';
+            
+            html += `
+                <div class="score-entry placeholder ${position <= 3 ? 'top-score' : ''}">
+                    <span class="position">${medal}</span>
+                    <span class="player-name">${score.playerName}</span>
+                    <span class="score-value">${score.score} pont</span>
+                    <span class="difficulty">${difficultyIcon}</span>
+                    <span class="date">Példa</span>
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+        console.log('✅ Globális ranglista (offline) betöltve');
+    }, 500);
 };
 
-LeaderboardManager.prototype.loadLocalLeaderboard = function() {
-    if (!this.element) return;
-    
-    this.element.innerHTML = `
-        <h3>🏠 Helyi Rangsor</h3>
-        <div class="leaderboard-entry">1. 🥇 Te - 8,500 pont</div>
-        <div class="leaderboard-entry">2. 🥈 LocalPlayer - 7,200 pont</div>
-        <div class="leaderboard-entry">3. 🥉 Friend1 - 6,800 pont</div>
-    `;
+// getCurrentView metódus
+LeaderboardManager.prototype.getCurrentView = function() {
+    return this.currentView;
 };
 
 // Globális hozzáférés biztosítása
@@ -1746,3 +1863,60 @@ window.debugLeaderboard = () => {
     if (localTab) console.log('- localTab onclick:', localTab.onclick);
     if (globalTab) console.log('- globalTab onclick:', globalTab.onclick);
 };
+// TESZT EREDMÉNYEK HOZZÁADÁSA - fájl vége
+window.addTestScores = function() {
+    console.log('🧪 Teszt eredmények hozzáadása...');
+    
+    const testScores = [
+        { playerName: 'TestPlayer1', score: 85, difficulty: 'easy' },
+        { playerName: 'TestPlayer2', score: 92, difficulty: 'hard' },
+        { playerName: 'CircleMaster', score: 78, difficulty: 'easy' },
+        { playerName: 'PerfectRound', score: 88, difficulty: 'hard' },
+        { playerName: 'ShapeWizard', score: 95, difficulty: 'hard' },
+        { playerName: 'GeometryKing', score: 82, difficulty: 'easy' },
+        { playerName: 'RoundHero', score: 90, difficulty: 'hard' }
+    ];
+    
+    // Jelenlegi eredmények lekérése
+    let scores = [];
+    try {
+        scores = JSON.parse(localStorage.getItem('perfectcircle_scores') || '[]');
+    } catch (e) {
+        scores = [];
+    }
+    
+    // Teszt eredmények hozzáadása
+    testScores.forEach(test => {
+        const newScore = {
+            playerName: test.playerName,
+            score: test.score,
+            difficulty: test.difficulty,
+            date: new Date().toISOString(),
+            created: new Date().toISOString(),
+            id: Date.now() + Math.random()
+        };
+        scores.push(newScore);
+    });
+    
+    // Rendezés és mentés
+    const sortedScores = scores
+        .sort((a, b) => (b.score || 0) - (a.score || 0))
+        .slice(0, 50);
+    
+    localStorage.setItem('perfectcircle_scores', JSON.stringify(sortedScores));
+    
+    console.log('✅ Teszt eredmények hozzáadva:', sortedScores.length);
+    
+    // Ha helyi tab aktív, frissítés
+    const localTab = document.getElementById('localTab');
+    if (localTab && localTab.classList.contains('active')) {
+        const app = window.perfectCircleApp;
+        if (app && app.leaderboardManager) {
+            app.leaderboardManager.loadLocalLeaderboard();
+        }
+    }
+    
+    alert('✅ Teszt eredmények hozzáadva! Nézd meg a "Helyi" ranglista tabot!');
+};
+
+console.log('✅ App.js betöltve - addTestScores elérhető');

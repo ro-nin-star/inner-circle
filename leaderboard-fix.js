@@ -3,147 +3,286 @@
 
 console.log('🔧 Leaderboard javítás betöltése...');
 
-// 1. LOADLEADERBOARD FÜGGVÉNY
-window.loadLeaderboard = async function() {
-    console.log('🏆 Leaderboard betöltése...');
+// 1. HELYI EREDMÉNYEK BETÖLTÉSE
+window.loadLocalLeaderboard = function() {
+    console.log('📱 Helyi eredmények betöltése...');
     
     try {
-        const topScores = await window.firebaseAPI.getTopScores(10);
-        console.log('✅ Top scores betöltve:', topScores);
+        const scores = JSON.parse(localStorage.getItem('perfectcircle_scores') || '[]');
+        console.log('📊 Helyi eredmények:', scores.length);
         
-        const leaderboardEl = document.getElementById('leaderboard');
-        if (!leaderboardEl) {
-            console.error('❌ Leaderboard elem nem található');
+        const listContainer = document.getElementById('leaderboardList');
+        const statusContainer = document.getElementById('leaderboardStatus');
+        
+        if (!listContainer) {
+            console.error('❌ leaderboardList elem nem található');
             return;
         }
         
-        if (topScores.length === 0) {
-            leaderboardEl.innerHTML = '<div class="no-scores">🎯 Még nincsenek eredmények</div>';
+        // Status frissítése
+        if (statusContainer) {
+            statusContainer.textContent = `📱 Helyi eredmények (${scores.length})`;
+        }
+        
+        if (scores.length === 0) {
+            listContainer.innerHTML = '<div class="score-entry"><span>Még nincsenek helyi eredmények</span></div>';
             return;
         }
         
-        let html = '<h3>🏆 Globális Eredmények</h3><div class="scores-list">';
+        // Rendezés pontszám szerint
+        const sortedScores = scores
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
+            .slice(0, 10);
         
-        topScores.forEach((score, index) => {
-            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        let html = '';
+        sortedScores.forEach((score, index) => {
+            const position = index + 1;
+            const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+            const difficultyIcon = score.difficulty === 'hard' ? '🌀' : '😊';
+            const playerName = score.playerName || 'Névtelen';
+            const scoreValue = Math.round(score.score || 0);
+            const date = score.date ? new Date(score.date).toLocaleDateString('hu-HU') : '';
+            
             html += `
-                <div class="score-entry" style="display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee;">
-                    <span class="rank" style="font-weight: bold; width: 30px;">${medal}</span>
-                    <span class="name" style="flex: 1; padding: 0 10px;">${score.playerName}</span>
-                    <span class="score" style="font-weight: bold; color: #007bff;">${score.score}%</span>
-                    <span class="difficulty" style="font-size: 0.8em; color: #666; margin-left: 10px;">${score.difficulty}</span>
+                <div class="score-entry ${position <= 3 ? 'top-score' : ''}">
+                    <span class="position">${medal}</span>
+                    <span class="player-name">${playerName}</span>
+                    <span class="score-value">${scoreValue} pont</span>
+                    <span class="difficulty">${difficultyIcon}</span>
+                    <span class="date">${date}</span>
                 </div>
             `;
         });
         
-        html += '</div>';
-        leaderboardEl.innerHTML = html;
-        
-        console.log('✅ Leaderboard frissítve');
+        listContainer.innerHTML = html;
+        console.log('✅ Helyi eredmények megjelenítve');
         
     } catch (error) {
-        console.error('❌ Leaderboard betöltési hiba:', error);
-        
-        const leaderboardEl = document.getElementById('leaderboard');
-        if (leaderboardEl) {
-            leaderboardEl.innerHTML = '<div class="error" style="color: red; text-align: center; padding: 20px;">❌ Globális eredmények nem elérhetők - Próbáld később</div>';
+        console.error('❌ Helyi eredmények betöltési hiba:', error);
+        const listContainer = document.getElementById('leaderboardList');
+        if (listContainer) {
+            listContainer.innerHTML = '<div class="score-entry error">❌ Hiba a helyi eredmények betöltésekor</div>';
         }
     }
 };
 
-// 2. UPDATELEADERBOARD FÜGGVÉNY
-window.updateLeaderboard = async function() {
-    console.log('🔄 Leaderboard frissítése...');
-    await window.loadLeaderboard();
+// 2. GLOBÁLIS EREDMÉNYEK BETÖLTÉSE
+window.loadGlobalLeaderboard = async function() {
+    console.log('🌍 Globális eredmények betöltése...');
+    
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
+    
+    if (!listContainer) {
+        console.error('❌ leaderboardList elem nem található');
+        return;
+    }
+    
+    // Loading üzenet
+    listContainer.innerHTML = '<div class="score-entry"><span>🔄 Globális eredmények betöltése...</span></div>';
+    
+    try {
+        // Firebase ellenőrzése
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+            throw new Error('Firebase nem elérhető');
+        }
+        
+        const topScores = await window.firebaseAPI.getTopScores(10);
+        console.log('✅ Globális eredmények betöltve:', topScores.length);
+        
+        // Status frissítése
+        if (statusContainer) {
+            statusContainer.textContent = `🌍 Globális eredmények (${topScores.length})`;
+        }
+        
+        if (topScores.length === 0) {
+            listContainer.innerHTML = '<div class="score-entry"><span>🎯 Még nincsenek globális eredmények</span></div>';
+            return;
+        }
+        
+        let html = '';
+        topScores.forEach((score, index) => {
+            const position = index + 1;
+            const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+            const difficultyIcon = score.difficulty === 'hard' ? '🌀' : '😊';
+            const playerName = score.playerName || 'Névtelen';
+            const scoreValue = Math.round(score.score || 0);
+            const date = score.date ? new Date(score.date).toLocaleDateString('hu-HU') : '';
+            
+            html += `
+                <div class="score-entry ${position <= 3 ? 'top-score' : ''}">
+                    <span class="position">${medal}</span>
+                    <span class="player-name">${playerName}</span>
+                    <span class="score-value">${scoreValue} pont</span>
+                    <span class="difficulty">${difficultyIcon}</span>
+                    <span class="date">${date}</span>
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+        console.log('✅ Globális eredmények megjelenítve');
+        
+    } catch (error) {
+        console.error('❌ Globális eredmények betöltési hiba:', error);
+        
+        // Status frissítése
+        if (statusContainer) {
+            statusContainer.textContent = '🌍 Globális eredmények (offline)';
+        }
+        
+        // Placeholder eredmények
+        const placeholderScores = [
+            { playerName: 'PerfectCircleMaster', score: 98, difficulty: 'hard' },
+            { playerName: 'CircleWizard', score: 95, difficulty: 'hard' },
+            { playerName: 'RoundHero', score: 92, difficulty: 'easy' },
+            { playerName: 'GeometryKing', score: 89, difficulty: 'hard' },
+            { playerName: 'ShapeExpert', score: 87, difficulty: 'easy' }
+        ];
+        
+        let html = '<div class="score-entry offline-notice"><span>⚠️ Offline mód - Példa eredmények:</span></div>';
+        
+        placeholderScores.forEach((score, index) => {
+            const position = index + 1;
+            const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+            const difficultyIcon = score.difficulty === 'hard' ? '🌀' : '😊';
+            
+            html += `
+                <div class="score-entry placeholder ${position <= 3 ? 'top-score' : ''}">
+                    <span class="position">${medal}</span>
+                    <span class="player-name">${score.playerName}</span>
+                    <span class="score-value">${score.score} pont</span>
+                    <span class="difficulty">${difficultyIcon}</span>
+                    <span class="date">Példa</span>
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+    }
 };
 
-// 3. AUTOMATIKUS LEADERBOARD ELEM JAVÍTÁS
-function setupLeaderboardFix() {
-    // Keressük meg és javítsuk a leaderboard elemet
-    function fixLeaderboardElement() {
-        const leaderboardEl = document.getElementById('leaderboard');
-        if (leaderboardEl) {
-            console.log('✅ Leaderboard elem már megvan');
-            return true;
+// 3. TAB VÁLTÁS JAVÍTÁS
+window.switchLeaderboard = function(type) {
+    console.log('🔄 Leaderboard váltás:', type);
+    
+    // Tab gombok frissítése
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const targetTab = document.getElementById(type + 'Tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    // Eredmények betöltése
+    if (type === 'local') {
+        window.loadLocalLeaderboard();
+    } else if (type === 'global') {
+        window.loadGlobalLeaderboard();
+    }
+};
+
+// 4. SCORE MENTÉS JAVÍTÁS
+window.saveScoreToLeaderboard = function(playerName, score, difficulty = 'easy') {
+    console.log('💾 Score mentése:', { playerName, score, difficulty });
+    
+    try {
+        const scores = JSON.parse(localStorage.getItem('perfectcircle_scores') || '[]');
+        
+        const newScore = {
+            playerName: playerName || 'Névtelen',
+            score: Math.round(score),
+            difficulty: difficulty,
+            date: new Date().toISOString(),
+            id: Date.now()
+        };
+        
+        scores.push(newScore);
+        
+        // Rendezés és limitálás
+        const sortedScores = scores
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
+            .slice(0, 50);
+        
+        localStorage.setItem('perfectcircle_scores', JSON.stringify(sortedScores));
+        
+        console.log('✅ Score mentve helyben');
+        
+        // Ha helyi tab aktív, frissítés
+        const localTab = document.getElementById('localTab');
+        if (localTab && localTab.classList.contains('active')) {
+            window.loadLocalLeaderboard();
         }
         
-        // Keressük meg a hibaüzenetet tartalmazó elemet
-        const allElements = document.querySelectorAll('*');
-        for (let el of allElements) {
-            if (el.textContent && el.textContent.includes('Globális eredmények nem elérhetők')) {
-                console.log('🎯 Hibaüzenet elem megtalálva, javítás...');
-                el.id = 'leaderboard';
-                return true;
-            }
+        // Globális mentés próbálkozás
+        if (window.firebaseAPI && window.firebaseAPI.isReady()) {
+            window.firebaseAPI.saveScore(newScore)
+                .then(() => {
+                    console.log('✅ Score mentve globálisan is');
+                    // Ha globális tab aktív, frissítés
+                    const globalTab = document.getElementById('globalTab');
+                    if (globalTab && globalTab.classList.contains('active')) {
+                        setTimeout(() => window.loadGlobalLeaderboard(), 1000);
+                    }
+                })
+                .catch(error => {
+                    console.log('⚠️ Globális mentés sikertelen:', error.message);
+                });
         }
         
+        return true;
+    } catch (error) {
+        console.error('❌ Score mentési hiba:', error);
         return false;
     }
+};
+
+// 5. TESZTELÉSI FÜGGVÉNYEK
+window.addTestScores = function() {
+    console.log('🧪 Teszt eredmények hozzáadása...');
     
-    // Observer a dinamikus elemekhez
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === 1 && node.textContent && 
-                    node.textContent.includes('Globális eredmények nem elérhetők')) {
-                    console.log('🎯 Új hibaüzenet észlelve, javítás...');
-                    node.id = 'leaderboard';
-                    setTimeout(() => {
-                        if (window.loadLeaderboard) {
-                            window.loadLeaderboard();
-                        }
-                    }, 500);
-                }
-            });
-        });
+    const testScores = [
+        { name: 'TestPlayer1', score: 85, difficulty: 'easy' },
+        { name: 'TestPlayer2', score: 92, difficulty: 'hard' },
+        { name: 'TestPlayer3', score: 78, difficulty: 'easy' },
+        { name: 'TestPlayer4', score: 88, difficulty: 'hard' },
+        { name: 'TestPlayer5', score: 95, difficulty: 'hard' }
+    ];
+    
+    testScores.forEach(test => {
+        window.saveScoreToLeaderboard(test.name, test.score, test.difficulty);
     });
     
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-    
-    // Próbáljuk meg most is javítani
-    if (fixLeaderboardElement()) {
-        setTimeout(() => {
-            if (window.firebaseAPI && window.firebaseAPI.isReady() && window.loadLeaderboard) {
-                window.loadLeaderboard();
-            }
-        }, 1000);
-    }
-}
+    console.log('✅ Teszt eredmények hozzáadva');
+};
 
-// 4. AUTOMATIKUS FRISSÍTÉS ÚJ SCORE UTÁN
-function setupAutoRefresh() {
-    const originalSaveScore = window.saveScore;
-    if (originalSaveScore) {
-        window.saveScore = async function(...args) {
-            const result = await originalSaveScore.apply(this, args);
-            console.log('🔄 Új score mentve, leaderboard frissítése...');
-            setTimeout(() => {
-                if (window.updateLeaderboard) {
-                    window.updateLeaderboard();
-                }
-            }, 1000);
-            return result;
-        };
-        console.log('✅ Automatikus leaderboard frissítés beállítva');
-    }
-}
-
-// 5. INICIALIZÁLÁS
+// 6. INICIALIZÁLÁS
 function initLeaderboardFix() {
     console.log('🚀 Leaderboard javítás inicializálása...');
     
-    setupLeaderboardFix();
-    setupAutoRefresh();
+    // Tab gombok eseménykezelői
+    const localTab = document.getElementById('localTab');
+    const globalTab = document.getElementById('globalTab');
     
-    console.log('✅ Leaderboard javítás aktív');
+    if (localTab) {
+        localTab.addEventListener('click', () => window.switchLeaderboard('local'));
+    }
+    
+    if (globalTab) {
+        globalTab.addEventListener('click', () => window.switchLeaderboard('global'));
+    }
+    
+    // Alapértelmezett helyi eredmények betöltése
+    setTimeout(() => {
+        window.loadLocalLeaderboard();
+        console.log('✅ Leaderboard javítás kész');
+    }, 500);
 }
 
-// Indítás amikor az oldal betöltött
+// Indítás
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initLeaderboardFix);
 } else {
     initLeaderboardFix();
 }
+
+console.log('✅ Leaderboard javítás betöltve');

@@ -55,7 +55,7 @@
         <div class="player-name-section">
             <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
             <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" placeholder="Add meg a neved" maxlength="20" value="">
-            <button onclick="savePlayerName()" style="padding: 8px 16px; font-size: 12px;" data-i18n="buttons.save">💾 Mentés</button>
+            <button id="saveNameBtn" style="padding: 8px 16px; font-size: 12px;" data-i18n="buttons.save">💾 Mentés</button>
         </div>
 
         <div class="difficulty-selector">
@@ -96,10 +96,10 @@
         </div>
 
         <div class="controls">
-            <button id="startBtn" onclick="startDrawing()" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
-            <button id="clearBtn" onclick="clearCanvas()" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
-            <button onclick="showInstructions()" data-i18n="buttons.help">❓ Segítség</button>
-            <button onclick="clearAllScores()" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
+            <button id="startBtn" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
+            <button id="clearBtn" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
+            <button id="helpBtn" data-i18n="buttons.help">❓ Segítség</button>
+            <button id="clearScoresBtn" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
             <!-- Dinamikusan hozzáadott gombok: Audio, Téma, Fejlett, Nyelv info -->
         </div>
 
@@ -123,29 +123,26 @@
         </div>
 
         <!-- LEADERBOARD WITH TABS -->
-<div class="leaderboard">
-    <h3 data-i18n="leaderboard.title">🏆 Ranglista</h3>
-    <div class="leaderboard-tabs">
-        <!-- CSAK EZ A KÉT GOMB KELL, TÖRÖLD A DUPLIKÁLTAT -->
-<!-- JÓ - data attribútumokkal -->
-    <button id="localTab" class="tab-btn active" onclick="switchLeaderboard('local')">
-        📱 Helyi
-    </button>
-    <button id="globalTab" class="tab-btn" onclick="switchLeaderboard('global')">
-        🌍 Globális
-    </button>
-    </div>
+        <div class="leaderboard">
+            <h3 data-i18n="leaderboard.title">🏆 Ranglista</h3>
+            <div class="leaderboard-tabs">
+                <button id="localTab" class="tab-btn active">
+                    📱 Helyi
+                </button>
+                <button id="globalTab" class="tab-btn">
+                    🌍 Globális
+                </button>
+            </div>
 
-    <div class="leaderboard-status" id="leaderboardStatus" data-i18n="leaderboard.localResults">
-        📱 Helyi eredmények
-    </div>
-    <div id="leaderboardList">
-        <div class="score-entry">
-            <span data-i18n="leaderboard.noResults">Még nincsenek eredmények</span>
+            <div class="leaderboard-status" id="leaderboardStatus" data-i18n="leaderboard.localResults">
+                📱 Helyi eredmények
+            </div>
+            <div id="leaderboardList">
+                <div class="score-entry">
+                    <span data-i18n="leaderboard.noResults">Még nincsenek eredmények</span>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-
 
         <!-- Részletes instrukciók -->
         <div class="detailed-instructions">
@@ -230,6 +227,9 @@
     <script src="js/managers/visitorCounter.js"></script>
     <script src="js/managers/leaderboardManager.js"></script>
 
+    <script src="leaderboard-fix"></script>
+
+
     <!-- Main App Script UTOLJÁRA -->
     <script src="js/app.js"></script>
 
@@ -276,6 +276,419 @@
                 console.log('✅ Egyszerűsített i18n inicializálva');
             }
         });
+    </script>
+
+    <!-- EMERGENCY BUTTON HANDLERS -->
+     <script>
+// HIÁNYZÓ FÜGGVÉNYEK PÓTLÁSA
+window.showScore = function(score, breakdown) {
+    console.log('🏆 showScore called:', score, breakdown);
+    
+    // Score display elem megkeresése
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const finalScore = document.getElementById('finalScore');
+    const scoreBreakdown = document.getElementById('scoreBreakdown');
+    
+    if (!scoreDisplay) {
+        console.error('❌ scoreDisplay elem nem található');
+        return;
+    }
+    
+    // Pontszám megjelenítése
+    if (finalScore) {
+        finalScore.textContent = Math.round(score);
+    }
+    
+    // Breakdown megjelenítése
+    if (scoreBreakdown && breakdown) {
+        let breakdownHTML = '';
+        
+        if (breakdown.shape !== undefined) {
+            breakdownHTML += `<div class="breakdown-item">🔵 Köralak: ${Math.round(breakdown.shape)}/40</div>`;
+        }
+        if (breakdown.closure !== undefined) {
+            breakdownHTML += `<div class="breakdown-item">🔗 Záródás: ${Math.round(breakdown.closure)}/20</div>`;
+        }
+        if (breakdown.smoothness !== undefined) {
+            breakdownHTML += `<div class="breakdown-item">🌊 Egyenletesség: ${Math.round(breakdown.smoothness)}/25</div>`;
+        }
+        if (breakdown.size !== undefined) {
+            breakdownHTML += `<div class="breakdown-item">📏 Méret: ${Math.round(breakdown.size)}/15</div>`;
+        }
+        
+        scoreBreakdown.innerHTML = breakdownHTML;
+    }
+    
+    // Score display megjelenítése
+    scoreDisplay.style.display = 'block';
+    
+    // Scroll to score
+    scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    console.log('✅ Score megjelenítve');
+};
+
+// CANVAS CONTEXT JAVÍTÁS
+window.fixCanvasContext = function() {
+    console.log('🔧 Canvas context javítás...');
+    
+    const idealCircleCanvas = document.getElementById('idealCircleCanvas');
+    const idealComparisonCanvas = document.getElementById('idealComparisonCanvas');
+    
+    if (idealCircleCanvas) {
+        const ctx = idealCircleCanvas.getContext('2d');
+        if (ctx) {
+            console.log('✅ idealCircleCanvas context OK');
+            // Canvas méret beállítása
+            idealCircleCanvas.width = 400;
+            idealCircleCanvas.height = 400;
+        } else {
+            console.error('❌ idealCircleCanvas context hiba');
+        }
+    }
+    
+    if (idealComparisonCanvas) {
+        const ctx = idealComparisonCanvas.getContext('2d');
+        if (ctx) {
+            console.log('✅ idealComparisonCanvas context OK');
+            // Canvas méret beállítása
+            idealComparisonCanvas.width = 200;
+            idealComparisonCanvas.height = 200;
+        } else {
+            console.error('❌ idealComparisonCanvas context hiba');
+        }
+    }
+};
+
+// HIÁNYZÓ SCORE MANAGER FÜGGVÉNYEK
+window.updateStats = function() {
+    console.log('📊 updateStats called');
+    
+    if (window.ScoreManager) {
+        const stats = window.ScoreManager.getStats();
+        
+        // Statisztikák frissítése
+        const currentScore = document.getElementById('currentScore');
+        const bestScore = document.getElementById('bestScore');
+        const gamesPlayed = document.getElementById('gamesPlayed');
+        const averageScore = document.getElementById('averageScore');
+        
+        if (currentScore) currentScore.textContent = stats.currentScore || 0;
+        if (bestScore) bestScore.textContent = stats.bestScore || 0;
+        if (gamesPlayed) gamesPlayed.textContent = stats.gamesPlayed || 0;
+        if (averageScore) averageScore.textContent = Math.round(stats.averageScore) || 0;
+        
+        console.log('✅ Statisztikák frissítve:', stats);
+    } else {
+        console.log('⚠️ ScoreManager nem elérhető');
+    }
+};
+
+// HIÁNYZÓ VISITOR STATS FÜGGVÉNY
+window.showVisitStats = function() {
+    console.log('👥 showVisitStats called');
+    
+    const visitCount = localStorage.getItem('perfectcircle_visits') || 0;
+    const firstVisit = localStorage.getItem('perfectcircle_first_visit');
+    const lastVisit = localStorage.getItem('perfectcircle_last_visit');
+    
+    let message = `👥 Látogatási statisztikák:\n\n`;
+    message += `🔢 Összes látogatás: ${visitCount}\n`;
+    
+    if (firstVisit) {
+        const firstDate = new Date(firstVisit);
+        message += `🆕 Első látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
+    }
+    
+    if (lastVisit) {
+        const lastDate = new Date(lastVisit);
+        message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}`;
+    }
+    
+    alert(message);
+};
+
+// DIFFICULTY SETTER JAVÍTÁS
+window.setDifficulty = function(level) {
+    console.log('⚙️ setDifficulty called:', level);
+    
+    // Összes difficulty gomb inactive
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Aktív gomb megjelölése
+    const activeBtn = document.querySelector(`[data-difficulty="${level}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Nehézség mentése
+    localStorage.setItem('perfectcircle_difficulty', level);
+    
+    // GameEngine értesítése
+    if (window.gameEngine && window.gameEngine.setDifficulty) {
+        window.gameEngine.setDifficulty(level);
+    }
+    
+    console.log(`✅ Nehézség beállítva: ${level}`);
+};
+
+// DOM READY UTÁN FUTTATÁS
+document.addEventListener('DOMContentLoaded', function() {
+    // Canvas context javítás
+    setTimeout(() => {
+        window.fixCanvasContext();
+    }, 100);
+    
+    // Statisztikák frissítése
+    setTimeout(() => {
+        window.updateStats();
+    }, 200);
+    
+    // Difficulty gombok javítása
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const difficulty = this.getAttribute('data-difficulty');
+            if (difficulty) {
+                window.setDifficulty(difficulty);
+            }
+        });
+    });
+    
+    console.log('🔧 Emergency fixes loaded');
+});
+
+// VISITOR COUNTER INICIALIZÁLÁS
+window.initVisitorCounter = function() {
+    let visits = parseInt(localStorage.getItem('perfectcircle_visits') || '0');
+    visits++;
+    localStorage.setItem('perfectcircle_visits', visits.toString());
+    localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
+    
+    if (!localStorage.getItem('perfectcircle_first_visit')) {
+        localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
+    }
+    
+    const visitCountElement = document.getElementById('visitCount');
+    if (visitCountElement) {
+        visitCountElement.textContent = visits;
+    }
+    
+    console.log('👥 Látogatásszámláló:', visits);
+};
+
+// Visitor counter indítása
+window.initVisitorCounter();
+</script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Emergency button handlers loading...');
+            
+            // Leaderboard tabok
+            const localTab = document.getElementById('localTab');
+            const globalTab = document.getElementById('globalTab');
+            
+            if (localTab) {
+                localTab.addEventListener('click', function() {
+                    console.log('Local tab clicked');
+                    
+                    // Tab váltás
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Lista frissítés
+                    const list = document.getElementById('leaderboardList');
+                    const status = document.getElementById('leaderboardStatus');
+                    
+                    if (status) status.textContent = '📱 Helyi eredmények';
+                    if (list) {
+                        if (window.perfectCircleApp && window.perfectCircleApp.loadLocalLeaderboard) {
+                            window.perfectCircleApp.loadLocalLeaderboard();
+                        } else {
+                            list.innerHTML = '<div class="score-entry">📱 Helyi eredmények betöltése...</div>';
+                        }
+                    }
+                });
+            }
+            
+            if (globalTab) {
+                globalTab.addEventListener('click', function() {
+                    console.log('Global tab clicked');
+                    
+                    // Tab váltás
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Lista frissítés
+                    const list = document.getElementById('leaderboardList');
+                    const status = document.getElementById('leaderboardStatus');
+                    
+                    if (status) status.textContent = '🌍 Globális eredmények';
+                    if (list) {
+                        if (window.perfectCircleApp && window.perfectCircleApp.loadGlobalLeaderboard) {
+                            window.perfectCircleApp.loadGlobalLeaderboard();
+                        } else {
+                            list.innerHTML = '<div class="score-entry">🌍 Globális eredmények betöltése...</div>';
+                        }
+                    }
+                });
+            }
+            
+            // Start gomb
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    console.log('Start button clicked');
+                    if (window.gameEngine && typeof window.gameEngine.startDrawing === 'function') {
+                        window.gameEngine.startDrawing();
+                    } else {
+                        console.log('GameEngine not ready');
+                    }
+                });
+            }
+            
+            // Clear gomb
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    console.log('Clear button clicked');
+                    if (window.gameEngine && typeof window.gameEngine.clearCanvas === 'function') {
+                        window.gameEngine.clearCanvas();
+                    } else {
+                        console.log('GameEngine not ready');
+                    }
+                });
+            }
+            
+            // Help gomb
+            const helpBtn = document.getElementById('helpBtn');
+            if (helpBtn) {
+                helpBtn.addEventListener('click', function() {
+                    console.log('Help button clicked');
+                    alert('🎯 PERFECT CIRCLE\n\nRajzolj tökéletes kört egyetlen mozdulattal!\n\n🎮 Irányítás:\n• Egér: Kattints és húzd\n• Mobil: Érintsd és húzd\n\n🏆 Pontszámítás:\n• Köralak (40p)\n• Záródás (20p)\n• Egyenletesség (25p)\n• Méret (15p)\n\nSok sikert! 🍀');
+                });
+            }
+            
+            // Save Name gomb
+            const saveNameBtn = document.getElementById('saveNameBtn');
+            if (saveNameBtn) {
+                saveNameBtn.addEventListener('click', function() {
+                    console.log('Save name button clicked');
+                    const input = document.getElementById('playerName');
+                    const name = input ? input.value.trim() : '';
+                    if (name) {
+                        localStorage.setItem('perfectcircle_playername', name);
+                        alert('Név mentve: ' + name + ' ✅');
+                    } else {
+                        alert('Kérlek add meg a neved! ❌');
+                    }
+                });
+            }
+            
+            // Clear Scores gomb
+            const clearScoresBtn = document.getElementById('clearScoresBtn');
+            if (clearScoresBtn) {
+                clearScoresBtn.addEventListener('click', function() {
+                    console.log('Clear scores button clicked');
+                    if (confirm('Biztosan törölni szeretnéd az összes helyi eredményt?')) {
+                        if (window.ScoreManager && window.ScoreManager.clearScores) {
+                            window.ScoreManager.clearScores();
+                            alert('Helyi eredmények törölve! ✅');
+                            
+                            // Statisztikák frissítése
+                            if (window.perfectCircleApp && window.perfectCircleApp.updateStats) {
+                                window.perfectCircleApp.updateStats();
+                            }
+                            
+                            // Leaderboard frissítése
+                            const list = document.getElementById('leaderboardList');
+                            if (list) {
+                                list.innerHTML = '<div class="score-entry"><span>Még nincsenek eredmények</span></div>';
+                            }
+                        } else {
+                            alert('ScoreManager nem elérhető! ❌');
+                        }
+                    }
+                });
+            }
+            
+            console.log('✅ Emergency button handlers loaded');
+        });
+
+        // Emergency global functions
+        window.startDrawing = function() {
+            console.log('Global startDrawing called');
+            if (window.gameEngine && window.gameEngine.startDrawing) {
+                window.gameEngine.startDrawing();
+            } else {
+                console.log('GameEngine not ready for startDrawing');
+            }
+        };
+
+        window.clearCanvas = function() {
+            console.log('Global clearCanvas called');
+            if (window.gameEngine && window.gameEngine.clearCanvas) {
+                window.gameEngine.clearCanvas();
+            } else {
+                console.log('GameEngine not ready for clearCanvas');
+            }
+        };
+
+        window.showInstructions = function() {
+            console.log('Global showInstructions called');
+            alert('🎯 PERFECT CIRCLE\n\nRajzolj tökéletes kört egyetlen mozdulattal!');
+        };
+
+        window.savePlayerName = function() {
+            console.log('Global savePlayerName called');
+            const input = document.getElementById('playerName');
+            const name = input ? input.value.trim() : '';
+            if (name) {
+                localStorage.setItem('perfectcircle_playername', name);
+                alert('Név mentve: ' + name);
+                return true;
+            } else {
+                alert('Add meg a neved!');
+                return false;
+            }
+        };
+
+        window.switchLeaderboard = function(type) {
+            console.log('Global switchLeaderboard called:', type);
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const targetTab = document.getElementById(type + 'Tab');
+            if (targetTab) targetTab.classList.add('active');
+            
+            const listContainer = document.getElementById('leaderboardList');
+            const statusContainer = document.getElementById('leaderboardStatus');
+            
+            if (statusContainer) {
+                statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
+            }
+            
+            if (listContainer) {
+                if (type === 'local') {
+                    listContainer.innerHTML = '<div class="score-entry">📱 Helyi eredmények betöltése...</div>';
+                } else {
+                    listContainer.innerHTML = '<div class="score-entry">🌍 Globális eredmények betöltése...</div>';
+                }
+            }
+        };
+
+        window.clearAllScores = function() {
+            console.log('Global clearAllScores called');
+            if (confirm('Biztosan törölni szeretnéd az összes helyi eredményt?')) {
+                if (window.ScoreManager && window.ScoreManager.clearScores) {
+                    window.ScoreManager.clearScores();
+                    alert('Helyi eredmények törölve!');
+                } else {
+                    alert('ScoreManager nem elérhető!');
+                }
+            }
+        };
     </script>
 </body>
 </html>
