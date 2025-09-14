@@ -1,4 +1,4 @@
-// Fő alkalmazás inicializáló és koordinátor - Tiszta verzió
+// Fő alkalmazás inicializáló és koordinátor - Teljes verzió
 
 // BIZTONSÁGOS SCORE ADAT KÉSZÍTŐ FÜGGVÉNY
 window.createSafeScoreData = (playerName, score, difficulty, transformation) => {
@@ -268,14 +268,21 @@ class PerfectCircleApp {
         }
 
         const fallbackTexts = {
-            'leaderboard.noResults': 'Még nincsenek eredmények',
-            'common.games': 'játék',
-            'common.players': 'játékos',
-            'player.anonymous': 'Névtelen',
+            'title': 'Perfect Circle',
+            'subtitle': 'Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!',
+            'buttons.startDrawing': '🎯 Rajzolás Kezdése',
+            'buttons.clear': '🗑️ Törlés',
+            'buttons.help': '❓ Segítség',
+            'buttons.save': '💾 Mentés',
+            'stats.currentScore': 'Jelenlegi Pontszám',
+            'stats.bestScore': 'Legjobb Eredmény',
+            'stats.gamesPlayed': 'Játékok Száma',
+            'stats.averageScore': 'Átlag Pontszám',
+            'player.label': '👤 Játékos név:',
             'player.placeholder': 'Add meg a neved',
+            'player.nameSaved': 'Név mentve: {name} ✅',
             'errors.invalidName': 'Kérlek add meg a neved!',
             'errors.nameTooLong': 'A név maximum 20 karakter lehet!',
-            'player.nameSaved': 'Név mentve: {name} ✅',
             'scoreTitle.perfect': '🏆 Tökéletes! Zseniális!',
             'scoreTitle.excellent': '🌟 Kiváló! Nagyon jó!',
             'scoreTitle.good': '👍 Jó munka!',
@@ -287,6 +294,8 @@ class PerfectCircleApp {
             'scoreBreakdown.size': '📏 Méret',
             'scoreBreakdown.transformation': '🎨 Transzformáció: {name}',
             'common.points': 'pont',
+            'common.players': 'játékos',
+            'common.games': 'játék',
             'transformations.rainbow': 'Szivárvány',
             'transformations.galaxy': 'Galaxis',
             'transformations.flower': 'Virág',
@@ -298,10 +307,35 @@ class PerfectCircleApp {
             'transformations.wave': 'Hullám',
             'transformations.fire': 'Tűz',
             'transformations.transformText': '🎨 Transzformáció alkalmazva: {name}',
+            'leaderboard.noResults': 'Még nincsenek eredmények',
+            'leaderboard.localResults': '📱 Helyi eredmények',
+            'leaderboard.globalResults': '🌍 Globális toplista',
+            'leaderboard.loading': 'Eredmények betöltése...',
+            'leaderboard.tooFrequentAttempt': 'Túl gyakori próbálkozás - várj 10 másodpercet',
+            'leaderboard.waitRetry': '⏳ Várj 10 másodpercet az újrapróbálkozás előtt',
+            'leaderboard.globalNotAvailable': '❌ Globális eredmények nem elérhetők - Próbáld később',
             'firebase.online': '🟢 Online',
             'firebase.offline': '🔴 Offline',
             'firebase.connecting': '🟡 Kapcsolódás...',
             'firebase.error': '❌ Hiba',
+            'firebase.notAvailable': 'Firebase nem elérhető',
+            'firebase.reconnectFailed': 'Firebase újracsatlakozás sikertelen',
+            'firebase.notAvailableCheckRules': '❌ Firebase nem elérhető - Ellenőrizd a Firestore Rules-t',
+            'firebase.rulesErrorSolution': '❌ Firestore Rules hiba - Kattints a státuszra a megoldásért',
+            'errors.notImplemented': 'Ez a funkció még nincs implementálva.',
+            'player.you': 'Te',
+            'player.anonymous': 'Névtelen',
+            'advanced.title': '⚙️ Fejlett',
+            'advanced.clearAllConfirm': 'Biztosan törölni szeretnéd az összes adatot?',
+            'advanced.allDataCleared': 'Minden adat törölve!',
+            'advanced.clearError': 'Hiba a törlés során',
+            'advanced.exportSuccess': 'Eredmények sikeresen exportálva!',
+            'advanced.exportError': 'Hiba az exportálás során',
+            'advanced.importSuccess': '{imported}/{total} eredmény importálva!',
+            'advanced.importError': 'Hiba az importálás során',
+            'advanced.fileError': 'Fájl olvasási hiba',
+            'advanced.invalidChoice': 'Érvénytelen választás!',
+            'advanced.openConsole': 'Nyomd meg F12-t a fejlesztői konzol megnyitásához!',
             'audio.enabled': 'Hang Be',
             'audio.disabled': 'Hang Ki',
             'audio.enabledMessage': 'Hang bekapcsolva!',
@@ -309,7 +343,91 @@ class PerfectCircleApp {
             'theme.light': '☀️ Világos',
             'theme.dark': '🌙 Sötét',
             'theme.lightEnabled': 'Világos téma bekapcsolva!',
-            'theme.darkEnabled': 'Sötét téma bekapcsolva!'
+            'theme.darkEnabled': 'Sötét téma bekapcsolva!',
+            'language.info': 'NYELVI INFORMÁCIÓK',
+            'language.current': 'Jelenlegi nyelv',
+            'language.detected': 'Automatikusan felismert',
+            'language.supported': 'Támogatott nyelvek',
+            'language.shortcuts': 'Billentyű parancsok',
+            'language.toggleMenu': 'Nyelv menü',
+            'language.clickFlag': 'Kattints a zászlóra a váltáshoz',
+            'language.autoSave': 'A nyelvválasztás automatikusan mentődik',
+            'advanced.features': `⚙️ FEJLETT FUNKCIÓK
+
+🎮 BILLENTYŰ PARANCSOK:
+• Ctrl+S: Rajzolás kezdése
+• Ctrl+R: Törlés
+• Ctrl+H: Segítség
+• Ctrl+E: Eredmények exportálása
+• Ctrl+L: Nyelv menü
+• Esc: Játék megszakítása / Menü bezárása
+• F1: Segítség
+
+📊 ADATKEZELÉS:
+• Helyi eredmények exportálása/importálása
+• Látogatási statisztikák
+• Téma váltás
+• Hang be/ki kapcsolása
+• Nyelv váltás
+
+🔧 HIBAKERESÉS:
+• Firebase kapcsolat ellenőrzése
+• Helyi adatok törlése
+• Konzol naplók megtekintése
+• Teljesítmény teszt
+
+🌍 NEMZETKÖZIESÍTÉS:
+• 6 nyelv támogatása
+• Automatikus nyelv felismerés
+• Dátum/idő lokalizáció
+
+Szeretnéd használni ezeket a funkciókat?`,
+            'advanced.menu': `Válassz egy műveletet:
+
+1 - Eredmények exportálása
+2 - Eredmények importálása  
+3 - Látogatási statisztikák
+4 - Firebase státusz
+5 - Helyi adatok törlése
+6 - Konzol megnyitása
+7 - Teljesítmény teszt
+8 - Nyelvi információk
+9 - Nyelv váltás
+
+Add meg a szám:`,
+            'fullInstructions': `🎯 PERFECT CIRCLE - TELJES ÚTMUTATÓ
+
+📝 JÁTÉK CÉLJA:
+Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!
+
+🎮 IRÁNYÍTÁS:
+• 🖱️ Egér: Kattints és húzd
+• 📱 Mobil: Érintsd és húzd
+• ⌨️ Billentyűk: Ctrl+S (start), Ctrl+R (törlés), Esc (stop)
+
+🏆 PONTOZÁS:
+• Köralak (40 pont): Mennyire hasonlít körre
+• Záródás (20 pont): Mennyire zárt a forma
+• Egyenletesség (25 pont): Mennyire egyenletes a vonal
+• Méret (15 pont): Optimális méret a canvas-en
+
+🎨 TRANSZFORMÁCIÓK:
+• Válassz különböző vizuális effekteket
+• A transzformáció nem befolyásolja a pontszámot
+• Csak a vizuális megjelenést változtatja
+
+💾 MENTÉS:
+• Helyi mentés: Automatikus minden játék után
+• Globális mentés: Add meg a neved a globális ranglistához
+
+🏅 RANGLISTÁK:
+• Helyi: A te eredményeid ezen a gépen
+• Globális: Világszerte minden játékos eredménye
+
+Sok sikert a tökéletes kör rajzolásához! 🍀✨`,
+            'difficulty.easy': 'Könnyű',
+            'difficulty.hard': 'Nehéz',
+            'warnings.gameInProgress': 'Biztosan el szeretnéd hagyni az oldalt? A folyamatban lévő játék elvész.'
         };
 
         let text = fallbackTexts[key] || key;
@@ -336,6 +454,7 @@ class PerfectCircleApp {
         }
 
         this.updatePlayerNamePlaceholder();
+        this.updateDifficultyButtons();
         this.updateDynamicElements();
 
         setTimeout(() => {
@@ -348,6 +467,14 @@ class PerfectCircleApp {
         if (nameInput) {
             nameInput.placeholder = this.t('player.placeholder');
         }
+    }
+
+    updateDifficultyButtons() {
+        const easyBtn = document.querySelector('[data-difficulty="easy"]');
+        const hardBtn = document.querySelector('[data-difficulty="hard"]');
+
+        if (easyBtn) easyBtn.textContent = this.t('difficulty.easy');
+        if (hardBtn) hardBtn.textContent = this.t('difficulty.hard');
     }
 
     updateDynamicElements() {
@@ -364,10 +491,15 @@ class PerfectCircleApp {
                 firebaseStatus.textContent = this.t('firebase.error');
             }
         }
+
+        const offlineNotice = document.getElementById('offlineNotice');
+        if (offlineNotice) {
+            offlineNotice.innerHTML = this.t('firebase.offlineNotice');
+        }
     }
 
     refreshLeaderboardDates() {
-        // Placeholder
+        // Leaderboard dátumok frissítése ha szükséges
     }
 
     setupEventListeners() {
@@ -387,6 +519,17 @@ class PerfectCircleApp {
                 const message = this.t('warnings.gameInProgress') || 'Biztosan el szeretnéd hagyni az oldalt? A folyamatban lévő játék elvész.';
                 e.returnValue = message;
                 return e.returnValue;
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const languageSelector = document.getElementById('languageSelector');
+            const languageMenu = document.getElementById('languageMenu');
+
+            if (languageSelector && !languageSelector.contains(e.target)) {
+                if (languageMenu && languageMenu.classList.contains('show')) {
+                    languageMenu.classList.remove('show');
+                }
             }
         });
     }
@@ -410,6 +553,18 @@ class PerfectCircleApp {
                     e.preventDefault();
                     this.showInstructions();
                     break;
+                case 'e':
+                    e.preventDefault();
+                    if (this.leaderboardManager && typeof this.leaderboardManager.exportLeaderboard === 'function') {
+                        this.leaderboardManager.exportLeaderboard();
+                    }
+                    break;
+                case 'l':
+                    e.preventDefault();
+                    if (window.i18nManager && typeof window.i18nManager.toggleLanguageMenu === 'function') {
+                        window.i18nManager.toggleLanguageMenu();
+                    }
+                    break;
             }
         }
 
@@ -417,6 +572,11 @@ class PerfectCircleApp {
             case 'Escape':
                 if (window.gameEngine && window.gameEngine.gameActive) {
                     window.gameEngine.clearCanvas();
+                } else {
+                    const languageMenu = document.getElementById('languageMenu');
+                    if (languageMenu && languageMenu.classList.contains('show')) {
+                        languageMenu.classList.remove('show');
+                    }
                 }
                 break;
             case 'F1':
@@ -437,6 +597,8 @@ class PerfectCircleApp {
     initializeUIWithI18n() {
         this.addAudioToggleButton();
         this.addThemeToggleButton();
+        this.addAdvancedFeaturesButton();
+        this.addLanguageInfoButton();
     }
 
     initializeUIFallback() {
@@ -486,6 +648,32 @@ class PerfectCircleApp {
         }
     }
 
+    addAdvancedFeaturesButton() {
+        const controls = document.querySelector('.controls');
+        if (controls && !document.getElementById('advancedBtn')) {
+            const advancedBtn = document.createElement('button');
+            advancedBtn.id = 'advancedBtn';
+            advancedBtn.setAttribute('data-i18n', 'advanced.title');
+            const advancedText = this.t('advanced.title').replace('⚙️ ', '') || 'Fejlett';
+            advancedBtn.innerHTML = '⚙️ ' + advancedText;
+            advancedBtn.onclick = this.showAdvancedFeatures.bind(this);
+            advancedBtn.title = 'Advanced features';
+            controls.appendChild(advancedBtn);
+        }
+    }
+
+    addLanguageInfoButton() {
+        const controls = document.querySelector('.controls');
+        if (controls && !document.getElementById('languageInfoBtn')) {
+            const langBtn = document.createElement('button');
+            langBtn.id = 'languageInfoBtn';
+            langBtn.innerHTML = '🌍 ' + this.currentLanguage.toUpperCase();
+            langBtn.onclick = this.showLanguageInfo.bind(this);
+            langBtn.title = 'Language information';
+            controls.appendChild(langBtn);
+        }
+    }
+
     toggleAudio() {
         if (window.AudioManager) {
             const isEnabled = window.AudioManager.isEnabled();
@@ -494,8 +682,8 @@ class PerfectCircleApp {
             const audioBtn = document.getElementById('audioToggleBtn');
             if (audioBtn) {
                 audioBtn.innerHTML = isEnabled ?
-                    this.t('audio.disabled') :
-                    this.t('audio.enabled');
+                    '🔇 ' + this.t('audio.disabled') :
+                    '🔊 ' + this.t('audio.enabled');
             }
 
             if (!isEnabled && window.AudioManager.playSuccessSound) {
@@ -516,8 +704,8 @@ class PerfectCircleApp {
         const themeBtn = document.getElementById('themeToggleBtn');
         if (themeBtn) {
             themeBtn.innerHTML = isDark ?
-                this.t('theme.light') :
-                this.t('theme.dark');
+                '☀️ ' + this.t('theme.light') :
+                '🌙 ' + this.t('theme.dark');
         }
 
         localStorage.setItem('perfectcircle_theme', isDark ? 'dark' : 'light');
@@ -534,9 +722,219 @@ class PerfectCircleApp {
             document.body.classList.add('dark-theme');
             const themeBtn = document.getElementById('themeToggleBtn');
             if (themeBtn) {
-                themeBtn.innerHTML = this.t('theme.light');
+                themeBtn.innerHTML = '☀️ ' + this.t('theme.light');
             }
         }
+    }
+
+    showLanguageInfo() {
+        if (!window.i18nManager) {
+            alert('Nyelvi információk nem elérhetők.');
+            return;
+        }
+
+        const currentLang = window.i18nManager.getCurrentLanguage();
+        const supportedLangs = window.i18nManager.getSupportedLanguages();
+
+        const info = `🌍 ${this.t('language.info')}
+
+📍 ${this.t('language.current')}: ${currentLang.toUpperCase()}
+🎯 ${this.t('language.detected')}
+
+🗣️ ${this.t('language.supported')}:
+${supportedLangs.map(lang =>
+    `${window.LanguageDetector ? window.LanguageDetector.getLanguageFlag(lang.code) : '🌍'} ${lang.nativeName} (${lang.code})`
+).join('\n')}
+
+⌨️ ${this.t('language.shortcuts')}:
+• Ctrl+L: ${this.t('language.toggleMenu')}
+• ${this.t('language.clickFlag')}
+
+🔄 ${this.t('language.autoSave')}`;
+
+        alert(info);
+    }
+
+    showAdvancedFeatures() {
+        const features = this.t('advanced.features');
+
+        if (confirm(features)) {
+            this.showAdvancedMenu();
+        }
+    }
+
+    showAdvancedMenu() {
+        const menuText = this.t('advanced.menu');
+
+        const action = prompt(menuText);
+
+        switch(action) {
+            case '1':
+                if (this.leaderboardManager) this.leaderboardManager.exportLeaderboard();
+                break;
+            case '2':
+                if (this.leaderboardManager) this.leaderboardManager.importLeaderboard();
+                break;
+            case '3':
+                if (window.showVisitStats) window.showVisitStats();
+                break;
+            case '4':
+                if (window.showFirebaseInfo) window.showFirebaseInfo();
+                break;
+            case '5':
+                this.clearAllData();
+                break;
+            case '6':
+                alert(this.t('advanced.openConsole'));
+                break;
+            case '7':
+                this.runPerformanceTest();
+                break;
+            case '8':
+                this.showLanguageInfo();
+                break;
+            case '9':
+                if (window.i18nManager && window.i18nManager.toggleLanguageMenu) {
+                    window.i18nManager.toggleLanguageMenu();
+                }
+                break;
+            default:
+                if (action !== null) {
+                    alert(this.t('advanced.invalidChoice'));
+                }
+        }
+    }
+
+    exportScores() {
+        try {
+            if (!window.ScoreManager) {
+                alert('ScoreManager nem elérhető!');
+                return;
+            }
+
+            const data = window.ScoreManager.exportScores();
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toLocaleDateString('hu-HU');
+            a.download = `perfect-circle-results-${date}.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            alert(this.t('advanced.exportSuccess'));
+        } catch (error) {
+            alert(this.t('advanced.exportError') + ': ' + error.message);
+        }
+    }
+
+    importScores() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    if (!window.ScoreManager) {
+                        alert('ScoreManager nem elérhető!');
+                        return;
+                    }
+
+                    const result = window.ScoreManager.importScores(e.target.result);
+                    if (result.success) {
+                        const message = this.t('advanced.importSuccess', {
+                            imported: result.imported,
+                            total: result.total
+                        });
+                        alert(message);
+                        this.updateStats();
+                        if (this.leaderboardManager) {
+                            this.leaderboardManager.refreshCurrentView();
+                        }
+                    } else {
+                        const errorMsg = this.t('advanced.importError') + ': ' + result.error;
+                        alert(errorMsg);
+                    }
+                } catch (error) {
+                    const fileErrorMsg = this.t('advanced.fileError') + ': ' + error.message;
+                    alert(fileErrorMsg);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        input.click();
+    }
+
+    clearAllData() {
+        const confirmMsg = this.t('advanced.clearAllConfirm');
+        if (confirm(confirmMsg)) {
+            try {
+                if (window.ScoreManager) window.ScoreManager.clearScores();
+                localStorage.removeItem('perfectcircle_playername');
+                localStorage.removeItem('perfectcircle_theme');
+                if (window.VisitorCounter) window.VisitorCounter.resetLocalCounter();
+
+                this.updateStats();
+                if (this.leaderboardManager) {
+                    this.leaderboardManager.refreshCurrentView();
+                }
+
+                alert(this.t('advanced.allDataCleared'));
+            } catch (error) {
+                const errorMsg = this.t('advanced.clearError') + ': ' + error.message;
+                alert(errorMsg);
+            }
+        }
+    }
+
+    runPerformanceTest() {
+        console.log('🚀 Teljesítmény teszt indítása...');
+
+        const startTime = performance.now();
+
+        const testPoints = [];
+        const centerX = 200;
+        const centerY = 200;
+        const radius = 100;
+
+        for (let i = 0; i < 100; i++) {
+            const angle = (i / 100) * Math.PI * 2;
+            testPoints.push({
+                x: centerX + Math.cos(angle) * radius + (Math.random() - 0.5) * 10,
+                y: centerY + Math.sin(angle) * radius + (Math.random() - 0.5) * 10
+            });
+        }
+
+        let analysis = { totalScore: 75 };
+        if (window.CircleAnalyzer) {
+            analysis = window.CircleAnalyzer.analyzeCircle(testPoints, 'easy');
+        }
+
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        const result = `
+🚀 TELJESÍTMÉNY TESZT EREDMÉNY
+
+⏱️ Futási idő: ${duration.toFixed(2)}ms
+📊 Pontszám: ${analysis.totalScore}/100
+🎯 Elemzett pontok: ${testPoints.length}
+💾 Memória használat: ${(performance.memory?.usedJSHeapSize / 1024 / 1024).toFixed(2) || 'N/A'} MB
+
+${duration < 50 ? '✅ Kiváló teljesítmény!' :
+  duration < 100 ? '👍 Jó teljesítmény' :
+  '⚠️ Lassú teljesítmény'}
+        `;
+
+        console.log(result);
+        alert(result);
     }
 
     loadPlayerName() {
@@ -600,19 +998,7 @@ class PerfectCircleApp {
     }
 
     showInstructions() {
-        const instructions = `
-🎯 PERFECT CIRCLE - TELJES ÚTMUTATÓ
-
-📝 JÁTÉK CÉLJA:
-Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!
-
-🎮 IRÁNYÍTÁS:
-• 🖱️ Egér: Kattints és húzd
-• 📱 Mobil: Érintsd és húzd
-• ⌨️ Billentyűk: Ctrl+S (start), Ctrl+R (törlés), Esc (stop)
-
-Sok sikert a tökéletes kör rajzolásához! 🍀✨
-        `;
+        const instructions = this.t('fullInstructions');
         alert(instructions);
     }
 
@@ -629,6 +1015,20 @@ Sok sikert a tökéletes kör rajzolásához! 🍀✨
             name: this.t(`transformations.${transformationName.toLowerCase()}`) || transformationName,
             emoji: emoji
         });
+    }
+
+    showError(errorKey, params = {}) {
+        const message = this.t(`errors.${errorKey}`, params);
+        alert(message);
+    }
+
+    showSuccess(successKey, params = {}) {
+        const message = this.t(`success.${successKey}`, params);
+        alert(message);
+    }
+
+    getLeaderboardManager() {
+        return this.leaderboardManager;
     }
 
     switchLeaderboard(type) {
@@ -665,13 +1065,13 @@ Sok sikert a tökéletes kör rajzolásához! 🍀✨
         const statusContainer = document.getElementById('leaderboardStatus');
         
         if (statusContainer) {
-            statusContainer.textContent = '❌ Globális eredmények nem elérhetők - Próbáld később';
+            statusContainer.textContent = this.t('leaderboard.globalNotAvailable');
         }
         
         if (listContainer) {
             listContainer.innerHTML = `
                 <div class="score-entry error">
-                    <span style="color: #ff6b6b;">❌ Globális eredmények nem elérhetők - Próbáld később</span>
+                    <span style="color: #ff6b6b;">❌ ${this.t('leaderboard.globalNotAvailable')}</span>
                 </div>
             `;
         }
@@ -717,6 +1117,12 @@ window.getPlayerName = () => {
 window.showInstructions = () => {
     if (window.perfectCircleApp) {
         window.perfectCircleApp.showInstructions();
+    }
+};
+
+window.clearAllScores = () => {
+    if (window.perfectCircleApp) {
+        window.perfectCircleApp.clearAllData();
     }
 };
 
@@ -1175,3 +1581,21 @@ window.addEventListener('error', (e) => {
         }
     }
 });
+
+// Hibakeresési függvény
+window.debugLeaderboard = () => {
+    console.log('🔍 Leaderboard hibakeresés:');
+    console.log('- perfectCircleApp:', !!window.perfectCircleApp);
+    console.log('- leaderboardManager:', !!window.perfectCircleApp?.leaderboardManager);
+    console.log('- switchLeaderboard függvény:', typeof window.switchLeaderboard);
+    console.log('- loadGlobalLeaderboard függvény:', typeof window.loadGlobalLeaderboard);
+    console.log('- loadLocalLeaderboard függvény:', typeof window.loadLocalLeaderboard);
+    
+    const localTab = document.getElementById('localTab');
+    const globalTab = document.getElementById('globalTab');
+    console.log('- localTab elem:', !!localTab);
+    console.log('- globalTab elem:', !!globalTab);
+    
+    if (localTab) console.log('- localTab onclick:', localTab.onclick);
+    if (globalTab) console.log('- globalTab onclick:', globalTab.onclick);
+};
