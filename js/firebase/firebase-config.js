@@ -82,30 +82,73 @@ async function initializeFirebase() {
 
 // Firebase API
 window.firebaseAPI = {
-    saveScore: async (playerName, score, difficulty, transformation) => {
-        if (!firebaseReady) {
-            throw new Error('Firebase nem elérhető');
-        }
+// ✅ JAVÍTOTT SAVESCORE FÜGGVÉNY - cseréld ki a firebase-config.js-ben
+saveScore: async (data) => {
+    console.log('🔥 Firebase saveScore - kapott adat:', data);
+    
+    if (!firebaseReady) {
+        throw new Error('Firebase nem elérhető');
+    }
+    
+    // ✅ OBJEKTUMBÓL VAGY PARAMÉTEREKBŐL FELDOLGOZÁS
+    let playerName, score, difficulty, transformation;
+    
+    if (typeof data === 'object' && data !== null) {
+        // Ha objektumot kapunk (új stílus)
+        playerName = data.playerName || 'Névtelen';
+        score = Number(data.score);
+        difficulty = data.difficulty || 'easy';
+        transformation = data.transformation || '';
         
-        try {
-            const docRef = await addDoc(collection(db, 'scores'), {
-                playerName: playerName,
-                score: score,
-                difficulty: difficulty,
-                transformation: transformation,
-                timestamp: serverTimestamp(),
-                date: new Date().toLocaleDateString('hu-HU'),
-                created: new Date().toISOString()
-            });
-            
-            console.log('✅ Pontszám mentve:', docRef.id);
-            return docRef.id;
-            
-        } catch (error) {
-            console.error('❌ Mentési hiba:', error);
-            throw error;
-        }
-    },
+        console.log('🔥 Objektumból kinyert értékek:', { playerName, score, difficulty, transformation });
+    } else {
+        // Ha régi stílusú paramétereket kapunk
+        playerName = arguments[0] || 'Névtelen';
+        score = Number(arguments[1]);
+        difficulty = arguments[2] || 'easy';
+        transformation = arguments[3] || '';
+        
+        console.log('🔥 Paraméterekből kinyert értékek:', { playerName, score, difficulty, transformation });
+    }
+    
+    // ✅ VALIDÁLÁS
+    if (typeof score !== 'number' || isNaN(score)) {
+        console.error('❌ Érvénytelen score:', score, typeof score);
+        throw new Error(`Érvénytelen score: ${score} (${typeof score})`);
+    }
+    
+    if (!playerName || playerName.trim().length === 0) {
+        console.error('❌ Érvénytelen playerName:', playerName);
+        throw new Error(`Érvénytelen playerName: ${playerName}`);
+    }
+    
+    try {
+        const docRef = await addDoc(collection(db, 'scores'), {
+            playerName: String(playerName).trim(),
+            score: score,
+            difficulty: String(difficulty),
+            transformation: String(transformation),
+            timestamp: serverTimestamp(),
+            date: new Date().toLocaleDateString('hu-HU'),
+            created: new Date().toISOString()
+        });
+        
+        console.log('✅ Pontszám mentve:', docRef.id);
+        return { 
+            id: docRef.id, 
+            playerName: playerName, 
+            score: score, 
+            difficulty: difficulty, 
+            transformation: transformation 
+        };
+        
+    } catch (error) {
+        console.error('❌ Mentési hiba:', error);
+        console.error('❌ Küldött adatok:', { playerName, score, difficulty, transformation });
+        throw error;
+    }
+},
+
 
     getTopScores: async (limitCount = 10) => {
         if (!firebaseReady) {
