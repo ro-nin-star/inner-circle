@@ -17,16 +17,28 @@
     <!-- Firebase status indicator -->
     <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()" data-i18n="firebase.connecting">🟡 Kapcsolódás...</div>
 
-    <!-- Nyelv váltó -->
+  <!-- Valahol a <body> elején, a game-container előtt -->
+<div class="top-fixed-header">
+    <!-- Firebase Status -->
+    <div class="firebase-status connecting">Connecting...</div>
+
+    <!-- Nyelv váltó (a meglévő HTML szerkezeteddel) -->
     <div class="language-selector" id="languageSelector">
         <div class="current-language" onclick="window.i18nManager?.toggleLanguageMenu()">
             <span id="currentLanguageFlag">🇭🇺</span>
             <span id="currentLanguageCode">HU</span>
         </div>
         <div class="language-menu" id="languageMenu">
-            <!-- Dinamikusan töltődik -->
+            <!-- Dinamikusan töltődik a JavaScript által -->
+            <!-- Példa egy opcióra, amit a JS generálhat: -->
+            <!-- <div class="language-option" data-lang="hu">Magyar</div> -->
+            <!-- <div class="language-option" data-lang="en">English</div> -->
         </div>
     </div>
+</div>
+
+<!-- ... a többi tartalmad (pl. game-container) ... -->
+
 
     <div class="game-container" id="gameContainer">
         <h1 data-i18n="title">🎯 Perfect Circle</h1>

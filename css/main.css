@@ -867,3 +867,202 @@ body.dark-theme .language-option.active {
         font-size: 1em;
     }
 }
+/* Új konténer a felső fix elemeknek */
+.top-fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex; /* Flexbox, hogy egymás mellé kerüljenek */
+    justify-content: space-between; /* Széthúzza a két elemet (Firebase balra, Nyelvválasztó jobbra) */
+    align-items: center; /* Függőlegesen középre igazítás */
+    padding: 10px 15px; /* Belső tér */
+    background: rgba(15, 32, 39, 0.8); /* Enyhén áttetsző háttér */
+    backdrop-filter: blur(5px);
+    z-index: 10000; /* Győződjön meg róla, hogy felül van */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Firebase Status - Módosítások a flexboxhoz igazítva */
+.firebase-status {
+    position: static; /* Már nem fixed, a .top-fixed-header pozícionálja */
+    margin: 0; /* Eltávolítjuk a külső margót */
+    /* A többi Firebase-státusz stílus marad */
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 600;
+    z-index: auto; /* A szülő z-indexét örökli, vagy felülírható, de nem kell magasnak lennie */
+    transition: all 0.3s ease;
+    cursor: pointer;
+    max-width: 150px;
+    text-align: center;
+}
+
+/* Nyelvválasztó (language-selector) - Módosítások a flexboxhoz igazítva */
+.language-selector {
+    position: relative; /* Fontos! Hogy a language-menu pozíciója ehhez legyen viszonyítva */
+    margin: 0; /* Eltávolítjuk a külső margót */
+    /* Az eredeti .language-selector stílusokból, amiket a gombhoz adtál, most csak a konténerre vonatkozóak maradnak meg. */
+    /* A gomb stílusait át kell helyezni a .current-language osztályra. */
+    z-index: 1; /* Hogy a menü a gomb fölött jelenjen meg, de a header alatt maradjon */
+}
+
+/* Aktuális nyelv kijelzője (ez lesz a "gomb") */
+.language-selector .current-language {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: 2px solid #388E3C;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    padding: 10px 15px; /* Kisebb padding, hogy passzoljon a Firebase státuszhoz */
+    border-radius: 25px; /* Lekerekített sarkok */
+    cursor: pointer;
+    display: flex; /* Hogy a zászló és a kód egymás mellett legyenek */
+    align-items: center;
+    gap: 5px; /* Kis távolság a zászló és a kód között */
+    font-size: 0.9em; /* Kisebb betűméret */
+}
+
+.language-selector .current-language:hover {
+    background: linear-gradient(135deg, #45a049, #4CAF50);
+    border-color: #2E7D32;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+
+/* Nyelvválasztó menü (lenyíló rész) */
+.language-selector .language-menu {
+    position: absolute;
+    top: calc(100% + 5px); /* Kicsit a .current-language alá */
+    right: 0; /* A .current-language jobb széléhez igazítva */
+    min-width: 120px; /* Alapértelmezett szélesség */
+    border: 2px solid #4CAF50;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    background: white;
+    border-radius: 10px; /* Lekerekítettebb menü */
+    overflow: hidden; /* Ha van border-radius */
+    display: none; /* Alapértelmezetten rejtett */
+}
+
+.language-selector.open .language-menu {
+    display: block; /* Amikor az 'open' osztály rákerül a language-selectorra, akkor jelenik meg */
+}
+
+.language-option {
+    padding: 8px 15px;
+    cursor: pointer;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.language-option:last-child {
+    border-bottom: none; /* Az utolsó elemnek ne legyen alsó vonala */
+}
+
+.language-option:hover {
+    background: linear-gradient(135deg, #E8F5E8, #C8E6C9);
+    color: #2E7D32;
+    font-weight: bold;
+}
+
+.language-option.active {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    font-weight: bold;
+}
+
+/* Dark theme támogatás a frissített stílusokhoz */
+body.dark-theme .top-fixed-header {
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .language-selector .current-language {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    border-color: #E65100;
+}
+
+body.dark-theme .language-selector .current-language:hover {
+    background: linear-gradient(135deg, #F57C00, #FF9800);
+    border-color: #BF360C;
+}
+
+body.dark-theme .language-selector .language-menu {
+    background: #424242;
+    border-color: #FF9800;
+}
+
+body.dark-theme .language-option {
+    color: #e0e0e0;
+    border-bottom-color: #666;
+}
+
+body.dark-theme .language-option:hover {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: #E65100;
+}
+
+body.dark-theme .language-option.active {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    color: white;
+}
+
+/* Fontos: A game-container margin-top-jának növelése */
+.game-container {
+    margin-top: 70px; /* A .top-fixed-header magasságától függően állítsd be */
+    /* Eredeti margin-top: 60px; */
+}
+
+/* Média lekérdezések a reszponzivitáshoz */
+@media (max-width: 768px) {
+    .top-fixed-header {
+        padding: 8px 10px;
+    }
+    .firebase-status,
+    .language-selector .current-language {
+        font-size: 0.8em;
+        padding: 8px 12px;
+    }
+    .language-selector .language-menu {
+        min-width: 100px;
+    }
+    .language-option {
+        padding: 6px 12px;
+        font-size: 0.9em;
+    }
+    .game-container {
+        margin-top: 65px; /* Kisebb képernyőre igazítva */
+    }
+}
+
+@media (max-width: 480px) {
+    .top-fixed-header {
+        flex-direction: column; /* Egymás alá rendezés */
+        align-items: flex-start;
+        gap: 5px;
+        padding: 5px;
+    }
+    .firebase-status,
+    .language-selector {
+        width: 100%; /* Szélesség kitöltése */
+        text-align: center; /* Ha a firebase-status szöveg közepén maradna */
+    }
+    .language-selector .current-language {
+        justify-content: center; /* Zászló és kód középre igazítása */
+        width: 100%;
+    }
+    .language-selector .language-menu {
+        top: calc(100% + 5px);
+        right: auto; /* Töröljük a jobb oldali igazítást */
+        left: 50%; /* Középre igazítjuk a menüt */
+        transform: translateX(-50%); /* Pontosan középre toljuk */
+    }
+    .game-container {
+        margin-top: 100px; /* Még nagyobb hely, mert a header magasabb lett */
+    }
+}
