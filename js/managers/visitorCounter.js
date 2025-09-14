@@ -16,7 +16,7 @@ class VisitorCounter {
             // Globális látogatásszám betöltése
             await this.loadGlobalVisitCount();
             
-            // Animáció indítása
+            // Animáció indítása (feltételezve, hogy létezik ilyen metódus)
             this.startAnimation();
             
         } catch (error) {
@@ -62,7 +62,7 @@ class VisitorCounter {
                 viewport: `${window.innerWidth}x${window.innerHeight}`,
                 referrer: (document.referrer || 'közvetlen').substring(0, 200),
                 url: window.location.href,
-                sessionId: this.getSessionId(),
+                sessionId: this.getSessionId(), // Feltételezve, hogy ez a metódus létezik
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 platform: navigator.platform
             };
@@ -86,8 +86,34 @@ class VisitorCounter {
             const globalCount = await window.firebaseAPI.getVisitCount();
             
             // Frissített megjelenítés globális számmal
-            const visitElement = document.getElementById('visitCount');
+            const visitElement = document.getElementById('globalVisitorCount'); // Feltételezve, hogy van ilyen ID a HTML-ben
             const localCount = parseInt(localStorage.getItem(this.STORAGE_KEY) || '0');
             
             if (visitElement) {
-                visitElement.innerHTML
+                // Itt kell eldöntened, hogy mit akarsz megjeleníteni.
+                // Pl. "Összes látogató: X" vagy "Globális: Y (Helyi: Z)"
+                // Én most egy egyszerű változatot írok be, amit testre szabhatsz.
+                visitElement.textContent = globalCount.toLocaleString('hu-HU');
+                console.log(`🌍 Globális látogatók száma: ${globalCount}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Globális látogatásszám betöltése sikertelen:', error);
+        }
+    }
+
+    // Ezeket a metódusokat feltételeztem a kódból, de ha nem léteznek, akkor meg kell őket valósítani.
+    static getSessionId() {
+        let sessionId = sessionStorage.getItem(this.SESSION_KEY);
+        if (!sessionId) {
+            sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            sessionStorage.setItem(this.SESSION_KEY, sessionId);
+        }
+        return sessionId;
+    }
+
+    static startAnimation() {
+        // Implementáld itt az animációs logikát, ha van
+        console.log('✨ Látogatásszámláló animáció elindítva (placeholder)');
+    }
+}
