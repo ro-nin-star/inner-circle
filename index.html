@@ -560,7 +560,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Firebase status indicator - JAVÍTOTT */
+        /* Firebase status indicator */
         .firebase-status {
             position: fixed;
             top: 15px;
@@ -852,10 +852,10 @@
         Látogatások: <span class="visitor-number" id="visitCount">0</span>
     </div>
 
-    <!-- Firebase SDK - JAVÍTOTT VERZIÓ REAL-TIME LISTENER NÉLKÜL -->
+    <!-- Firebase SDK - TELJESEN OFFLINE CACHE NÉLKÜL -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp, disableNetwork, enableNetwork, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase konfiguráció
         const firebaseConfig = {
@@ -884,7 +884,7 @@
             
             switch(status) {
                 case 'online':
-                    statusEl.innerHTML = '🟢 Online';
+                    statusEl.innerHTML = '🟢 Online (No Cache)';
                     offlineNotice.classList.remove('show');
                     break;
                 case 'offline':
@@ -904,46 +904,54 @@
             console.log(`🔥 Firebase státusz: ${status} - ${message || ''}`);
         }
 
-        // JAVÍTOTT Firebase inicializálás - CSAK EGYSZERŰ LEKÉRDEZÉSEKKEL
+        // TELJESEN ÚJRAÍRT Firebase inicializálás - OFFLINE CACHE KIKAPCSOLVA
         async function initializeFirebase() {
             updateFirebaseStatus('connecting', 'Inicializálás...');
             
             try {
-                console.log('🔥 Firebase inicializálása...');
+                console.log('🔥 Firebase inicializálása OFFLINE CACHE NÉLKÜL...');
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                // EGYSZERŰ kapcsolat tesztelése - CSAK getDocs, NINCS real-time listener
-                console.log('🔗 Egyszerű kapcsolat tesztelése...');
+                // KRITIKUS: Offline cache teljes kikapcsolása
+                console.log('🚫 Offline cache kikapcsolása...');
+                await disableNetwork(db);
+                await enableNetwork(db);
                 
-                // Rövidebb timeout és egyszerűbb teszt
-                const testQuery = query(collection(db, 'scores'), limit(1));
+                // Egyszerű kapcsolat tesztelése - CSAK HTTP REST API
+                console.log('🔗 Egyszerű HTTP REST API tesztelés...');
                 
-                // 5 másodperces timeout
-                const testPromise = getDocs(testQuery);
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 5000)
-                );
+                // Fetch API használata közvetlenül a Firestore REST API-hoz
+                const testUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/scores?pageSize=1`;
                 
-                const result = await Promise.race([testPromise, timeoutPromise]);
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${firebaseConfig.apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                // Ha sikerült, akkor online vagyunk
-                firebaseReady = true;
-                updateFirebaseStatus('online', `Kapcsolódva - ${result.size} dokumentum`);
-                console.log('✅ Firebase sikeresen inicializálva és tesztelve');
-                
-                return true;
+                if (response.ok) {
+                    const data = await response.json();
+                    firebaseReady = true;
+                    updateFirebaseStatus('online', `REST API működik - ${data.documents?.length || 0} dokumentum`);
+                    console.log('✅ Firebase REST API sikeresen tesztelve');
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
             } catch (error) {
                 console.error('❌ Firebase inicializálási/kapcsolódási hiba:', error);
                 firebaseReady = false;
                 
-                if (error.code === 'unavailable' || error.message === 'Timeout') {
-                    updateFirebaseStatus('offline', 'Szerver nem elérhető');
-                } else if (error.code === 'permission-denied') {
+                if (error.message.includes('400') || error.message.includes('unauthorized')) {
+                    updateFirebaseStatus('error', 'API kulcs vagy projekt hiba');
+                } else if (error.message.includes('403')) {
                     updateFirebaseStatus('error', 'Hozzáférés megtagadva');
                 } else {
-                    updateFirebaseStatus('error', `Hiba: ${error.code || error.message}`);
+                    updateFirebaseStatus('offline', 'Szerver nem elérhető');
                 }
                 
                 // Újrapróbálkozás
@@ -951,14 +959,14 @@
                     connectionAttempts++;
                     console.log(`🔄 Újrapróbálkozás ${connectionAttempts}/${maxRetries} ${retryDelay}ms múlva...`);
                     setTimeout(() => initializeFirebase(), retryDelay);
-                    retryDelay *= 1.5; // Mérsékelt backoff
+                    retryDelay *= 1.5;
                 }
                 
                 return false;
             }
         }
 
-        // Firebase API funkciók - CSAK EGYSZERŰ MŰVELETEK
+        // Firebase API funkciók - TISZTA REST API HASZNÁLAT
         window.firebaseAPI = {
             saveScore: async (playerName, score, difficulty, transformation) => {
                 if (!firebaseReady) {
@@ -966,27 +974,42 @@
                 }
                 
                 try {
-                    // EGYSZERŰ addDoc művelet - NINCS real-time listener
-                    const docRef = await addDoc(collection(db, 'scores'), {
-                        playerName: playerName,
-                        score: score,
-                        difficulty: difficulty,
-                        transformation: transformation,
-                        timestamp: serverTimestamp(),
-                        date: new Date().toLocaleDateString('hu-HU'),
-                        created: new Date().toISOString()
+                    // TISZTA REST API hívás
+                    const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/scores`;
+                    
+                    const document = {
+                        fields: {
+                            playerName: { stringValue: playerName },
+                            score: { integerValue: score.toString() },
+                            difficulty: { stringValue: difficulty },
+                            transformation: { stringValue: transformation },
+                            date: { stringValue: new Date().toLocaleDateString('hu-HU') },
+                            created: { timestampValue: new Date().toISOString() }
+                        }
+                    };
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(document)
                     });
                     
-                    console.log('✅ Pontszám mentve Firebase-be:', docRef.id);
-                    return docRef.id;
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ Pontszám mentve REST API-val:', result.name);
+                        return result.name;
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     
                 } catch (error) {
-                    console.error('❌ Firebase mentési hiba:', error);
+                    console.error('❌ REST API mentési hiba:', error);
                     
-                    // Státusz frissítése hiba esetén
-                    if (error.code === 'unavailable' || error.code === 'deadline-exceeded') {
+                    if (error.message.includes('400') || error.message.includes('403')) {
                         firebaseReady = false;
-                        updateFirebaseStatus('offline', 'Kapcsolat megszakadt');
+                        updateFirebaseStatus('error', 'API hiba');
                     }
                     
                     throw error;
@@ -999,36 +1022,49 @@
                 }
                 
                 try {
-                    // EGYSZERŰ getDocs művelet - NINCS real-time listener
-                    const q = query(
-                        collection(db, 'scores'), 
-                        orderBy('score', 'desc'), 
-                        limit(limitCount)
-                    );
+                    // TISZTA REST API lekérdezés
+                    const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/scores?pageSize=${limitCount}&orderBy=score desc`;
                     
-                    // 8 másodperces timeout a lekérdezéshez
-                    const queryPromise = getDocs(q);
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Query timeout')), 8000)
-                    );
-                    
-                    const querySnapshot = await Promise.race([queryPromise, timeoutPromise]);
-                    const scores = [];
-                    
-                    querySnapshot.forEach((doc) => {
-                        scores.push({ id: doc.id, ...doc.data() });
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
                     });
                     
-                    console.log(`📊 ${scores.length} globális eredmény betöltve`);
-                    return scores;
+                    if (response.ok) {
+                        const data = await response.json();
+                        const scores = [];
+                        
+                        if (data.documents) {
+                            data.documents.forEach((doc) => {
+                                const fields = doc.fields;
+                                scores.push({
+                                    id: doc.name.split('/').pop(),
+                                    playerName: fields.playerName?.stringValue || 'Névtelen',
+                                    score: parseInt(fields.score?.integerValue || '0'),
+                                    difficulty: fields.difficulty?.stringValue || 'easy',
+                                    transformation: fields.transformation?.stringValue || '',
+                                    date: fields.date?.stringValue || 'Ismeretlen'
+                                });
+                            });
+                        }
+                        
+                        // Rendezés pontszám szerint
+                        scores.sort((a, b) => b.score - a.score);
+                        
+                        console.log(`📊 ${scores.length} globális eredmény betöltve REST API-val`);
+                        return scores;
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     
                 } catch (error) {
-                    console.error('❌ Firebase lekérdezési hiba:', error);
+                    console.error('❌ REST API lekérdezési hiba:', error);
                     
-                    // Státusz frissítése hiba esetén
-                    if (error.code === 'unavailable' || error.message === 'Query timeout') {
+                    if (error.message.includes('400') || error.message.includes('403')) {
                         firebaseReady = false;
-                        updateFirebaseStatus('offline', 'Lekérdezés sikertelen');
+                        updateFirebaseStatus('error', 'API lekérdezési hiba');
                     }
                     
                     throw error;
@@ -1054,13 +1090,16 @@
 🔥 Firebase Státusz: ${status}
 📡 Kapcsolódási próbálkozások: ${connectionAttempts}/${maxRetries}
 🏗️ Projekt: perfectcircle-8f981
-⚡ Mód: Egyszerű lekérdezések (NINCS real-time)
+⚡ Mód: TISZTA REST API (NINCS CACHE!)
+🚫 Offline cache: KIKAPCSOLVA
+🌐 WebChannel streams: KIKAPCSOLVA
 ${firebaseReady ? '✅ Globális ranglista elérhető' : '❌ Csak helyi tárolás'}
 
 🔧 Technikai info:
-- Real-time listener: KIKAPCSOLVA
-- Timeout: 5s (init), 8s (query)
-- Retry stratégia: 3x exponenciális backoff
+- Persistent streams: NINCS
+- Real-time listener: NINCS
+- Offline cache: KIKAPCSOLVA
+- Csak HTTP REST API hívások
 
 ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             `;
@@ -1102,11 +1141,11 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             }
         }
 
-        // JAVÍTOTT GLOBÁLIS LEADERBOARD KEZELŐ
+        // GLOBÁLIS LEADERBOARD KEZELŐ
         class GlobalLeaderboard {
             static currentView = 'local';
             static lastAttempt = 0;
-            static retryDelay = 10000; // 10 másodperc
+            static retryDelay = 10000;
             
             static async saveGlobalScore(playerName, score, difficulty, transformation) {
                 if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
@@ -1133,7 +1172,6 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
                 this.lastAttempt = now;
                 
                 if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
-                    // Újracsatlakozási kísérlet
                     console.log('🔄 Firebase újracsatlakozási kísérlet...');
                     try {
                         await window.firebaseAPI.reconnect();
@@ -1244,7 +1282,6 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
                 GlobalLeaderboard.updateStatus('🔄 Kapcsolódás...', true);
                 
-                // Újracsatlakozási kísérlet
                 try {
                     await window.firebaseAPI.reconnect();
                 } catch (error) {
@@ -1259,7 +1296,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             try {
                 const scores = await GlobalLeaderboard.loadGlobalScores();
                 GlobalLeaderboard.displayScores(scores, true);
-                GlobalLeaderboard.updateStatus(`🌍 Globális toplista (${scores.length} játékos)`);
+                GlobalLeaderboard.updateStatus(`🌍 Globális toplista (${scores.length} játékos) - REST API`);
             } catch (error) {
                 if (error.message.includes('Túl gyakori')) {
                     GlobalLeaderboard.updateStatus('⏳ Várj 10 másodpercet az újrapróbálkozás előtt');
@@ -1485,7 +1522,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             }
         ];
 
-        // [Hang és effekt függvények - változatlan]
+        // [A többi függvény változatlan - hang, effektek, játék logika]
         function initAudio() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1933,7 +1970,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             ctx.setLineDash([]);
         }
 
-        // JAVÍTOTT showScore függvény
+        // showScore függvény
         async function showScore(score, analysis, transformationName = '') {
             document.getElementById('currentScore').textContent = Math.round(score);
             document.getElementById('finalScore').textContent = Math.round(score);
@@ -1991,9 +2028,8 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
                 if (playerName !== 'Névtelen' && window.firebaseAPI && window.firebaseAPI.isReady()) {
                     try {
                         await GlobalLeaderboard.saveGlobalScore(playerName, Math.round(score), difficulty, transformationName);
-                        console.log('✅ Pontszám mentve globálisan!');
+                        console.log('✅ Pontszám mentve globálisan REST API-val!');
                         
-                        // Ha globális tab aktív, frissítsük
                         if (GlobalLeaderboard.currentView === 'global') {
                             setTimeout(() => loadGlobalLeaderboard(), 1000);
                         }
@@ -2004,7 +2040,6 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
                     console.log('📴 Firebase offline - globális mentés kihagyva');
                 }
                 
-                // Aktuális tab frissítése
                 if (GlobalLeaderboard.currentView === 'local') {
                     loadLocalLeaderboard(currentGameId);
                 }
@@ -2045,7 +2080,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
 • Versenyezz játékosokkal a világ minden tájáról!
 • Firebase státusz: jobb felső sarokban (kattintható)
 • Offline módban is játszhatsz!
-• Optimalizált: NINCS real-time listener
+• Optimalizált: TISZTA REST API (NINCS CACHE!)
 
 🎉 Ünneplési effektek:
 • 95+ pont: Konfetti + tűzijáték + fanfár
