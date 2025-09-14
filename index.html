@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Circle - Rajzolj Tökéletes Kört!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #667eea;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            overflow: hidden;
+            background: white;
+        }
+
+        #gameCanvas {
+            display: block;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: rgba(102, 126, 234, 0.7);
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score-display {
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            border-radius: 15px;
+            color: white;
+            display: none;
+        }
+
+        .score-display.show {
+            display: block;
+            animation: scoreAnimation 0.5s ease-out;
+        }
+
+        @keyframes scoreAnimation {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .score-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .breakdown-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .leaderboard {
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .leaderboard h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .score-entry.current {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+            animation: highlight 1s ease-out;
+        }
+
+        @keyframes highlight {
+            0% { background: #ffeb3b; }
+            100% { background: #fff5f5; }
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .difficulty-selector {
+            margin: 15px 0;
+        }
+
+        .difficulty-btn {
+            background: #f0f0f0;
+            color: #333;
+            margin: 0 5px;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .difficulty-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            #gameCanvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Perfect Circle</h1>
+        <p class="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
+        
+        <div class="instructions">
+            <strong>Hogyan játssz:</strong> Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz!
+        </div>
+
+        <div class="difficulty-selector">
+            <strong>Nehézség:</strong>
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy">Könnyű</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')" data-difficulty="medium">Közepes</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard">Nehéz</button>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">Jelenlegi Pontszám</div>
+                <div class="stat-value" id="currentScore">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Legjobb Eredmény</div>
+                <div class="stat-value" id="bestScore">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Játékok Száma</div>
+                <div class="stat-value" id="gamesPlayed">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Átlag Pontszám</div>
+                <div class="stat-value" id="averageScore">0</div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div class="canvas-overlay" id="canvasOverlay"></div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" onclick="startDrawing()">🎯 Rajzolás Kezdése</button>
+            <button id="clearBtn" onclick="clearCanvas()" disabled>🗑️ Törlés</button>
+            <button onclick="showInstructions()">❓ Segítség</button>
+            <button onclick="clearAllScores()">🗑️ Eredmények Törlése</button>
+        </div>
+
+        <div class="score-display" id="scoreDisplay">
+            <h3 id="scoreTitle">Eredmény</h3>
+            <div style="font-size: 2em; margin: 10px 0;">
+                <span id="finalScore">0</span> / 100 pont
+            </div>
+            <div class="score-breakdown" id="scoreBreakdown"></div>
+        </div>
+
+        <div class="leaderboard">
+            <h3>🏆 Legjobb Eredmények</h3>
+            <div id="leaderboardList">
+                <div class="score-entry">
+                    <span>Még nincsenek eredmények</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Játék változók
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let points = [];
+        let gameActive = false;
+        let difficulty = 'easy';
+        let currentGameId = null;
+
+        // Nehézségi szintek
+        const difficulties = {
+            easy: { minRadius: 50, maxRadius: 150, tolerance: 0.85 },
+            medium: { minRadius: 30, maxRadius: 180, tolerance: 0.90 },
+            hard: { minRadius: 20, maxRadius: 190, tolerance: 0.95 }
+        };
+
+        // LocalStorage kezelő
+        class ScoreManager {
+            static getScores() {
+                const scores = localStorage.getItem('perfectcircle_scores');
+                return scores ? JSON.parse(scores) : [];
+            }
+
+            static saveScore(score, analysis, difficulty) {
+                const scores = this.getScores();
+                const newScore = {
+                    id: Date.now(),
+                    score: Math.round(score),
+                    analysis: analysis,
+                    difficulty: difficulty,
+                    date: new Date().toLocaleDateString('hu-HU'),
+                    timestamp: Date.now()
+                };
+
+                scores.push(newScore);
+                scores.sort((a, b) => b.score - a.score);
+                
+                // Top 10 megtartása
+                const topScores = scores.slice(0, 10);
+                localStorage.setItem('perfectcircle_scores', JSON.stringify(topScores));
+                
+                return newScore;
+            }
+
+            static clearScores() {
+                localStorage.removeItem('perfectcircle_scores');
+            }
+
+            static getStats() {
+                const scores = this.getScores();
+                if (scores.length === 0) {
+                    return { best: 0, average: 0, games: 0 };
+                }
+
+                const best = Math.max(...scores.map(s => s.score));
+                const average = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
+                
+                return { best, average, games: scores.length };
+            }
+        }
+
+        // Nehézség beállítása
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-difficulty="${level}"]`).classList.add('active');
+        }
+
+        // Rajzolás kezdése
+        function startDrawing() {
+            gameActive = true;
+            points = [];
+            clearCanvas();
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('clearBtn').disabled = false;
+            document.getElementById('canvasOverlay').textContent = 'Rajzolj egy kört!';
+            document.getElementById('scoreDisplay').classList.remove('show');
+            
+            currentGameId = Date.now();
+        }
+
+        // Canvas törlése
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            points = [];
+            
+            if (gameActive) {
+                document.getElementById('canvasOverlay').textContent = 'Rajzolj egy kört!';
+            } else {
+                document.getElementById('canvasOverlay').textContent = '';
+            }
+        }
+
+        // Egér/touch események
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        // Rajzolás kezdése
+        function startPath(e) {
+            if (!gameActive) return;
+            
+            isDrawing = true;
+            const pos = getEventPos(e);
+            points = [pos];
+            
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            
+            document.getElementById('canvasOverlay').textContent = '';
+        }
+
+        // Rajzolás folytatása
+        function drawPath(e) {
+            if (!gameActive || !isDrawing) return;
+            
+            e.preventDefault();
+            const pos = getEventPos(e);
+            points.push(pos);
+            
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#667eea';
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        // Rajzolás befejezése
+        function endPath(e) {
+            if (!gameActive || !isDrawing) return;
+            
+            isDrawing = false;
+            gameActive = false;
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('clearBtn').disabled = true;
+            
+            if (points.length > 10) {
+                analyzeCircle();
+            } else {
+                showScore(0, { error: 'Túl kevés pont! Rajzolj egy teljes kört.' });
+            }
+        }
+
+        // Event listener-ek
+        canvas.addEventListener('mousedown', startPath);
+        canvas.addEventListener('mousemove', drawPath);
+        canvas.addEventListener('mouseup', endPath);
+        canvas.addEventListener('mouseleave', endPath);
+
+        // Touch események
+        canvas.addEventListener('touchstart', startPath);
+        canvas.addEventListener('touchmove', drawPath);
+        canvas.addEventListener('touchend', endPath);
+
+        // Kör elemzése
+        function analyzeCircle() {
+            if (points.length < 10) {
+                showScore(0, { error: 'Túl kevés pont!' });
+                return;
+            }
+
+            // Középpont számítása
+            const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+            const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+
+            // Távolságok számítása a középponttól
+            const distances = points.map(p => 
+                Math.sqrt((p.x - centerX) ** 2 + (p.y - centerY) ** 2)
+            );
+
+            const avgRadius = distances.reduce((sum, d) => sum + d, 0) / distances.length;
+            const minRadius = Math.min(...distances);
+            const maxRadius = Math.max(...distances);
+
+            // Pontszám komponensek
+            const analysis = {
+                centerX: centerX,
+                centerY: centerY,
+                avgRadius: avgRadius,
+                minRadius: minRadius,
+                maxRadius: maxRadius,
+                pointCount: points.length
+            };
+
+            // 1. Köralak pontossága (0-40 pont)
+            const radiusVariation = (maxRadius - minRadius) / avgRadius;
+            const shapeScore = Math.max(0, 40 * (1 - radiusVariation * 2));
+
+            // 2. Záródás pontossága (0-20 pont)
+            const firstPoint = points[0];
+            const lastPoint = points[points.length - 1];
+            const closureDistance = Math.sqrt(
+                (firstPoint.x - lastPoint.x) ** 2 + (firstPoint.y - lastPoint.y) ** 2
+            );
+            const closureScore = Math.max(0, 20 * (1 - closureDistance / avgRadius));
+
+            // 3. Egyenletesség (0-25 pont)
+            const radiusDeviations = distances.map(d => Math.abs(d - avgRadius));
+            const avgDeviation = radiusDeviations.reduce((sum, d) => sum + d, 0) / radiusDeviations.length;
+            const smoothnessScore = Math.max(0, 25 * (1 - avgDeviation / avgRadius * 3));
+
+            // 4. Méret ellenőrzés (0-15 pont)
+            const difficultySettings = difficulties[difficulty];
+            const sizeScore = (avgRadius >= difficultySettings.minRadius && avgRadius <= difficultySettings.maxRadius) ? 15 : 0;
+
+            // Összpontszám
+            const totalScore = Math.min(100, shapeScore + closureScore + smoothnessScore + sizeScore);
+
+            // Részletes elemzés
+            analysis.shapeScore = Math.round(shapeScore);
+            analysis.closureScore = Math.round(closureScore);
+            analysis.smoothnessScore = Math.round(smoothnessScore);
+            analysis.sizeScore = Math.round(sizeScore);
+            analysis.radiusVariation = radiusVariation;
+            analysis.closureDistance = closureDistance;
+            analysis.avgDeviation = avgDeviation;
+
+            // Ideális kör rajzolása
+            drawIdealCircle(centerX, centerY, avgRadius);
+
+            showScore(totalScore, analysis);
+        }
+
+        // Ideális kör rajzolása
+        function drawIdealCircle(centerX, centerY, radius) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Pontszám megjelenítése
+        function showScore(score, analysis) {
+            document.getElementById('currentScore').textContent = Math.round(score);
+            document.getElementById('finalScore').textContent = Math.round(score);
+            
+            // Cím beállítása pontszám alapján
+            let title = '';
+            if (score >= 95) title = '🏆 Tökéletes! Zseniális!';
+            else if (score >= 85) title = '🌟 Kiváló! Nagyon jó!';
+            else if (score >= 70) title = '👍 Jó munka!';
+            else if (score >= 50) title = '👌 Nem rossz!';
+            else title = '💪 Próbáld újra!';
+            
+            document.getElementById('scoreTitle').textContent = title;
+
+            // Részletes breakdown
+            if (!analysis.error) {
+                const breakdown = document.getElementById('scoreBreakdown');
+                breakdown.innerHTML = `
+                    <div class="breakdown-item">
+                        <strong>Köralak</strong><br>
+                        ${analysis.shapeScore}/40 pont
+                    </div>
+                    <div class="breakdown-item">
+                        <strong>Záródás</strong><br>
+                        ${analysis.closureScore}/20 pont
+                    </div>
+                    <div class="breakdown-item">
+                        <strong>Egyenletesség</strong><br>
+                        ${analysis.smoothnessScore}/25 pont
+                    </div>
+                    <div class="breakdown-item">
+                        <strong>Méret</strong><br>
+                        ${analysis.sizeScore}/15 pont
+                    </div>
+                `;
+            } else {
+                document.getElementById('scoreBreakdown').innerHTML = `
+                    <div style="color: #ff6b6b; font-weight: bold;">${analysis.error}</div>
+                `;
+            }
+
+            document.getElementById('scoreDisplay').classList.add('show');
+
+            // Eredmény mentése (ha nem hiba)
+            if (!analysis.error && score > 0) {
+                ScoreManager.saveScore(score, analysis, difficulty);
+                updateStats();
+                loadLeaderboard(currentGameId);
+            }
+        }
+
+        // Statisztikák frissítése
+        function updateStats() {
+            const stats = ScoreManager.getStats();
+            document.getElementById('bestScore').textContent = stats.best;
+            document.getElementById('averageScore').textContent = stats.average;
+            document.getElementById('gamesPlayed').textContent = stats.games;
+        }
+
+        // Eredménytábla betöltése
+        function loadLeaderboard(highlightId = null) {
+            const scores = ScoreManager.getScores();
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            if (scores.length === 0) {
+                leaderboardList.innerHTML = '<div class="score-entry"><span>Még nincsenek eredmények</span></div>';
+                return;
+            }
+            
+            leaderboardList.innerHTML = scores.map((score, index) => {
+                const isHighlighted = score.id === highlightId;
+                const difficultyEmoji = { easy: '🟢', medium: '🟡', hard: '🔴' };
+                
+                return `
+                    <div class="score-entry ${isHighlighted ? 'current' : ''}">
+                        <span>${index + 1}. ${score.score} pont</span>
+                        <span>${difficultyEmoji[score.difficulty]} ${score.difficulty}</span>
+                        <span>${score.date}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Segítség megjelenítése
+        function showInstructions() {
+            alert(`🎯 Perfect Circle - Játékszabályok:
+
+📝 Cél: Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!
+
+🎮 Irányítás:
+• Egér: Kattints és húzd
+• Mobil: Érintsd és húzd
+
+📊 Pontozás (max 100 pont):
+• Köralak (40 pont): Mennyire kerek a formád
+• Záródás (20 pont): Mennyire zárul be jól a kör
+• Egyenletesség (25 pont): Mennyire egyenletes a vonalvastagság
+• Méret (15 pont): Megfelelő méretű-e a kör
+
+🎯 Nehézségi szintek:
+• Könnyű: 50-150px sugár
+• Közepes: 30-180px sugár  
+• Nehéz: 20-190px sugár
+
+💡 Tippek:
+• Lassan és egyenletesen rajzolj
+• Próbáld meg egy mozdulattal befejezni
+• A középső méret a legjobb
+• Gyakorolj rendszeresen!
+
+Sok sikert! 🍀`);
+        }
+
+        // Eredmények törlése
+        function clearAllScores() {
+            if (confirm('Biztosan törölni szeretnéd az összes eredményt?')) {
+                ScoreManager.clearScores();
+                updateStats();
+                loadLeaderboard();
+                alert('Eredmények törölve!');
+            }
+        }
+
+        // Inicializálás
+        function init() {
+            updateStats();
+            loadLeaderboard();
+            
+            // Canvas méretezés mobilon
+            function resizeCanvas() {
+                const container = document.querySelector('.canvas-container');
+                const maxWidth = Math.min(400, container.offsetWidth - 20);
+                canvas.style.width = maxWidth + 'px';
+                canvas.style.height = maxWidth + 'px';
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        // Játék indítása
+        init();
+    </script>
+</body>
+</html>
