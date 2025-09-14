@@ -594,6 +594,12 @@
             box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
         }
 
+        .firebase-status.error {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
         .firebase-status:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -852,10 +858,10 @@
         Látogatások: <span class="visitor-number" id="visitCount">0</span>
     </div>
 
-    <!-- Firebase SDK - JAVÍTOTT AUTENTIKÁCIÓ ÉS FIRESTORE RULES -->
+    <!-- JAVÍTOTT Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp, connectFirestoreEmulator, disableNetwork, enableNetwork, clearIndexedDbPersistence, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase konfiguráció
         const firebaseConfig = {
@@ -871,9 +877,6 @@
         // Firebase állapot kezelés
         let app, db;
         let firebaseReady = false;
-        let connectionAttempts = 0;
-        let maxRetries = 3;
-        let retryDelay = 2000;
 
         // Státusz frissítő függvény
         function updateFirebaseStatus(status, message) {
@@ -884,7 +887,7 @@
             
             switch(status) {
                 case 'online':
-                    statusEl.innerHTML = '🟢 Online (SDK)';
+                    statusEl.innerHTML = '🟢 Online';
                     offlineNotice.classList.remove('show');
                     break;
                 case 'offline':
@@ -896,79 +899,50 @@
                     offlineNotice.classList.remove('show');
                     break;
                 case 'error':
-                    statusEl.innerHTML = '❌ Rules Error';
+                    statusEl.innerHTML = '❌ Error';
                     offlineNotice.classList.add('show');
                     break;
             }
             
-            console.log(`🔥 Firebase státusz: ${status} - ${message || ''}`);
+            console.log(`🔥 Firebase: ${status} - ${message || ''}`);
         }
 
-        // JAVÍTOTT Firebase inicializálás - HELYES SDK HASZNÁLAT
+        // Egyszerűsített Firebase inicializálás
         async function initializeFirebase() {
             updateFirebaseStatus('connecting', 'Inicializálás...');
             
             try {
-                console.log('🔥 Firebase inicializálása helyes SDK-val...');
+                console.log('🔥 Firebase inicializálása...');
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                // KRITIKUS: Offline persistence teljes kikapcsolása
-                try {
-                    console.log('🚫 Offline persistence kikapcsolása...');
-                    await clearIndexedDbPersistence(db);
-                } catch (error) {
-                    console.log('⚠️ IndexedDB már tiszta vagy nem elérhető');
-                }
-                
-                // Network letiltása és újra engedélyezése
-                try {
-                    await disableNetwork(db);
-                    await enableNetwork(db);
-                    console.log('🔄 Network újraindítva');
-                } catch (error) {
-                    console.log('⚠️ Network restart sikertelen');
-                }
-                
-                // EGYSZERŰ kapcsolat tesztelése Firebase JS SDK-val
-                console.log('🔗 SDK kapcsolat tesztelése...');
-                
+                // Egyszerű kapcsolat teszt
+                console.log('🔗 Firestore teszt...');
                 const testQuery = query(collection(db, 'scores'), limit(1));
                 const querySnapshot = await getDocs(testQuery);
                 
                 firebaseReady = true;
-                updateFirebaseStatus('online', `SDK működik - ${querySnapshot.size} dokumentum`);
-                console.log('✅ Firebase SDK sikeresen tesztelve');
+                updateFirebaseStatus('online', `Működik! ${querySnapshot.size} dokumentum`);
+                console.log('✅ Firebase sikeresen működik!');
                 
                 return true;
                 
             } catch (error) {
-                console.error('❌ Firebase inicializálási/kapcsolódási hiba:', error);
+                console.error('❌ Firebase hiba:', error);
                 firebaseReady = false;
                 
                 if (error.code === 'permission-denied') {
-                    updateFirebaseStatus('error', 'Firestore Rules hiba - Ellenőrizd a szabályokat');
-                } else if (error.code === 'unauthenticated') {
-                    updateFirebaseStatus('error', 'Autentikáció szükséges');
-                } else if (error.code === 'unavailable') {
-                    updateFirebaseStatus('offline', 'Szerver nem elérhető');
+                    updateFirebaseStatus('error', 'Firestore Rules hiba');
+                    console.error('🚫 FIRESTORE RULES HIBA! Szükséges: allow read, write: if true;');
                 } else {
-                    updateFirebaseStatus('offline', `Hiba: ${error.code || error.message}`);
-                }
-                
-                // Újrapróbálkozás
-                if (connectionAttempts < maxRetries) {
-                    connectionAttempts++;
-                    console.log(`🔄 Újrapróbálkozás ${connectionAttempts}/${maxRetries} ${retryDelay}ms múlva...`);
-                    setTimeout(() => initializeFirebase(), retryDelay);
-                    retryDelay *= 1.5;
+                    updateFirebaseStatus('offline', error.code || error.message);
                 }
                 
                 return false;
             }
         }
 
-        // Firebase API funkciók - HELYES SDK HASZNÁLAT
+        // Firebase API funkciók
         window.firebaseAPI = {
             saveScore: async (playerName, score, difficulty, transformation) => {
                 if (!firebaseReady) {
@@ -976,7 +950,6 @@
                 }
                 
                 try {
-                    // HELYES Firebase JS SDK addDoc használat
                     const docRef = await addDoc(collection(db, 'scores'), {
                         playerName: playerName,
                         score: score,
@@ -987,20 +960,11 @@
                         created: new Date().toISOString()
                     });
                     
-                    console.log('✅ Pontszám mentve Firebase SDK-val:', docRef.id);
+                    console.log('✅ Pontszám mentve:', docRef.id);
                     return docRef.id;
                     
                 } catch (error) {
-                    console.error('❌ Firebase SDK mentési hiba:', error);
-                    
-                    if (error.code === 'permission-denied') {
-                        firebaseReady = false;
-                        updateFirebaseStatus('error', 'Írási jogosultság megtagadva');
-                    } else if (error.code === 'unavailable') {
-                        firebaseReady = false;
-                        updateFirebaseStatus('offline', 'Kapcsolat megszakadt');
-                    }
-                    
+                    console.error('❌ Mentési hiba:', error);
                     throw error;
                 }
             },
@@ -1011,7 +975,6 @@
                 }
                 
                 try {
-                    // HELYES Firebase JS SDK getDocs használat
                     const q = query(
                         collection(db, 'scores'), 
                         orderBy('score', 'desc'), 
@@ -1025,20 +988,11 @@
                         scores.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    console.log(`📊 ${scores.length} globális eredmény betöltve SDK-val`);
+                    console.log(`📊 ${scores.length} eredmény betöltve`);
                     return scores;
                     
                 } catch (error) {
-                    console.error('❌ Firebase SDK lekérdezési hiba:', error);
-                    
-                    if (error.code === 'permission-denied') {
-                        firebaseReady = false;
-                        updateFirebaseStatus('error', 'Olvasási jogosultság megtagadva');
-                    } else if (error.code === 'unavailable') {
-                        firebaseReady = false;
-                        updateFirebaseStatus('offline', 'Lekérdezés sikertelen');
-                    }
-                    
+                    console.error('❌ Lekérdezési hiba:', error);
                     throw error;
                 }
             },
@@ -1046,12 +1000,7 @@
             isReady: () => firebaseReady,
             
             reconnect: async () => {
-                if (!firebaseReady) {
-                    connectionAttempts = 0;
-                    retryDelay = 2000;
-                    return await initializeFirebase();
-                }
-                return true;
+                return await initializeFirebase();
             }
         };
 
@@ -1060,21 +1009,13 @@
             const status = firebaseReady ? 'Online' : 'Offline';
             const info = `
 🔥 Firebase Státusz: ${status}
-📡 Kapcsolódási próbálkozások: ${connectionAttempts}/${maxRetries}
 🏗️ Projekt: perfectcircle-8f981
-⚡ Mód: Firebase JS SDK (helyes autentikáció)
-🚫 Offline cache: KIKAPCSOLVA
-${firebaseReady ? '✅ Globális ranglista elérhető' : '❌ Csak helyi tárolás'}
+📊 Firestore: ${firebaseReady ? 'Működik' : 'Hiba'}
 
-🔧 Technikai info:
-- SDK verzió: 10.7.1
-- Persistent streams: AUTO (SDK kezeli)
-- IndexedDB: KIKAPCSOLVA
-- Network restart: IGEN
-
-⚠️ Ha továbbra is hibák vannak:
-1. Firestore Rules ellenőrzése szükséges
-2. Firebase Console > Firestore > Rules:
+${!firebaseReady ? `
+❌ PROBLÉMA MEGOLDÁSA:
+1. Firebase Console > Firestore > Rules
+2. Másold be ezt:
 
 rules_version = '2';
 service cloud.firestore {
@@ -1085,12 +1026,14 @@ service cloud.firestore {
   }
 }
 
-${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
+3. Publish gomb
+4. Frissítsd az oldalt (F5)
+` : '✅ Minden rendben!'}
             `;
             alert(info);
         };
 
-        // Globális hozzáférés biztosítása
+        // Globális hozzáférés
         window.updateFirebaseStatus = updateFirebaseStatus;
 
         // Inicializálás indítása
@@ -1280,7 +1223,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             try {
                 const scores = await GlobalLeaderboard.loadGlobalScores();
                 GlobalLeaderboard.displayScores(scores, true);
-                GlobalLeaderboard.updateStatus(`🌍 Globális toplista (${scores.length} játékos) - Firebase SDK`);
+                GlobalLeaderboard.updateStatus(`🌍 Globális toplista (${scores.length} játékos)`);
             } catch (error) {
                 if (error.message.includes('Túl gyakori')) {
                     GlobalLeaderboard.updateStatus('⏳ Várj 10 másodpercet az újrapróbálkozás előtt');
@@ -1299,8 +1242,6 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             GlobalLeaderboard.displayScores(scores, false, highlightId);
             GlobalLeaderboard.updateStatus(`📱 Helyi eredmények (${scores.length} játék)`);
         }
-
-        // [A többi játék kód változatlan...]
 
         // Játék változók
         const canvas = document.getElementById('gameCanvas');
@@ -1510,7 +1451,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
             }
         ];
 
-        // [Hang és effekt függvények - változatlan]
+        // Hang és effekt függvények
         function initAudio() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -2016,7 +1957,7 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
                 if (playerName !== 'Névtelen' && window.firebaseAPI && window.firebaseAPI.isReady()) {
                     try {
                         await GlobalLeaderboard.saveGlobalScore(playerName, Math.round(score), difficulty, transformationName);
-                        console.log('✅ Pontszám mentve globálisan Firebase SDK-val!');
+                        console.log('✅ Pontszám mentve globálisan!');
                         
                         if (GlobalLeaderboard.currentView === 'global') {
                             setTimeout(() => loadGlobalLeaderboard(), 1000);
@@ -2068,7 +2009,6 @@ ${!firebaseReady ? 'Kattints a "Globális" tabra az újracsatlakozáshoz!' : ''}
 • Versenyezz játékosokkal a világ minden tájáról!
 • Firebase státusz: jobb felső sarokban (kattintható)
 • Offline módban is játszhatsz!
-• Firebase JS SDK használat (helyes autentikáció)
 
 🎉 Ünneplési effektek:
 • 95+ pont: Konfetti + tűzijáték + fanfár
