@@ -548,8 +548,21 @@ button:disabled {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Nyelvváltó gomb javított stílus */
+/* Nyelvválasztó pozíciója a jobb felső sarokban */
+.language-selector { /* Hozzáadtam egy osztályt, ha még nincs */
+    position: fixed;
+    top: 15px; /* Például 15px távolság a tetejétől */
+    right: 15px; /* Például 15px távolság a jobb szélétől */
+    z-index: 9999; /* Győződj meg róla, hogy felül van más elemeken */
+}
+
+/* Ha a #languageSelector közvetlenül a gomb, akkor így: */
 #languageSelector {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 9999;
+    /* A többi stílusod marad, csak a pozíciót állítjuk be */
     background: linear-gradient(135deg, #4CAF50, #45a049) !important;
     color: white !important;
     border: 2px solid #388E3C !important;
@@ -559,30 +572,43 @@ button:disabled {
     transition: all 0.3s ease !important;
 }
 
-#languageSelector:hover {
-    background: linear-gradient(135deg, #45a049, #4CAF50) !important;
-    border-color: #2E7D32 !important;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
-    transform: translateY(-1px) !important;
-}
-
-#languageSelector:active {
-    transform: translateY(0) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-}
-
-/* Nyelvváltó menü javítás */
+/* A nyelvválasztó menü pozíciójának beállítása (ha külön elem) */
 #languageMenu {
+    position: absolute; /* Az #languageSelector-höz képest fog elhelyezkedni */
+    top: calc(100% + 5px); /* Kicsit a gomb alá, 5px távolságra */
+    right: 0; /* A gomb jobb széléhez igazítva */
+    /* A többi stílusod marad */
     border: 2px solid #4CAF50 !important;
     box-shadow: 0 8px 16px rgba(0,0,0,0.3) !important;
     background: white !important;
 }
 
-.language-option {
-    color: #333 !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    transition: all 0.2s ease !important;
+/* Média lekérdezések frissítése a nyelvválasztóhoz, ha szükséges */
+@media (max-width: 768px) {
+    #languageSelector,
+    .language-selector { /* Használd mindkettőt, ha a language-selector osztályt is használod */
+        top: 10px;
+        right: 10px;
+        font-size: 13px; /* Kisebb méret kisebb képernyőn */
+        padding: 8px 16px;
+    }
+
+    #languageMenu {
+        top: calc(100% + 5px);
+        right: 0;
+    }
 }
+
+@media (max-width: 480px) {
+    #languageSelector,
+    .language-selector {
+        top: 5px;
+        right: 5px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
 
 .language-option:hover {
     background: linear-gradient(135deg, #E8F5E8, #C8E6C9) !important;
