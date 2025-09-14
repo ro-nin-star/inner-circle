@@ -56,6 +56,7 @@ body::after {
     color: #1e3c72;
     position: relative;
     border: 3px solid rgba(30, 60, 114, 0.2);
+    margin-top: 60px; /* Hely a felső elemeknek */
 }
 
 h1 {
@@ -113,6 +114,8 @@ h1 {
     box-shadow: 
         inset 0 0 20px rgba(30, 60, 114, 0.1),
         0 10px 30px rgba(30, 60, 114, 0.3);
+    width: 408px; /* Canvas width + border */
+    height: 408px; /* Canvas height + border */
 }
 
 #gameCanvas {
@@ -120,12 +123,27 @@ h1 {
     cursor: crosshair;
     touch-action: none;
     border-radius: 50%;
+    width: 400px;
+    height: 400px;
+}
+
+#idealCircleCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    opacity: 0.3;
+    border-radius: 50%;
+    width: 400px;
+    height: 400px;
 }
 
 .canvas-overlay {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     display: flex;
     align-items: center;
@@ -156,6 +174,11 @@ h1 {
 
 .transformation-overlay.show {
     display: flex;
+}
+
+.transformation-content {
+    text-align: center;
+    padding: 20px;
 }
 
 /* Buttons */
@@ -191,6 +214,10 @@ button:disabled {
 /* Controls */
 .controls {
     margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
 }
 
 /* Score Display */
@@ -210,6 +237,12 @@ button:disabled {
     display: block;
 }
 
+.score-number {
+    font-size: 2em;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
 .score-breakdown {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -221,6 +254,30 @@ button:disabled {
     background: rgba(255, 255, 255, 0.2);
     padding: 8px;
     border-radius: 15px;
+}
+
+/* Ideal Circle Container */
+.ideal-circle-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+
+.ideal-circle-canvas-container {
+    position: relative;
+    margin: 10px auto;
+    width: 200px;
+    height: 200px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.ideal-circle-canvas-container canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
 }
 
 /* Player Name */
@@ -300,6 +357,14 @@ button:disabled {
     gap: 5px;
 }
 
+.leaderboard-actions {
+    margin-top: 10px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
 .score-entry {
     display: flex;
     justify-content: space-between;
@@ -337,6 +402,49 @@ button:disabled {
     color: #1e3c72;
 }
 
+/* Detailed Instructions */
+.detailed-instructions {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    padding: 20px;
+    border-radius: 30px;
+    border: 2px solid rgba(30, 60, 114, 0.1);
+    text-align: left;
+}
+
+.detailed-instructions h3 {
+    color: #1e3c72;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.instruction-section {
+    margin-bottom: 15px;
+}
+
+.instruction-section h4 {
+    color: #2a5298;
+    margin-bottom: 8px;
+}
+
+.instruction-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.instruction-section li {
+    margin-bottom: 5px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.instruction-section li::before {
+    content: '•';
+    color: #4fc3f7;
+    position: absolute;
+    left: 0;
+}
+
 /* Difficulty Selector */
 .difficulty-selector {
     margin: 12px 0;
@@ -356,11 +464,11 @@ button:disabled {
     color: white;
 }
 
-/* Visitor Counter */
+/* Fixed Position Elements */
 .visitor-counter {
     position: fixed;
     bottom: 15px;
-    right: 15px;
+    left: 15px; /* Változás: balra helyezve */
     background: rgba(30, 60, 114, 0.9);
     color: white;
     padding: 8px 15px;
@@ -399,7 +507,7 @@ button:disabled {
 .firebase-status {
     position: fixed;
     top: 15px;
-    right: 15px;
+    left: 15px; /* Változás: balra helyezve */
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.75em;
@@ -440,6 +548,102 @@ button:disabled {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
+/* Nyelv selector stílusa */
+.language-selector {
+    position: fixed;
+    top: 15px;
+    right: 15px; /* Jobb oldalon marad */
+    z-index: 10000;
+    font-family: Arial, sans-serif;
+}
+
+.current-language {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.current-language:hover {
+    background: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.language-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 150px;
+    display: none;
+    margin-top: 5px;
+    border: 1px solid rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.language-menu.show {
+    display: block;
+    animation: fadeInDown 0.3s ease;
+}
+
+.language-option {
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    font-size: 14px;
+    color: #333;
+}
+
+.language-option:hover {
+    background: #f5f5f5;
+}
+
+.language-option.active {
+    background: #e3f2fd;
+    color: #1976d2;
+    font-weight: bold;
+}
+
+.language-option .flag {
+    font-size: 16px;
+}
+
+.language-option .name {
+    flex: 1;
+}
+
+/* Dev Info */
+.dev-info {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    font-size: 10px;
+    opacity: 0.5;
+    color: white;
+    z-index: 9997;
+}
+
+.dev-info span {
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.dev-info span:hover {
+    opacity: 1;
+}
+
 /* Offline Notice */
 .offline-notice {
     background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
@@ -465,13 +669,32 @@ button:disabled {
     border: 2px solid #4fc3f7;
     border-radius: 50%;
     border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Dekoratív körök */
 .decoration-circle {
-    position: absolute;
+    position: fixed;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(79, 195, 247, 0.1) 0%, transparent 70%);
+    z-index: -1;
 }
 
 .decoration-circle:nth-child(1) {
@@ -485,12 +708,133 @@ button:disabled {
     width: 40px;
     height: 40px;
     top: 70%;
-    left: 85%;
+    right: 5%;
 }
 
 .decoration-circle:nth-child(3) {
     width: 80px;
     height: 80px;
     top: 40%;
-    left: 90%;
+    right: 10%;
+}
+
+/* Dark theme támogatás */
+body.dark-theme {
+    background: radial-gradient(circle at center, #0f0f23 0%, #1a1a2e 50%, #000000 100%);
+}
+
+body.dark-theme .game-container {
+    background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(40,40,40,0.95) 100%);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .current-language {
+    background: rgba(50, 50, 50, 0.95);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-theme .language-menu {
+    background: #333;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .language-option {
+    color: white;
+}
+
+body.dark-theme .language-option:hover {
+    background: #444;
+}
+
+body.dark-theme .language-option.active {
+    background: #1976d2;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-container {
+        margin-top: 80px;
+        padding: 20px;
+        border-radius: 30px;
+    }
+    
+    .game-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .canvas-container {
+        width: 320px;
+        height: 320px;
+    }
+    
+    #gameCanvas,
+    #idealCircleCanvas {
+        width: 320px;
+        height: 320px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .controls button {
+        width: 90%;
+        max-width: 300px;
+        margin: 3px 0;
+    }
+    
+    .visitor-counter {
+        bottom: 10px;
+        left: 10px;
+        font-size: 0.8em;
+        padding: 6px 10px;
+    }
+    
+    .firebase-status {
+        top: 10px;
+        left: 10px;
+        font-size: 0.7em;
+    }
+    
+    .language-selector {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .dev-info {
+        bottom: 10px;
+        right: 10px;
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container {
+        margin-top: 100px;
+        padding: 15px;
+    }
+    
+    .canvas-container {
+        width: 280px;
+        height: 280px;
+    }
+    
+    #gameCanvas,
+    #idealCircleCanvas {
+        width: 280px;
+        height: 280px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .subtitle {
+        font-size: 1em;
+    }
 }

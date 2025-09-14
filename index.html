@@ -15,7 +15,18 @@
     <div class="decoration-circle"></div>
 
     <!-- Firebase status indicator -->
-    <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()">🟡 Connecting...</div>
+    <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()" data-i18n="firebase.connecting">🟡 Kapcsolódás...</div>
+
+    <!-- Nyelv váltó -->
+    <div class="language-selector" id="languageSelector">
+        <div class="current-language" onclick="window.i18nManager?.toggleLanguageMenu()">
+            <span id="currentLanguageFlag">🇭🇺</span>
+            <span id="currentLanguageCode">HU</span>
+        </div>
+        <div class="language-menu" id="languageMenu">
+            <!-- Dinamikusan töltődik -->
+        </div>
+    </div>
 
     <div class="game-container" id="gameContainer">
         <h1 data-i18n="title">🎯 Perfect Circle</h1>
@@ -63,12 +74,15 @@
             </div>
         </div>
 
+        <!-- Canvas container - JAVÍTOTT -->
         <div class="canvas-container">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <canvas id="idealCircleCanvas" width="400" height="400"></canvas>
             <div class="canvas-overlay" id="canvasOverlay"></div>
             <div class="transformation-overlay" id="transformationOverlay">
-                <div data-i18n="transformations.transforming">✨ Varázslat történik... ✨</div>
-                <div style="font-size: 0.8em; margin-top: 10px;" id="transformationText">A köröd átalakul...</div>
+                <div class="transformation-content">
+                    <h2 id="transformationText" data-i18n="transformation.magic">✨ Varázslat történik... ✨</h2>
+                </div>
             </div>
         </div>
 
@@ -77,14 +91,26 @@
             <button id="clearBtn" onclick="clearCanvas()" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
             <button onclick="showInstructions()" data-i18n="buttons.help">❓ Segítség</button>
             <button onclick="clearAllScores()" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
+            <!-- Dinamikusan hozzáadott gombok: Audio, Téma, Fejlett, Nyelv info -->
         </div>
 
+        <!-- Pontszám megjelenítő -->
         <div class="score-display" id="scoreDisplay">
             <h3 id="scoreTitle" data-i18n="scoreTitle.result">Eredmény</h3>
-            <div style="font-size: 2em; margin: 10px 0;">
-                <span id="finalScore">0</span> / 100 <span data-i18n="common.points">pont</span>
+            <div class="score-number">
+                <span id="finalScore">0</span>/100 <span data-i18n="common.points">pont</span>
             </div>
-            <div class="score-breakdown" id="scoreBreakdown"></div>
+            <div class="score-breakdown" id="scoreBreakdown">
+                <!-- Dinamikusan töltődik -->
+            </div>
+            
+            <!-- Ideális kör összehasonlítás - JAVÍTOTT -->
+            <div id="idealCircleContainer" class="ideal-circle-container" style="display: none;">
+                <h4 data-i18n="analysis.idealCircle">Ideális kör összehasonlítás:</h4>
+                <div class="ideal-circle-canvas-container">
+                    <canvas id="idealComparisonCanvas" width="200" height="200"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- LEADERBOARD WITH TABS -->
@@ -102,6 +128,52 @@
                     <span data-i18n="leaderboard.noResults">Még nincsenek eredmények</span>
                 </div>
             </div>
+            
+            <!-- Leaderboard export/import gombok -->
+            <div class="leaderboard-actions">
+                <button onclick="window.LeaderboardManager?.exportLeaderboard()" data-i18n="leaderboard.export">📤 Export</button>
+                <button onclick="window.LeaderboardManager?.importLeaderboard()" data-i18n="leaderboard.import">📥 Import</button>
+            </div>
+        </div>
+
+        <!-- Részletes instrukciók -->
+        <div class="detailed-instructions">
+            <h3 data-i18n="instructions.detailedTitle">📖 Részletes Útmutató</h3>
+            <div class="instruction-section">
+                <h4 data-i18n="instructions.gameplayTitle">🎮 Játékmenet:</h4>
+                <ul>
+                    <li data-i18n="instructions.step1">Kattints a "Rajzolás Kezdése" gombra</li>
+                    <li data-i18n="instructions.step2">Rajzolj egy kört egyetlen mozdulattal</li>
+                    <li data-i18n="instructions.step3">Nézd meg az eredményed és a transzformációt!</li>
+                </ul>
+            </div>
+            
+            <div class="instruction-section">
+                <h4 data-i18n="instructions.scoringTitle">📊 Pontszámítás:</h4>
+                <ul>
+                    <li data-i18n="instructions.shapeScore">🔵 Köralak (40 pont): Mennyire hasonlít körre</li>
+                    <li data-i18n="instructions.closureScore">🔗 Záródás (20 pont): Mennyire zárt a forma</li>
+                    <li data-i18n="instructions.smoothnessScore">🌊 Egyenletesség (25 pont): Mennyire egyenletes a vonal</li>
+                    <li data-i18n="instructions.sizeScore">📏 Méret (15 pont): Optimális méret használata</li>
+                </ul>
+            </div>
+            
+            <div class="instruction-section">
+                <h4 data-i18n="instructions.transformationsTitle">🎨 Transzformációk:</h4>
+                <p data-i18n="instructions.transformationsText">70+ pont esetén a köröd varázslatos alakzattá változik! Minden transzformáció után egy mosolygó arc jelenik meg! 😊</p>
+            </div>
+            
+            <div class="instruction-section">
+                <h4 data-i18n="instructions.controlsTitle">⌨️ Billentyű parancsok:</h4>
+                <ul>
+                    <li data-i18n="instructions.ctrlS">Ctrl+S: Rajzolás kezdése</li>
+                    <li data-i18n="instructions.ctrlR">Ctrl+R: Törlés</li>
+                    <li data-i18n="instructions.ctrlH">Ctrl+H: Segítség</li>
+                    <li data-i18n="instructions.ctrlL">Ctrl+L: Nyelv menü</li>
+                    <li data-i18n="instructions.escape">Esc: Játék megszakítása</li>
+                    <li data-i18n="instructions.f1">F1: Segítség</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -110,7 +182,23 @@
         <span data-i18n="visitors.label">Látogatások:</span> <span class="visitor-number" id="visitCount">0</span>
     </div>
 
-    <!-- I18n Scripts ELŐSZÖR -->
+    <!-- Fejlesztői információk -->
+    <div class="dev-info">
+        <span data-i18n="dev.version">v2.0</span> | 
+        <span onclick="window.debugGameEngine?.()" data-i18n="dev.debug">Debug</span>
+    </div>
+
+    <!-- JavaScript fájlok betöltése -->
+    <script>
+        // Globális nyelvi adatok tárolója
+        window.languageData = {};
+        
+        // Magyar nyelv beágyazása
+        window.languageData.hu = {
+            // ... (az előző teljes magyar fordítás)
+        };
+    </script>
+
     <script src="js/i18n/languageDetector.js"></script>
     <script src="js/i18n/i18nManager.js"></script>
     
@@ -133,5 +221,50 @@
     
     <!-- Main App Script UTOLJÁRA -->
     <script src="js/app.js"></script>
+
+    <!-- Inicializálás -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌍 DOM betöltve, i18n inicializálás...');
+            
+            if (window.languageData && window.languageData.hu) {
+                window.simpleTranslate = function(key, params = {}) {
+                    const keys = key.split('.');
+                    let value = window.languageData.hu;
+                    
+                    for (const k of keys) {
+                        if (value && typeof value === 'object' && value[k] !== undefined) {
+                            value = value[k];
+                        } else {
+                            return key;
+                        }
+                    }
+                    
+                    if (typeof value === 'string' && params) {
+                        Object.keys(params).forEach(param => {
+                            value = value.replace(`{${param}}`, params[param]);
+                        });
+                    }
+                    
+                    return value;
+                };
+                
+                document.querySelectorAll('[data-i18n]').forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    const translation = window.simpleTranslate(key);
+                    
+                    if (translation && translation !== key) {
+                        if (element.tagName === 'INPUT' && element.type === 'text') {
+                            element.placeholder = translation;
+                        } else {
+                            element.innerHTML = translation;
+                        }
+                    }
+                });
+                
+                console.log('✅ Egyszerűsített i18n inicializálva');
+            }
+        });
+    </script>
 </body>
 </html>

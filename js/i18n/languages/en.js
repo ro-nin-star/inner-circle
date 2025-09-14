@@ -1,178 +1,140 @@
-// English language file
-window.i18nLanguages = window.i18nLanguages || {};
-window.i18nLanguages.en = {
-    title: "Perfect Circle",
-    subtitle: "Draw the most perfect circle in one single motion!",
-    
-    instructions: {
-        title: "How to play:",
-        text: "Click and drag your mouse (or touch and drag your finger) to draw a circle. The more perfect your circle, the more points you get! Your circle will magically transform! ✨"
-    },
+const translations = {
+    title: 'Perfect Circle',
+    subtitle: 'Draw the most perfect circle with a single movement!',
     
     buttons: {
-        startDrawing: "🎯 Start Drawing",
-        clear: "🗑️ Clear",
-        help: "❓ Help",
-        clearScores: "🗑️ Clear Local Scores",
-        save: "💾 Save",
-        export: "📤 Export",
-        import: "📥 Import"
+        startDrawing: '🎯 Start Drawing',
+        clear: '🗑️ Clear',
+        help: '❓ Help',
+        save: '💾 Save',
+        clearScores: '🗑️ Clear Local Scores'
     },
     
     stats: {
-        currentScore: "Current Score",
-        bestScore: "Best Score",
-        gamesPlayed: "Games Played",
-        averageScore: "Average Score"
-    },
-    
-    difficulty: {
-        label: "Difficulty:",
-        easy: "Easy 😊",
-        hard: "Hard 🌀"
+        currentScore: 'Current Score',
+        bestScore: 'Best Score',
+        gamesPlayed: 'Games Played',
+        averageScore: 'Average Score'
     },
     
     player: {
-        label: "👤 Player name:",
-        placeholder: "Enter your name",
-        nameSaved: "Name saved: {name} ✅"
+        label: '👤 Player name:',
+        placeholder: 'Enter your name',
+        nameSaved: 'Name saved: {name} ✅',
+        anonymous: 'Anonymous'
+    },
+    
+    difficulty: {
+        label: 'Difficulty:',
+        easy: 'Easy 😊',
+        hard: 'Hard 🌀'
+    },
+    
+    instructions: {
+        title: 'How to play:',
+        text: 'Click and drag your mouse (or touch and drag your finger) to draw a circle. The more perfect your circle, the more points you get! The circle will magically transform! ✨'
     },
     
     leaderboard: {
-        title: "🏆 Leaderboard",
-        local: "📱 Local",
-        global: "🌍 Global",
-        localResults: "📱 Local results",
-        globalResults: "🌍 Global results",
-        noResults: "No results yet",
-        loadingGlobal: "Loading global results...",
-        globalTop: "🌍 Global leaderboard ({count} players)",
-        localCount: "📱 Local results ({count} games)"
+        title: '🏆 Leaderboard',
+        local: '📱 Local',
+        global: '🌍 Global',
+        localResults: '📱 Local results',
+        globalResults: '🌍 Global results',
+        noResults: 'No results yet',
+        loading: 'Loading...',
+        export: '📤 Export',
+        import: '📥 Import'
     },
     
     scoreTitle: {
-        perfect: "🏆 Perfect! Genius!",
-        excellent: "🌟 Excellent! Very good!",
-        good: "👍 Good work!",
-        notBad: "👌 Not bad!",
-        tryAgain: "💪 Try again!"
+        result: 'Result',
+        perfect: '🏆 Perfect! Genius!',
+        excellent: '🌟 Excellent! Very good!',
+        good: '👍 Good work!',
+        notBad: '👌 Not bad!',
+        tryAgain: '💪 Try again!'
     },
     
     scoreBreakdown: {
-        shape: "Shape",
-        closure: "Closure",
-        smoothness: "Smoothness", 
-        size: "Size",
-        transformation: "✨ Transformation: {name}!"
+        shape: '🔵 Circle Shape',
+        closure: '🔗 Closure',
+        smoothness: '🌊 Smoothness',
+        size: '📏 Size',
+        transformation: '🎨 Transformation: {name}'
     },
     
-    transformations: {
-        sun: "Sun",
-        pizza: "Pizza",
-        donut: "Donut",
-        moon: "Moon",
-        earth: "Earth",
-        ball: "Ball",
-        clock: "Clock",
-        flower: "Flower",
-        emoji: "Emoji",
-        cookie: "Cookie",
-        transforming: "✨ Magic is happening... ✨",
-        transformText: "Your circle transformed into a {name}! {emoji}"
+    common: {
+        points: 'points'
     },
     
-    errors: {
-        tooFewPoints: "Too few points! Draw a complete circle.",
-        firebaseOffline: "Firebase not available",
-        saveFailed: "Save failed",
-        loadFailed: "Load failed",
-        invalidName: "Please enter your name!",
-        nameTooLong: "Name can be maximum 20 characters!"
+    transformation: {
+        magic: '✨ Magic is happening... ✨'
     },
     
     firebase: {
-        online: "🟢 Online",
-        offline: "🔴 Offline",
-        connecting: "🟡 Connecting...",
-        error: "❌ Error",
-        offlineNotice: "⚠️ Offline mode: Global leaderboard not available. Results saved locally."
+        connecting: '🟡 Connecting...',
+        online: '🟢 Online',
+        offline: '🔴 Offline',
+        error: '❌ Error',
+        offlineNotice: '⚠️ <strong>Offline mode:</strong> Global leaderboard unavailable. Results saved locally.'
     },
     
     visitors: {
-        label: "Visits:",
-        stats: "📊 VISITOR STATISTICS",
-        local: "👤 Local visits: {count}",
-        global: "🌍 Global visits: {count}",
-        today: "📅 Today's visits: {count}",
-        unique: "🔄 Unique sessions: {count}",
-        recent: "📈 RECENT VISITS:",
-        session: "🆔 Session ID: {id}",
-        lastVisit: "🕒 Last visit: {time}"
-    },
-    
-    advanced: {
-        title: "⚙️ ADVANCED FEATURES",
-        keyboard: "🎮 KEYBOARD SHORTCUTS:",
-        dataManagement: "📊 DATA MANAGEMENT:",
-        debugging: "🔧 DEBUGGING:",
-        performance: "🚀 PERFORMANCE TEST RESULT",
-        exportSuccess: "Results exported! ✅",
-        importSuccess: "✅ Successful import!\n{imported} results imported\nTotal: {total} results",
-        clearAllConfirm: "⚠️ WARNING!\n\nThis will delete ALL local data:\n• Results\n• Player name\n• Settings\n• Visit counter\n\nAre you sure?",
-        allDataCleared: "✅ All local data cleared!"
+        label: 'Visits:'
     },
     
     audio: {
-        enabled: "🔊 Sound On",
-        disabled: "🔇 Sound Off",
-        enabledMessage: "Sound enabled 🔊",
-        disabledMessage: "Sound disabled 🔇"
+        enabled: '🔊 Sound On',
+        disabled: '🔇 Sound Off',
+        enabledMessage: 'Sound enabled!',
+        disabledMessage: 'Sound disabled!'
     },
     
     theme: {
-        light: "☀️ Light",
-        dark: "🌙 Dark",
-        lightEnabled: "Light theme enabled ☀️",
-        darkEnabled: "Dark theme enabled 🌙"
+        light: '☀️ Light',
+        dark: '🌙 Dark',
+        lightEnabled: 'Light theme enabled!',
+        darkEnabled: 'Dark theme enabled!'
     },
     
-    fullInstructions: `🎯 PERFECT CIRCLE - COMPLETE GUIDE
-
-📝 GAME OBJECTIVE:
-Draw the most perfect circle in one single motion!
-
-🎮 CONTROLS:
-• 🖱️ Mouse: Click and drag
-• 📱 Mobile: Touch and drag
-• ⌨️ Keyboard: Ctrl+S (start), Ctrl+R (clear), Esc (stop)
-
-📊 SCORING SYSTEM (max 100 points):
-• 🔵 Shape (40p): How round your shape is
-• 🔗 Closure (20p): How well the circle closes
-• 📏 Smoothness (25p): How even the line thickness is
-• 📐 Size (15p): Whether the size is appropriate
-
-🎯 DIFFICULTY LEVELS:
-• 🟢 Easy: 50-150px radius, stable UI
-• 🔴 Hard: 20-190px radius + rotating UI!
-
-✨ MAGICAL TRANSFORMATIONS:
-Your circle follows your exact shape and transforms into:
-• ☀️ Sun • 🍕 Pizza • 🍩 Donut • 🌙 Moon
-• 🌍 Earth • ⚽ Ball • 🕐 Clock • 🌸 Flower
-• 😊 Emoji • 🍪 Cookie
-
-🌍 GLOBAL LEADERBOARD:
-• 👤 Enter your name for global competition!
-• 🏆 Compete with players worldwide!
-• 📊 Firebase status: top right corner
-• 📴 Play offline too!
-
-Good luck drawing the perfect circle! 🍀✨`,
+    advanced: {
+        title: '⚙️ Advanced Features',
+        features: 'Advanced features and settings',
+        menu: 'Advanced menu'
+    },
     
-    dateTime: {
-        locale: "en-US",
-        dateFormat: "MM/DD/YYYY",
-        timeFormat: "h:mm:ss A"
+    language: {
+        info: '🌍 Language Info',
+        current: 'Current language',
+        supported: 'Supported languages'
+    },
+    
+    transformations: {
+        rainbow: 'Rainbow',
+        galaxy: 'Galaxy',
+        flower: 'Flower',
+        mandala: 'Mandala',
+        spiral: 'Spiral',
+        star: 'Star',
+        heart: 'Heart',
+        diamond: 'Diamond',
+        wave: 'Wave',
+        fire: 'Fire',
+        transformText: '🎨 Transformation applied: {name}',
+        transforming: '✨ Magic is happening... ✨'
+    },
+    
+    errors: {
+        invalidName: 'Please enter your name!',
+        nameTooLong: 'Name can be maximum 20 characters!',
+        tooFewPoints: 'Too few points! Draw a complete circle.',
+        analysisError: 'Analysis error occurred.',
+        criticalError: 'Critical error occurred. Please refresh the page.'
     }
 };
+
+// Globális hozzáférés
+if (typeof window !== 'undefined') {
+    window.translations_en = translations;
+}

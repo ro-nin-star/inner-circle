@@ -143,7 +143,24 @@ class PerfectCircleApp {
             'scoreTitle.excellent': '🌟 Kiváló! Nagyon jó!',
             'scoreTitle.good': '👍 Jó munka!',
             'scoreTitle.notBad': '👌 Nem rossz!',
-            'scoreTitle.tryAgain': '💪 Próbáld újra!'
+            'scoreTitle.tryAgain': '💪 Próbáld újra!',
+            'scoreBreakdown.shape': '🔵 Köralak',
+            'scoreBreakdown.closure': '🔗 Záródás',
+            'scoreBreakdown.smoothness': '🌊 Egyenletesség',
+            'scoreBreakdown.size': '📏 Méret',
+            'scoreBreakdown.transformation': '🎨 Transzformáció: {name}',
+            'common.points': 'pont',
+            'transformations.rainbow': 'Szivárvány',
+            'transformations.galaxy': 'Galaxis',
+            'transformations.flower': 'Virág',
+            'transformations.mandala': 'Mandala',
+            'transformations.spiral': 'Spirál',
+            'transformations.star': 'Csillag',
+            'transformations.heart': 'Szív',
+            'transformations.diamond': 'Gyémánt',
+            'transformations.wave': 'Hullám',
+            'transformations.fire': 'Tűz',
+            'transformations.transformText': '🎨 Transzformáció alkalmazva: {name}'
         };
         
         let text = fallbackTexts[key] || key;
@@ -880,80 +897,221 @@ window.updateStats = () => {
     }
 };
 
-// Score megjelenítő függvény - biztonságos
+// Score megjelenítő függvény - JAVÍTOTT VERZIÓ
 window.showScore = async (score, analysis, transformationName = '') => {
+    console.log('📊 showScore hívva:', { score, analysis, transformationName });
+    
     // UI frissítés
     const elements = {
+        scoreDisplay: document.getElementById('scoreDisplay'),
         currentScore: document.getElementById('currentScore'),
         finalScore: document.getElementById('finalScore'),
         scoreTitle: document.getElementById('scoreTitle'),
-        scoreBreakdown: document.getElementById('scoreBreakdown')
+        scoreBreakdown: document.getElementById('scoreBreakdown'),
+        idealCircleContainer: document.getElementById('idealCircleContainer')
     };
-    
-    if (elements.currentScore) elements.currentScore.textContent = Math.round(score);
-    if (elements.finalScore) elements.finalScore.textContent = Math.round(score);
-    
-    // Lokalizált cím beállítása
-    let title = '👍 Jó munka!'; // Fallback
-    if (window.perfectCircleApp) {
-        title = window.perfectCircleApp.getScoreTitle(score);
-    }
-    if (elements.scoreTitle) elements.scoreTitle.textContent = title;
-
-    // Részletes pontszám megjelenítése - biztonságos
-    if (!analysis.error && elements.scoreBreakdown) {
-        const app = window.perfectCircleApp;
-        const localizedTransformation = transformationName && app ? 
-            app.t('scoreBreakdown.transformation', {
-                name: app.t(`transformations.${transformationName.toLowerCase()}`) || transformationName
-            }) : '';
-            
-        elements.scoreBreakdown.innerHTML = `
-            <div class="breakdown-item">
-                <strong>${app ? app.t('scoreBreakdown.shape') : 'Köralak'}</strong><br>
-                ${analysis.shapeScore}/40 ${app ? app.t('common.points') : 'pont'}
-            </div>
-            <div class="breakdown-item">
-                <strong>${app ? app.t('scoreBreakdown.closure') : 'Záródás'}</strong><br>
-                ${analysis.closureScore}/20 ${app ? app.t('common.points') : 'pont'}
-            </div>
-            <div class="breakdown-item">
-                <strong>${app ? app.t('scoreBreakdown.smoothness') : 'Egyenletesség'}</strong><br>
-                ${analysis.smoothnessScore}/25 ${app ? app.t('common.points') : 'pont'}
-            </div>
-            <div class="breakdown-item">
-                <strong>${app ? app.t('scoreBreakdown.size') : 'Méret'}</strong><br>
-                ${analysis.sizeScore}/15 ${app ? app.t('common.points') : 'pont'}
-            </div>
-            ${localizedTransformation ? `<div class="breakdown-item" style="grid-column: 1/-1; background: rgba(255,215,0,0.3);"><strong>${localizedTransformation}</strong></div>` : ''}
-        `;
-    } else if (analysis.error && elements.scoreBreakdown) {
-        const app = window.perfectCircleApp;
-        const errorMsg = app ? app.t(`errors.${analysis.error}`) || analysis.error : analysis.error;
-        elements.scoreBreakdown.innerHTML = `
-            <div style="color: #ff6b6b; font-weight: bold;">${errorMsg}</div>
-        `;
-    }
 
     // Score display megjelenítése
+    if (elements.scoreDisplay) {
+        elements.scoreDisplay.style.display = 'block';
+    }
+
+    const roundedScore = Math.round(score);
+
+    // Pontszám megjelenítése
+    if (elements.currentScore) elements.currentScore.textContent = roundedScore;
+    if (elements.finalScore) elements.finalScore.textContent = roundedScore;
+    
+    // JAVÍTOTT PONTSZÁM CÍM - EMOJI MEGŐRZÉSE
+    if (elements.scoreTitle) {
+        let titleEmoji = '';
+        let titleText = '';
+        
+        if (roundedScore >= 90) {
+            titleEmoji = '🏆';
+            titleText = 'Tökéletes! Zseniális!';
+        } else if (roundedScore >= 75) {
+            titleEmoji = '🌟';
+            titleText = 'Kiváló! Nagyon jó!';
+        } else if (roundedScore >= 60) {
+            titleEmoji = '👍';
+            titleText = 'Jó munka!';
+        } else if (roundedScore >= 40) {
+            titleEmoji = '👌';
+            titleText = 'Nem rossz!';
+        } else {
+            titleEmoji = '💪';
+            titleText = 'Próbáld újra!';
+        }
+
+        // Lokalizált szöveg lekérése (ha elérhető)
+        const app = window.perfectCircleApp;
+        if (app) {
+            const scoreKey = roundedScore >= 90 ? 'perfect' : 
+                           roundedScore >= 75 ? 'excellent' : 
+                           roundedScore >= 60 ? 'good' : 
+                           roundedScore >= 40 ? 'notBad' : 'tryAgain';
+            
+            const localizedText = app.t(`scoreTitle.${scoreKey}`);
+            if (localizedText && !localizedText.startsWith('scoreTitle.')) {
+                titleText = localizedText;
+            }
+        }
+
+        // EMOJI MEGŐRZÉS - innerHTML használatával
+        elements.scoreTitle.innerHTML = `<span style="font-size: 1.2em;">${titleEmoji}</span> ${titleText}`;
+        
+        console.log('🎯 Cím beállítva:', `${titleEmoji} ${titleText}`);
+    }
+
+    // JAVÍTOTT RÉSZLETES PONTSZÁM BREAKDOWN
+    if (!analysis.error && elements.scoreBreakdown) {
+        const app = window.perfectCircleApp;
+        
+        // Pontszámok kerekítése és ellenőrzése
+        const shapeScore = Math.round(analysis.shapeScore || 0);
+        const closureScore = Math.round(analysis.closureScore || 0);
+        const smoothnessScore = Math.round(analysis.smoothnessScore || 0);
+        const sizeScore = Math.round(analysis.sizeScore || 0);
+        
+        console.log('📊 Pontszám részletei:', {
+            shapeScore, closureScore, smoothnessScore, sizeScore,
+            originalAnalysis: analysis
+        });
+        
+        // Transzformáció szöveg JAVÍTVA
+        let transformationHtml = '';
+        if (transformationName && transformationName.trim() !== '') {
+            // Transzformáció nevek magyarul
+            const transformationNames = {
+                'rainbow': 'Szivárvány',
+                'galaxy': 'Galaxis',
+                'flower': 'Virág',
+                'mandala': 'Mandala',
+                'spiral': 'Spirál',
+                'star': 'Csillag',
+                'heart': 'Szív',
+                'diamond': 'Gyémánt',
+                'wave': 'Hullám',
+                'fire': 'Tűz'
+            };
+            
+            let displayName = transformationNames[transformationName.toLowerCase()] || transformationName;
+            let transformationText = `🎨 Transzformáció: ${displayName}`;
+            
+            if (app) {
+                // Lokalizált név próbálkozás
+                const localizedName = app.t(`transformations.${transformationName.toLowerCase()}`);
+                if (localizedName && !localizedName.startsWith('transformations.')) {
+                    displayName = localizedName;
+                }
+                
+                // Teljes szöveg lokalizálása
+                const localizedText = app.t('scoreBreakdown.transformation', { name: displayName });
+                if (localizedText && !localizedText.startsWith('scoreBreakdown.')) {
+                    transformationText = localizedText;
+                } else {
+                    // Fallback a transformations.transformText kulcsra
+                    const fallbackText = app.t('transformations.transformText', { name: displayName });
+                    if (fallbackText && !fallbackText.startsWith('transformations.')) {
+                        transformationText = fallbackText;
+                    }
+                }
+            }
+            
+            transformationHtml = `
+                <div class="breakdown-item transformation-item" style="grid-column: 1/-1; background: rgba(255,215,0,0.3); border: 2px solid #ffd700; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                    <strong>${transformationText}</strong>
+                </div>
+            `;
+        }
+        
+        // Lokalizált szövegek biztonságos lekérése
+        const getText = (key, fallback) => {
+            if (!app) return fallback;
+            const text = app.t(key);
+            return (text && !text.startsWith(key.split('.')[0] + '.')) ? text : fallback;
+        };
+        
+        const shapeText = getText('scoreBreakdown.shape', '🔵 Köralak');
+        const closureText = getText('scoreBreakdown.closure', '🔗 Záródás');
+        const smoothnessText = getText('scoreBreakdown.smoothness', '🌊 Egyenletesség');
+        const sizeText = getText('scoreBreakdown.size', '📏 Méret');
+        const pointsText = getText('common.points', 'pont');
+        
+        elements.scoreBreakdown.innerHTML = `
+            <div class="breakdown-item">
+                <strong>${shapeText}:</strong><br>
+                <span class="score-value">${shapeScore}/40 ${pointsText}</span>
+            </div>
+            <div class="breakdown-item">
+                <strong>${closureText}:</strong><br>
+                <span class="score-value">${closureScore}/20 ${pointsText}</span>
+            </div>
+            <div class="breakdown-item">
+                <strong>${smoothnessText}:</strong><br>
+                <span class="score-value">${smoothnessScore}/25 ${pointsText}</span>
+            </div>
+            <div class="breakdown-item">
+                <strong>${sizeText}:</strong><br>
+                <span class="score-value">${sizeScore}/15 ${pointsText}</span>
+            </div>
+            ${transformationHtml}
+        `;
+
+    } else if (analysis.error && elements.scoreBreakdown) {
+        const app = window.perfectCircleApp;
+        const errorMsg = app ? (app.t(`errors.${analysis.error}`) || analysis.error) : analysis.error;
+        elements.scoreBreakdown.innerHTML = `
+            <div style="color: #ff6b6b; font-weight: bold; text-align: center; padding: 20px;">
+                ❌ ${errorMsg}
+            </div>
+        `;
+    }
+
+    // Ideális kör megjelenítése
+    if (analysis && !analysis.error && analysis.center && analysis.radius && elements.idealCircleContainer) {
+        elements.idealCircleContainer.style.display = 'block';
+        
+        const canvas = document.getElementById('idealCircleCanvas');
+        if (canvas && window.CircleAnalyzer && typeof window.CircleAnalyzer.drawIdealCircle === 'function') {
+            const ctx = canvas.getContext('2d');
+            const gameCanvas = document.getElementById('gameCanvas');
+            
+            if (gameCanvas && window.gameEngine && window.gameEngine.points) {
+                canvas.width = gameCanvas.width;
+                canvas.height = gameCanvas.height;
+                
+                window.CircleAnalyzer.drawIdealCircle(
+                    ctx, 
+                    analysis.center.x, 
+                    analysis.center.y, 
+                    analysis.radius,
+                    window.gameEngine.points
+                );
+            }
+        }
+    }
+
+    // Effektek és hangok
     if (window.EffectsManager) {
         window.EffectsManager.showScoreAnimation();
     }
 
-    if (!analysis.error && score > 0) {
+    if (!analysis.error && roundedScore > 0) {
         setTimeout(() => {
             if (window.EffectsManager) {
-                window.EffectsManager.celebrateScore(score);
+                window.EffectsManager.celebrateScore(roundedScore);
             }
             if (window.AudioManager && window.AudioManager.playCheerSound) {
-                window.AudioManager.playCheerSound(score);
+                window.AudioManager.playCheerSound(roundedScore);
             }
         }, 500);
         
         // Helyi mentés
         let savedScore = null;
         if (window.ScoreManager) {
-            savedScore = window.ScoreManager.saveScore(score, analysis, 
+            savedScore = window.ScoreManager.saveScore(roundedScore, analysis, 
                 window.gameEngine ? window.gameEngine.getDifficulty() : 'easy', 
                 transformationName
             );
@@ -974,7 +1132,7 @@ window.showScore = async (score, analysis, transformationName = '') => {
                 if (window.LeaderboardManager) {
                     await window.LeaderboardManager.saveGlobalScore(
                         playerName, 
-                        Math.round(score), 
+                        roundedScore, 
                         window.gameEngine ? window.gameEngine.getDifficulty() : 'easy', 
                         transformationName
                     );
@@ -996,6 +1154,8 @@ window.showScore = async (score, analysis, transformationName = '') => {
             window.LeaderboardManager.loadLocalLeaderboard(savedScore?.id);
         }
     }
+
+    console.log('✅ showScore befejezve');
 };
 
 // Biztonságos inicializálás - többszörös próbálkozással
