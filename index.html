@@ -263,6 +263,56 @@
             border-radius: 15px;
         }
 
+        /* PLAYER NAME INPUT */
+        .player-name-section {
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            padding: 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(30, 60, 114, 0.1);
+        }
+
+        .player-name-input {
+            padding: 10px 15px;
+            border: 2px solid #1e3c72;
+            border-radius: 25px;
+            font-size: 14px;
+            width: 200px;
+            text-align: center;
+            margin: 0 10px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .player-name-input:focus {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+        }
+
+        /* LEADERBOARD TABS */
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #1e3c72;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
         .leaderboard {
             margin-top: 20px;
             background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
@@ -274,11 +324,26 @@
         .leaderboard h3 {
             color: #1e3c72;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .leaderboard-status {
+            font-size: 0.8em;
+            color: #2a5298;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
         .score-entry {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 8px;
             margin: 4px 0;
             background: white;
@@ -291,6 +356,16 @@
             border-left-color: #4fc3f7;
             background: #f0f8ff;
             animation: highlight 1s ease-out;
+        }
+
+        .score-entry.top-3 {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left-color: #ff9800;
+        }
+
+        .score-entry.rank-1 {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border-left-color: #ffd700;
         }
 
         @keyframes highlight {
@@ -470,6 +545,21 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #4fc3f7;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Mobil optimalizálás */
         @media (max-width: 600px) {
             .game-container {
@@ -509,6 +599,21 @@
                 bottom: 10px;
                 right: 10px;
                 font-size: 0.75em;
+                padding: 6px 12px;
+            }
+
+            .player-name-input {
+                width: 150px;
+                margin: 5px;
+            }
+
+            .leaderboard-tabs {
+                flex-wrap: wrap;
+                gap: 3px;
+            }
+
+            .tab-btn {
+                font-size: 12px;
                 padding: 6px 12px;
             }
         }
@@ -590,6 +695,13 @@
             <strong>Hogyan játssz:</strong> Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨
         </div>
 
+        <!-- PLAYER NAME SECTION -->
+        <div class="player-name-section">
+            <label for="playerName"><strong>👤 Játékos név:</strong></label>
+            <input type="text" id="playerName" class="player-name-input" placeholder="Add meg a neved" maxlength="20" value="">
+            <button onclick="savePlayerName()" style="padding: 8px 16px; font-size: 12px;">💾 Mentés</button>
+        </div>
+
         <div class="difficulty-selector">
             <strong>Nehézség:</strong>
             <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy">Könnyű 😊</button>
@@ -628,7 +740,7 @@
             <button id="startBtn" onclick="startDrawing()">🎯 Rajzolás Kezdése</button>
             <button id="clearBtn" onclick="clearCanvas()" disabled>🗑️ Törlés</button>
             <button onclick="showInstructions()">❓ Segítség</button>
-            <button onclick="clearAllScores()">🗑️ Eredmények Törlése</button>
+            <button onclick="clearAllScores()">🗑️ Helyi Eredmények Törlése</button>
         </div>
 
         <div class="score-display" id="scoreDisplay">
@@ -639,8 +751,16 @@
             <div class="score-breakdown" id="scoreBreakdown"></div>
         </div>
 
+        <!-- LEADERBOARD WITH TABS -->
         <div class="leaderboard">
-            <h3>🏆 Legjobb Eredmények</h3>
+            <h3>🏆 Ranglista</h3>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" onclick="switchLeaderboard('local')" id="localTab">📱 Helyi</button>
+                <button class="tab-btn" onclick="switchLeaderboard('global')" id="globalTab">🌍 Globális</button>
+            </div>
+            <div class="leaderboard-status" id="leaderboardStatus">
+                📱 Helyi eredmények
+            </div>
             <div id="leaderboardList">
                 <div class="score-entry">
                     <span>Még nincsenek eredmények</span>
@@ -653,6 +773,86 @@
     <div class="visitor-counter" id="visitorCounter">
         Látogatások: <span class="visitor-number" id="visitCount">0</span>
     </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase konfiguráció (használj saját Firebase project adatokat)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOw7Lj3-demo-key-replace-with-real",
+            authDomain: "perfect-circle-demo.firebaseapp.com",
+            projectId: "perfect-circle-demo",
+            storageBucket: "perfect-circle-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo-app-id"
+        };
+
+        // Firebase inicializálás
+        let app, db;
+        let firebaseReady = false;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            firebaseReady = true;
+            console.log('Firebase inicializálva');
+        } catch (error) {
+            console.warn('Firebase nem elérhető, csak helyi tárolás működik:', error);
+            firebaseReady = false;
+        }
+
+        // Firebase függvények globálisan elérhetővé tétele
+        window.firebaseAPI = {
+            saveScore: async (playerName, score, difficulty, transformation) => {
+                if (!firebaseReady) {
+                    throw new Error('Firebase nem elérhető');
+                }
+                
+                try {
+                    const docRef = await addDoc(collection(db, 'scores'), {
+                        playerName: playerName,
+                        score: score,
+                        difficulty: difficulty,
+                        transformation: transformation,
+                        timestamp: serverTimestamp(),
+                        date: new Date().toLocaleDateString('hu-HU')
+                    });
+                    console.log('Pontszám mentve Firebase-be:', docRef.id);
+                    return docRef.id;
+                } catch (error) {
+                    console.error('Hiba a Firebase mentés során:', error);
+                    throw error;
+                }
+            },
+
+            getTopScores: async (limitCount = 10) => {
+                if (!firebaseReady) {
+                    throw new Error('Firebase nem elérhető');
+                }
+                
+                try {
+                    const q = query(
+                        collection(db, 'scores'), 
+                        orderBy('score', 'desc'), 
+                        limit(limitCount)
+                    );
+                    const querySnapshot = await getDocs(q);
+                    const scores = [];
+                    querySnapshot.forEach((doc) => {
+                        scores.push({ id: doc.id, ...doc.data() });
+                    });
+                    return scores;
+                } catch (error) {
+                    console.error('Hiba a Firebase lekérdezés során:', error);
+                    throw error;
+                }
+            },
+
+            isReady: () => firebaseReady
+        };
+    </script>
 
     <script>
         // Látogatásszámláló kezelése
@@ -682,6 +882,146 @@
             }
         }
 
+        // GLOBÁLIS LEADERBOARD KEZELŐ
+        class GlobalLeaderboard {
+            static currentView = 'local';
+            
+            static async saveGlobalScore(playerName, score, difficulty, transformation) {
+                if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+                    throw new Error('Firebase nem elérhető');
+                }
+                
+                const sanitizedName = playerName.trim().substring(0, 20) || 'Névtelen';
+                
+                try {
+                    await window.firebaseAPI.saveScore(sanitizedName, score, difficulty, transformation);
+                    return true;
+                } catch (error) {
+                    console.error('Globális pontszám mentése sikertelen:', error);
+                    throw error;
+                }
+            }
+            
+            static async loadGlobalScores() {
+                if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+                    throw new Error('Firebase nem elérhető');
+                }
+                
+                try {
+                    const scores = await window.firebaseAPI.getTopScores(10);
+                    return scores;
+                } catch (error) {
+                    console.error('Globális pontszámok betöltése sikertelen:', error);
+                    throw error;
+                }
+            }
+            
+            static updateStatus(message, isLoading = false) {
+                const statusEl = document.getElementById('leaderboardStatus');
+                if (isLoading) {
+                    statusEl.innerHTML = `<div class="loading-spinner"></div> ${message}`;
+                } else {
+                    statusEl.textContent = message;
+                }
+            }
+            
+            static displayScores(scores, isGlobal = false, highlightId = null) {
+                const leaderboardList = document.getElementById('leaderboardList');
+                
+                if (scores.length === 0) {
+                    leaderboardList.innerHTML = '<div class="score-entry"><span>Még nincsenek eredmények</span></div>';
+                    return;
+                }
+                
+                leaderboardList.innerHTML = scores.map((score, index) => {
+                    const isHighlighted = score.id === highlightId;
+                    const difficultyEmoji = { easy: '🟢😊', hard: '🔴🌀' };
+                    const transformationDisplay = score.transformation ? ` ✨${score.transformation}` : '';
+                    
+                    let rankClass = '';
+                    if (index === 0) rankClass = 'rank-1';
+                    else if (index < 3) rankClass = 'top-3';
+                    
+                    const playerName = isGlobal ? score.playerName : 'Te';
+                    
+                    return `
+                        <div class="score-entry ${isHighlighted ? 'current' : ''} ${rankClass}">
+                            <span>${index + 1}. ${playerName}</span>
+                            <span>${score.score} pont${transformationDisplay}</span>
+                            <span>${difficultyEmoji[score.difficulty]} ${score.date}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // PLAYER NAME KEZELÉS
+        function savePlayerName() {
+            const nameInput = document.getElementById('playerName');
+            const name = nameInput.value.trim();
+            
+            if (name.length === 0) {
+                alert('Kérlek add meg a neved!');
+                return;
+            }
+            
+            if (name.length > 20) {
+                alert('A név maximum 20 karakter lehet!');
+                return;
+            }
+            
+            localStorage.setItem('perfectcircle_playername', name);
+            alert(`Név mentve: ${name}`);
+        }
+
+        function loadPlayerName() {
+            const savedName = localStorage.getItem('perfectcircle_playername');
+            if (savedName) {
+                document.getElementById('playerName').value = savedName;
+            }
+        }
+
+        function getPlayerName() {
+            const name = document.getElementById('playerName').value.trim();
+            return name || 'Névtelen';
+        }
+
+        // LEADERBOARD TAB VÁLTÁS
+        function switchLeaderboard(type) {
+            GlobalLeaderboard.currentView = type;
+            
+            // Tab gombok frissítése
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(type + 'Tab').classList.add('active');
+            
+            if (type === 'local') {
+                GlobalLeaderboard.updateStatus('📱 Helyi eredmények');
+                loadLocalLeaderboard();
+            } else {
+                loadGlobalLeaderboard();
+            }
+        }
+
+        async function loadGlobalLeaderboard() {
+            GlobalLeaderboard.updateStatus('Globális eredmények betöltése...', true);
+            
+            try {
+                const scores = await GlobalLeaderboard.loadGlobalScores();
+                GlobalLeaderboard.displayScores(scores, true);
+                GlobalLeaderboard.updateStatus(`🌍 Globális toplista (${scores.length} játékos)`);
+            } catch (error) {
+                GlobalLeaderboard.updateStatus('❌ Globális eredmények nem elérhetők');
+                GlobalLeaderboard.displayScores([]);
+                console.error('Globális leaderboard betöltési hiba:', error);
+            }
+        }
+
+        function loadLocalLeaderboard(highlightId = null) {
+            const scores = ScoreManager.getScores();
+            GlobalLeaderboard.displayScores(scores, false, highlightId);
+            GlobalLeaderboard.updateStatus(`📱 Helyi eredmények (${scores.length} játék)`);
+        }
+
         // Játék változók
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -693,7 +1033,7 @@
         let audioContext;
         let currentTransformation = null;
 
-        // BŐVÍTETT kör transzformációs objektumok - PONTOSAN KÖVETIK A RAJZOLT ALAKOT!
+        // Kör transzformációs objektumok (rövidített verzió a hely miatt)
         const circleTransformations = [
             {
                 name: "Nap",
@@ -701,7 +1041,6 @@
                 draw: (centerX, centerY, radius, userPoints = null) => {
                     ctx.save();
                     
-                    // ELSŐ: Felhasználó vonalának követése
                     if (userPoints && userPoints.length > 0) {
                         // Nap sugarai a felhasználó vonala mentén
                         ctx.strokeStyle = '#FFD700';
@@ -711,7 +1050,6 @@
                             const angle = Math.atan2(point.y - centerY, point.x - centerX);
                             const distance = Math.sqrt((point.x - centerX) ** 2 + (point.y - centerY) ** 2);
                             
-                            // Sugár kifelé
                             const x1 = point.x;
                             const y1 = point.y;
                             const x2 = centerX + Math.cos(angle) * (distance * 1.3);
@@ -723,7 +1061,7 @@
                             ctx.stroke();
                         }
                         
-                        // Felhasználó vonala arany színnel
+                        // Felhasználó vonala
                         ctx.beginPath();
                         ctx.moveTo(userPoints[0].x, userPoints[0].y);
                         for (let i = 1; i < userPoints.length; i++) {
@@ -733,7 +1071,7 @@
                         ctx.lineWidth = 8;
                         ctx.stroke();
                         
-                        // Nap belső része - felhasználó alakja alapján
+                        // Nap belső része
                         ctx.beginPath();
                         ctx.moveTo(userPoints[0].x, userPoints[0].y);
                         for (let i = 1; i < userPoints.length; i++) {
@@ -744,7 +1082,7 @@
                         ctx.fill();
                     }
                     
-                    // Nap arca a közepén
+                    // Nap arca
                     ctx.fillStyle = '#FF8C00';
                     ctx.beginPath();
                     ctx.arc(centerX - radius * 0.2, centerY - radius * 0.15, radius * 0.08, 0, 2 * Math.PI);
@@ -757,64 +1095,6 @@
                     ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.arc(centerX, centerY + radius * 0.1, radius * 0.3, 0, Math.PI);
-                    ctx.stroke();
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Hold",
-                emoji: "🌙",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Hold alap - felhasználó vonala
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#E6F3FF';
-                        ctx.fill();
-                        
-                        // Hold körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#4FC3F7';
-                        ctx.lineWidth = 6;
-                        ctx.stroke();
-                    }
-                    
-                    // Hold kráterei
-                    ctx.fillStyle = '#BBDEFB';
-                    ctx.beginPath();
-                    ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, radius * 0.15, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(centerX + radius * 0.2, centerY + radius * 0.3, radius * 0.1, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(centerX + radius * 0.1, centerY - radius * 0.4, radius * 0.08, 0, 2 * Math.PI);
-                    ctx.fill();
-                    
-                    // Hold arca
-                    ctx.fillStyle = '#2A5298';
-                    ctx.beginPath();
-                    ctx.arc(centerX - radius * 0.15, centerY - radius * 0.1, radius * 0.06, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(centerX + radius * 0.15, centerY - radius * 0.1, radius * 0.06, 0, 2 * Math.PI);
-                    ctx.fill();
-                    
-                    ctx.strokeStyle = '#2A5298';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY + radius * 0.15, radius * 0.2, 0, Math.PI);
                     ctx.stroke();
                     
                     ctx.restore();
@@ -841,7 +1121,7 @@
                         ctx.beginPath();
                         ctx.moveTo(userPoints[0].x, userPoints[0].y);
                         for (let i = 1; i < userPoints.length; i++) {
-                            const scaleFactor = 0.85; // Kicsit kisebb a szósz
+                            const scaleFactor = 0.85;
                             const x = centerX + (userPoints[i].x - centerX) * scaleFactor;
                             const y = centerY + (userPoints[i].y - centerY) * scaleFactor;
                             ctx.lineTo(x, y);
@@ -891,20 +1171,6 @@
                         );
                         ctx.fill();
                     });
-                    
-                    // Pizza szeletek vonalai
-                    ctx.strokeStyle = '#8B7355';
-                    ctx.lineWidth = 2;
-                    for (let i = 0; i < 8; i++) {
-                        const angle = (i * Math.PI * 2) / 8;
-                        ctx.beginPath();
-                        ctx.moveTo(centerX, centerY);
-                        ctx.lineTo(
-                            centerX + Math.cos(angle) * radius * 0.8,
-                            centerY + Math.sin(angle) * radius * 0.8
-                        );
-                        ctx.stroke();
-                    }
                     
                     ctx.restore();
                 }
@@ -959,321 +1225,6 @@
                     ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Színes szórás
-                    const sprinkleColors = ['#1E3C72', '#2A5298', '#4FC3F7', '#FFD700', '#FF6B6B', '#FFFFFF'];
-                    ctx.lineWidth = 3;
-                    
-                    for (let i = 0; i < 20; i++) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const distance = radius * (0.4 + Math.random() * 0.3);
-                        const x = centerX + Math.cos(angle) * distance;
-                        const y = centerY + Math.sin(angle) * distance;
-                        
-                        ctx.strokeStyle = sprinkleColors[Math.floor(Math.random() * sprinkleColors.length)];
-                        ctx.beginPath();
-                        ctx.moveTo(x - 5, y);
-                        ctx.lineTo(x + 5, y);
-                        ctx.stroke();
-                    }
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Óra",
-                emoji: "🕐",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Óra háttér - felhasználó vonala
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#F0F8FF';
-                        ctx.fill();
-                        
-                        // Óra körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#1E3C72';
-                        ctx.lineWidth = 6;
-                        ctx.stroke();
-                    }
-                    
-                    // Számok
-                    ctx.fillStyle = '#1E3C72';
-                    ctx.font = `${radius * 0.2}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    
-                    for (let i = 1; i <= 12; i++) {
-                        const angle = (i * Math.PI * 2) / 12 - Math.PI / 2;
-                        const x = centerX + Math.cos(angle) * radius * 0.7;
-                        const y = centerY + Math.sin(angle) * radius * 0.7;
-                        ctx.fillText(i.toString(), x, y);
-                    }
-                    
-                    // Órák jelölése
-                    ctx.strokeStyle = '#1E3C72';
-                    ctx.lineWidth = 2;
-                    for (let i = 0; i < 12; i++) {
-                        const angle = (i * Math.PI * 2) / 12;
-                        const x1 = centerX + Math.cos(angle) * radius * 0.8;
-                        const y1 = centerY + Math.sin(angle) * radius * 0.8;
-                        const x2 = centerX + Math.cos(angle) * radius * 0.85;
-                        const y2 = centerY + Math.sin(angle) * radius * 0.85;
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                        ctx.stroke();
-                    }
-                    
-                    // Óramutató (3 óra)
-                    ctx.strokeStyle = '#2A5298';
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY);
-                    ctx.lineTo(centerX + radius * 0.4, centerY);
-                    ctx.stroke();
-                    
-                    // Percmutató (12 óra)
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY);
-                    ctx.lineTo(centerX, centerY - radius * 0.6);
-                    ctx.stroke();
-                    
-                    // Központ
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius * 0.05, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#1E3C72';
-                    ctx.fill();
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Virág",
-                emoji: "🌸",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Virág szirmok a felhasználó vonala mentén
-                        for (let i = 0; i < userPoints.length; i += Math.floor(userPoints.length / 8)) {
-                            const point = userPoints[i];
-                            
-                            ctx.beginPath();
-                            ctx.arc(point.x, point.y, radius * 0.2, 0, 2 * Math.PI);
-                            ctx.fillStyle = '#E1F5FE';
-                            ctx.fill();
-                            ctx.strokeStyle = '#4FC3F7';
-                            ctx.lineWidth = 3;
-                            ctx.stroke();
-                        }
-                        
-                        // Felhasználó vonala mint szár/körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#4FC3F7';
-                        ctx.lineWidth = 4;
-                        ctx.stroke();
-                    }
-                    
-                    // Virág közepe
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius * 0.25, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fill();
-                    ctx.strokeStyle = '#FFA500';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    
-                    // Porzók
-                    ctx.fillStyle = '#2A5298';
-                    for (let i = 0; i < 6; i++) {
-                        const angle = (i * Math.PI * 2) / 6;
-                        const x = centerX + Math.cos(angle) * radius * 0.15;
-                        const y = centerY + Math.sin(angle) * radius * 0.15;
-                        
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius * 0.03, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Labda",
-                emoji: "⚽",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Labda alap - felhasználó vonala
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fill();
-                        
-                        // Labda körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#1E3C72';
-                        ctx.lineWidth = 6;
-                        ctx.stroke();
-                    }
-                    
-                    // Futball minta
-                    ctx.fillStyle = '#1E3C72';
-                    for (let i = 0; i < 6; i++) {
-                        const angle = (i * Math.PI * 2) / 6;
-                        const x = centerX + Math.cos(angle) * radius * 0.4;
-                        const y = centerY + Math.sin(angle) * radius * 0.4;
-                        
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius * 0.15, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Szem",
-                emoji: "👁️",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Szem fehérje - felhasználó vonala
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fill();
-                        
-                        // Szem körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#1E3C72';
-                        ctx.lineWidth = 6;
-                        ctx.stroke();
-                    }
-                    
-                    // Írisz
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius * 0.5, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#4FC3F7';
-                    ctx.fill();
-                    ctx.strokeStyle = '#2A5298';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    
-                    // Pupilla
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius * 0.2, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#000000';
-                    ctx.fill();
-                    
-                    // Fény reflex
-                    ctx.beginPath();
-                    ctx.arc(centerX - radius * 0.1, centerY - radius * 0.1, radius * 0.08, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fill();
-                    
-                    ctx.restore();
-                }
-            },
-            {
-                name: "Dartboard",
-                emoji: "🎯",
-                draw: (centerX, centerY, radius, userPoints = null) => {
-                    ctx.save();
-                    
-                    if (userPoints && userPoints.length > 0) {
-                        // Dartboard külső - felhasználó vonala
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fill();
-                        
-                        // Dartboard rétegek
-                        const colors = ['#FF0000', '#FFFFFF', '#000000'];
-                        for (let i = 0; i < 3; i++) {
-                            ctx.beginPath();
-                            ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                            for (let j = 1; j < userPoints.length; j++) {
-                                const scaleFactor = 0.8 - i * 0.2;
-                                const x = centerX + (userPoints[j].x - centerX) * scaleFactor;
-                                const y = centerY + (userPoints[j].y - centerY) * scaleFactor;
-                                ctx.lineTo(x, y);
-                            }
-                            ctx.closePath();
-                            ctx.fillStyle = colors[i];
-                            ctx.fill();
-                        }
-                        
-                        // Dartboard körvonal
-                        ctx.beginPath();
-                        ctx.moveTo(userPoints[0].x, userPoints[0].y);
-                        for (let i = 1; i < userPoints.length; i++) {
-                            ctx.lineTo(userPoints[i].x, userPoints[i].y);
-                        }
-                        ctx.strokeStyle = '#1E3C72';
-                        ctx.lineWidth = 6;
-                        ctx.stroke();
-                    }
-                    
-                    // Dartboard vonalak
-                    ctx.strokeStyle = '#1E3C72';
-                    ctx.lineWidth = 2;
-                    for (let i = 0; i < 8; i++) {
-                        const angle = (i * Math.PI * 2) / 8;
-                        ctx.beginPath();
-                        ctx.moveTo(centerX, centerY);
-                        ctx.lineTo(
-                            centerX + Math.cos(angle) * radius * 0.9,
-                            centerY + Math.sin(angle) * radius * 0.9
-                        );
-                        ctx.stroke();
-                    }
-                    
-                    // Központ
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius * 0.1, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fill();
-                    
                     ctx.restore();
                 }
             }
@@ -1286,33 +1237,21 @@
             }
         }
 
-        // Transzformációs hang
         function playTransformationSound() {
             initAudio();
-            
             const frequencies = [523.25, 659.25, 783.99, 1046.50];
             frequencies.forEach((freq, index) => {
-                setTimeout(() => {
-                    playNote(freq, 0.3, 'sine');
-                }, index * 200);
+                setTimeout(() => playNote(freq, 0.3, 'sine'), index * 200);
             });
         }
 
-        // Ünneplési hangok generálása
         function playCheerSound(score) {
             initAudio();
-            
-            if (score >= 95) {
-                playFanfare();
-            } else if (score >= 85) {
-                playVictoryTune();
-            } else if (score >= 70) {
-                playSuccessSound();
-            } else if (score >= 50) {
-                playNeutralSound();
-            } else {
-                playSadSound();
-            }
+            if (score >= 95) playFanfare();
+            else if (score >= 85) playVictoryTune();
+            else if (score >= 70) playSuccessSound();
+            else if (score >= 50) playNeutralSound();
+            else playSadSound();
         }
 
         function playFanfare() {
@@ -1359,7 +1298,6 @@
             oscillator.stop(audioContext.currentTime + duration);
         }
 
-        // Szikrázó effekt a transzformáció alatt
         function createMagicSparkles(centerX, centerY, radius) {
             const container = document.querySelector('.canvas-container');
             
@@ -1388,30 +1326,24 @@
             }
         }
 
-        // Kör transzformáció a felhasználó vonalának PONTOS követésével
         function transformCircle(centerX, centerY, radius) {
             const overlay = document.getElementById('transformationOverlay');
             const transformationText = document.getElementById('transformationText');
             
-            // Random transzformáció kiválasztása
             const randomTransformation = circleTransformations[Math.floor(Math.random() * circleTransformations.length)];
             currentTransformation = randomTransformation;
             
-            // Overlay megjelenítése
             transformationText.textContent = `A köröd ${randomTransformation.name}-má/-vé alakul! ${randomTransformation.emoji}`;
             overlay.classList.add('show');
             
-            // Varázslatos effektek
             createMagicSparkles(centerX, centerY, radius);
             playTransformationSound();
             
-            // 1.5 másodperc után transzformáció
             setTimeout(() => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 randomTransformation.draw(centerX, centerY, radius, points);
             }, 1500);
             
-            // Overlay eltüntetése 3 másodperc után
             setTimeout(() => {
                 overlay.classList.remove('show');
             }, 3000);
@@ -1419,7 +1351,6 @@
             return randomTransformation.name;
         }
 
-        // Transzformáció újrarajzolása
         function redrawTransformation() {
             if (currentTransformation && points.length > 0) {
                 const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
@@ -1434,7 +1365,6 @@
             }
         }
 
-        // Konfetti effekt - kék színsémával
         function createConfetti(intensity = 50) {
             const container = document.getElementById('gameContainer');
             const colors = ['#4fc3f7', '#29b6f6', '#0277bd', '#1e3c72', '#2a5298', '#FFD700'];
@@ -1509,17 +1439,12 @@
                 
             } else if (score >= 70) {
                 createConfetti(30);
-                
-            } else if (score >= 50) {
-                // Nincs különleges effekt
-                
-            } else {
+            } else if (score < 50) {
                 container.classList.add('shake');
                 setTimeout(() => container.classList.remove('shake'), 500);
             }
         }
 
-        // MÓDOSÍTOTT nehézségi szintek - csak 2 szint
         const difficulties = {
             easy: { minRadius: 50, maxRadius: 150, tolerance: 0.85 },
             hard: { minRadius: 20, maxRadius: 190, tolerance: 0.95 }
@@ -1570,12 +1495,10 @@
             }
         }
 
-        // MÓDOSÍTOTT nehézség beállítása - csak könnyű és nehéz
         function setDifficulty(level) {
             difficulty = level;
             const container = document.getElementById('gameContainer');
             
-            // Forgatás csak nehéz módban
             if (level === 'hard') {
                 container.classList.add('hard-mode');
             } else {
@@ -1596,7 +1519,6 @@
             
             document.getElementById('startBtn').disabled = true;
             document.getElementById('clearBtn').disabled = false;
-            document.getElementById('canvasOverlay').textContent = 'Rajzolj egy kört!';
             document.getElementById('scoreDisplay').classList.remove('show');
             
             currentGameId = Date.now();
@@ -1606,12 +1528,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             points = [];
             currentTransformation = null;
-            
-            if (gameActive) {
-                document.getElementById('canvasOverlay').textContent = 'Rajzolj egy kört!';
-            } else {
-                document.getElementById('canvasOverlay').textContent = '';
-            }
         }
 
         function getEventPos(e) {
@@ -1644,8 +1560,6 @@
             
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
-            
-            document.getElementById('canvasOverlay').textContent = '';
         }
 
         function drawPath(e) {
@@ -1743,7 +1657,6 @@
 
             drawIdealCircle(centerX, centerY, avgRadius);
 
-            // TRANSZFORMÁCIÓ! ✨
             let transformationName = '';
             if (!analysis.error && totalScore > 0) {
                 setTimeout(() => {
@@ -1765,7 +1678,8 @@
             ctx.setLineDash([]);
         }
 
-        function showScore(score, analysis, transformationName = '') {
+        // MÓDOSÍTOTT showScore függvény - globális mentéssel
+        async function showScore(score, analysis, transformationName = '') {
             document.getElementById('currentScore').textContent = Math.round(score);
             document.getElementById('finalScore').textContent = Math.round(score);
             
@@ -1813,9 +1727,30 @@
                     playCheerSound(score);
                 }, 500);
                 
+                // Helyi mentés
                 ScoreManager.saveScore(score, analysis, difficulty, transformationName);
                 updateStats();
-                loadLeaderboard(currentGameId);
+                
+                // Globális mentés megkísérlése
+                const playerName = getPlayerName();
+                if (playerName !== 'Névtelen' && window.firebaseAPI && window.firebaseAPI.isReady()) {
+                    try {
+                        await GlobalLeaderboard.saveGlobalScore(playerName, Math.round(score), difficulty, transformationName);
+                        console.log('Pontszám mentve globálisan!');
+                        
+                        // Ha globális tab aktív, frissítsük
+                        if (GlobalLeaderboard.currentView === 'global') {
+                            setTimeout(() => loadGlobalLeaderboard(), 1000);
+                        }
+                    } catch (error) {
+                        console.warn('Globális mentés sikertelen:', error);
+                    }
+                }
+                
+                // Aktuális tab frissítése
+                if (GlobalLeaderboard.currentView === 'local') {
+                    loadLocalLeaderboard(currentGameId);
+                }
             }
         }
 
@@ -1824,30 +1759,6 @@
             document.getElementById('bestScore').textContent = stats.best;
             document.getElementById('averageScore').textContent = stats.average;
             document.getElementById('gamesPlayed').textContent = stats.games;
-        }
-
-        function loadLeaderboard(highlightId = null) {
-            const scores = ScoreManager.getScores();
-            const leaderboardList = document.getElementById('leaderboardList');
-            
-            if (scores.length === 0) {
-                leaderboardList.innerHTML = '<div class="score-entry"><span>Még nincsenek eredmények</span></div>';
-                return;
-            }
-            
-            leaderboardList.innerHTML = scores.map((score, index) => {
-                const isHighlighted = score.id === highlightId;
-                const difficultyEmoji = { easy: '🟢😊', hard: '🔴🌀' };
-                const transformationDisplay = score.transformation ? ` ✨${score.transformation}` : '';
-                
-                return `
-                    <div class="score-entry ${isHighlighted ? 'current' : ''}">
-                        <span>${index + 1}. ${score.score} pont${transformationDisplay}</span>
-                        <span>${difficultyEmoji[score.difficulty]} ${score.difficulty}</span>
-                        <span>${score.date}</span>
-                    </div>
-                `;
-            }).join('');
         }
 
         function showInstructions() {
@@ -1870,42 +1781,42 @@
 • Nehéz 🌀: 20-190px sugár + forgó UI!
 
 ✨ VARÁZSLAT: A köröd pontosan követi az alakodat!
-• Nap ☀️ • Hold 🌙 • Pizza 🍕 • Donut 🍩 • Óra 🕐
-• Virág 🌸 • Labda ⚽ • Szem 👁️ • Dartboard 🎯
-• ÚJDONSÁG: A transzformált objektum PONTOSAN követi a rajzolt alakot!
+• Transzformációk: Nap ☀️, Pizza 🍕, Donut 🍩 és még sok más!
+
+🌍 GLOBÁLIS RANGLISTA:
+• Add meg a neved a globális ranglistához!
+• Versenyezz játékosokkal a világ minden tájáról!
+• Helyi és globális eredmények külön megtekinthetők!
 
 🎉 Ünneplési effektek:
 • 95+ pont: Konfetti + tűzijáték + fanfár
 • 85+ pont: Konfetti + tűzijáték + győzelmi dallam
 • 70+ pont: Konfetti + siker hang
-• 50+ pont: Semleges hang
-• 0-49 pont: Rázás + szomorú hang
 
 💡 Tippek:
 • Lassan és egyenletesen rajzolj
 • Próbáld meg egy mozdulattal befejezni
-• A középső méret a legjobb
-• Nehéz módban a forgó UI extra kihívás!
-• Az alakod pontosan megmarad a transzformációban!
+• Add meg a neved a globális ranglistához!
 
 Sok sikert! 🍀✨`);
         }
 
         function clearAllScores() {
-            if (confirm('Biztosan törölni szeretnéd az összes eredményt?')) {
+            if (confirm('Biztosan törölni szeretnéd a helyi eredményeket?')) {
                 ScoreManager.clearScores();
                 updateStats();
-                loadLeaderboard();
-                alert('Eredmények törölve!');
+                if (GlobalLeaderboard.currentView === 'local') {
+                    loadLocalLeaderboard();
+                }
+                alert('Helyi eredmények törölve!');
             }
         }
 
         function init() {
-            // Látogatásszámláló inicializálása
             VisitorCounter.init();
-            
+            loadPlayerName();
             updateStats();
-            loadLeaderboard();
+            loadLocalLeaderboard();
             
             function resizeCanvas() {
                 const container = document.querySelector('.canvas-container');
@@ -1918,7 +1829,6 @@ Sok sikert! 🍀✨`);
             window.addEventListener('resize', resizeCanvas);
         }
 
-        // Resize event listener a transzformáció újrarajzolásához
         window.addEventListener('resize', () => {
             redrawTransformation();
         });
