@@ -1,4 +1,65 @@
 // Fő alkalmazás inicializáló és koordinátor - Teljes verzió
+// LeaderboardManager konstruktor és metódusok
+function LeaderboardManager(element) {
+    this.element = element || document.getElementById('leaderboard');
+    if (!this.element) {
+        // Hozd létre a leaderboard elemet ha nincs
+        this.element = document.createElement('div');
+        this.element.id = 'leaderboard';
+        this.element.innerHTML = '<h3>🏆 Rangsor</h3><div>Betöltés...</div>';
+        
+        const container = document.querySelector('.container') || document.body;
+        container.appendChild(this.element);
+    }
+}
+
+// Metódusok hozzáadása a prototípushoz
+LeaderboardManager.prototype.switchLeaderboard = function(type) {
+    console.log(`🔄 LeaderboardManager switchLeaderboard: ${type}`);
+    
+    if (type === 'global') {
+        this.loadGlobalLeaderboard();
+    } else if (type === 'local') {
+        this.loadLocalLeaderboard();
+    }
+};
+
+LeaderboardManager.prototype.loadGlobalLeaderboard = function() {
+    console.log('🌍 LeaderboardManager loadGlobalLeaderboard');
+    
+    if (!this.element) return;
+    
+    this.element.innerHTML = `
+        <h3>🏆 Globális Rangsor</h3>
+        <div class="leaderboard-loading">Adatok betöltése...</div>
+    `;
+    
+    // Szimulált adatok betöltése
+    setTimeout(() => {
+        this.element.innerHTML = `
+            <h3>🏆 Globális Rangsor</h3>
+            <div class="leaderboard-entry">1. 🥇 Player1 - 15,420 pont</div>
+            <div class="leaderboard-entry">2. 🥈 Player2 - 12,350 pont</div>
+            <div class="leaderboard-entry">3. 🥉 Player3 - 11,200 pont</div>
+            <div class="leaderboard-entry">4. 👤 Te - 8,500 pont</div>
+            <div class="leaderboard-entry">5. 👤 Player5 - 7,800 pont</div>
+        `;
+    }, 1000);
+};
+
+LeaderboardManager.prototype.loadLocalLeaderboard = function() {
+    if (!this.element) return;
+    
+    this.element.innerHTML = `
+        <h3>🏠 Helyi Rangsor</h3>
+        <div class="leaderboard-entry">1. 🥇 Te - 8,500 pont</div>
+        <div class="leaderboard-entry">2. 🥈 LocalPlayer - 7,200 pont</div>
+        <div class="leaderboard-entry">3. 🥉 Friend1 - 6,800 pont</div>
+    `;
+};
+
+// Globális hozzáférés biztosítása
+window.LeaderboardManager = LeaderboardManager;
 
 // BIZTONSÁGOS SCORE ADAT KÉSZÍTŐ FÜGGVÉNY
 // JAVÍTOTT createSafeScoreData - cseréld ki a teljes függvényt
@@ -220,41 +281,26 @@ class PerfectCircleApp {
         });
     }
 
-    async initializeLeaderboardManager() {
-        console.log('🏆 LeaderboardManager inicializálása...');
+async initializeLeaderboardManager() {
+    console.log('🏆 LeaderboardManager inicializálása...');
+    
+    try {
+        // Hozzuk létre a LeaderboardManager példányt
+        this.leaderboardManager = new LeaderboardManager();
+        console.log('✅ LeaderboardManager példány létrehozva');
         
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        while (!window.LeaderboardManager && attempts < maxAttempts) {
-            console.log(`🔄 LeaderboardManager várakozás... (${attempts + 1}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
+        if (typeof this.leaderboardManager.loadLocalLeaderboard === 'function') {
+            this.leaderboardManager.loadLocalLeaderboard();
+            console.log('✅ Helyi ranglista betöltve');
         }
         
-        if (!window.LeaderboardManager) {
-            console.warn('⚠️ LeaderboardManager osztály nem elérhető - folytatás nélküle');
-            this.leaderboardManager = null;
-            return;
-        }
-        
-        try {
-            this.leaderboardManager = new window.LeaderboardManager(this);
-            console.log('✅ LeaderboardManager példány létrehozva');
-            
-            if (typeof this.leaderboardManager.loadLocalLeaderboard === 'function') {
-                this.leaderboardManager.loadLocalLeaderboard();
-                console.log('✅ Helyi ranglista betöltve');
-            } else {
-                console.error('❌ loadLocalLeaderboard metódus nem található');
-            }
-            
-        } catch (error) {
-            console.error('❌ LeaderboardManager inicializálási hiba:', error);
-            this.leaderboardManager = null;
-            this.displayFallbackLeaderboard();
-        }
+    } catch (error) {
+        console.error('❌ LeaderboardManager inicializálási hiba:', error);
+        this.leaderboardManager = null;
+        this.displayFallbackLeaderboard();
     }
+}
+
 
     displayFallbackLeaderboard() {
         console.log('🔄 Fallback ranglista megjelenítés...');
@@ -1235,10 +1281,13 @@ window.switchLeaderboard = (type) => {
     console.log(`🔄 Globális switchLeaderboard hívás: ${type}`);
     
     const app = window.perfectCircleApp;
-    if (app && typeof app.switchLeaderboard === 'function') {
-        app.switchLeaderboard(type);
+    if (app && app.leaderboardManager && typeof app.leaderboardManager.switchLeaderboard === 'function') {
+        app.leaderboardManager.switchLeaderboard(type);
     } else {
-        console.error('❌ PerfectCircleApp switchLeaderboard metódus nem elérhető');
+        console.log('⚠️ LeaderboardManager switchLeaderboard metódus nem elérhető');
+        if (app && typeof app.handleLeaderboardSwitch === 'function') {
+            app.handleLeaderboardSwitch(type);
+        }
     }
 };
 
@@ -1246,8 +1295,8 @@ window.loadGlobalLeaderboard = async () => {
     console.log('🌍 Globális loadGlobalLeaderboard hívás');
     
     const app = window.perfectCircleApp;
-    if (app && typeof app.loadGlobalLeaderboard === 'function') {
-        await app.loadGlobalLeaderboard();
+    if (app && app.leaderboardManager && typeof app.leaderboardManager.loadGlobalLeaderboard === 'function') {
+        await app.leaderboardManager.loadGlobalLeaderboard();
     } else {
         console.error('❌ PerfectCircleApp loadGlobalLeaderboard metódus nem elérhető');
     }
