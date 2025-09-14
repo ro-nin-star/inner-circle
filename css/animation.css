@@ -1,0 +1,225 @@
+/* Animációk és effektek */
+
+/* Stat celebration */
+.stat.celebrating {
+    animation: statCelebration 0.8s ease-out;
+}
+
+@keyframes statCelebration {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.1); background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); }
+    50% { transform: scale(1.05); background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%); }
+    100% { transform: scale(1); background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%); }
+}
+
+/* Transformation animation */
+.transformation-overlay.show {
+    animation: transformationFade 3s ease-in-out;
+}
+
+@keyframes transformationFade {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Magic sparkles */
+.magic-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #ffd700;
+    border-radius: 50%;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+/* Score animation */
+.score-display.show {
+    animation: scoreAnimation 0.5s ease-out;
+}
+
+@keyframes scoreAnimation {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Highlight animation */
+.score-entry.current {
+    animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+    0% { background: #fff3e0; }
+    100% { background: #f0f8ff; }
+}
+
+/* Hard mode rotation */
+.game-container.hard-mode {
+    animation: circleFloat 6s ease-in-out infinite;
+}
+
+@keyframes circleFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
+}
+
+/* Confetti */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #4fc3f7;
+    border-radius: 50%;
+    animation: confetti-fall 3s linear infinite;
+    z-index: 1000;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Fireworks */
+.firework {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: firework 1s ease-out forwards;
+    z-index: 1000;
+}
+
+@keyframes firework {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* Excellence pulse */
+.excellent-pulse {
+    animation: excellentPulse 2s ease-in-out;
+}
+
+@keyframes excellentPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    25% { 
+        transform: scale(1.02); 
+        box-shadow: 0 25px 50px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    50% { 
+        transform: scale(1.05); 
+        box-shadow: 0 30px 60px rgba(79, 195, 247, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    75% { 
+        transform: scale(1.02); 
+        box-shadow: 0 25px 50px rgba(30, 60, 114, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+}
+
+/* Shake effect */
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Visitor counter pulse */
+.visitor-counter {
+    animation: visitorCounterPulse 2s ease-in-out;
+}
+
+@keyframes visitorCounterPulse {
+    0% { 
+        opacity: 0; 
+        transform: translateY(20px) scale(0.8); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* Blink animation */
+.visitor-counter::before {
+    animation: blink 3s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.3; }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Slide in animation */
+.offline-notice.show {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Decoration circles float */
+.decoration-circle {
+    animation: decorationFloat 8s ease-in-out infinite;
+}
+
+.decoration-circle:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.decoration-circle:nth-child(2) {
+    animation-delay: 2s;
+}
+
+.decoration-circle:nth-child(3) {
+    animation-delay: 4s;
+}
+
+@keyframes decorationFloat {
+    0%, 100% { 
+        transform: translateY(0px) scale(1);
+        opacity: 0.3;
+    }
+    50% { 
+        transform: translateY(-20px) scale(1.1);
+        opacity: 0.6;
+    }
+}

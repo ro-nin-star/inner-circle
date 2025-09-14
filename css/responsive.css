@@ -1,0 +1,84 @@
+/* Mobil optimalizálás */
+@media (max-width: 600px) {
+    .game-container {
+        padding: 15px;
+        margin: 8px;
+        border-radius: 30px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .game-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .stat {
+        padding: 10px;
+        border-radius: 20px;
+    }
+    
+    .stat-label {
+        font-size: 0.75em;
+    }
+    
+    .stat-value {
+        font-size: 1.3em;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+    }
+
+    .visitor-counter {
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.75em;
+        padding: 6px 12px;
+    }
+
+    .player-name-input {
+        width: 150px;
+        margin: 5px;
+    }
+
+    .leaderboard-tabs {
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+
+    .tab-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .firebase-status {
+        top: 10px;
+        right: 10px;
+        font-size: 0.65em;
+        padding: 4px 8px;
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 400px) {
+    .game-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat {
+        padding: 8px;
+    }
+
+    .game-container {
+        border-radius: 25px;
+    }
+
+    .visitor-counter {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+}
