@@ -390,42 +390,56 @@ class PerfectCircleApp {
         }
     }
     
-    addAudioToggleButton() {
-        const controls = document.querySelector('.controls');
-        if (controls && !document.getElementById('audioToggleBtn')) {
-            const audioBtn = document.createElement('button');
-            audioBtn.id = 'audioToggleBtn';
-            audioBtn.innerHTML = this.t('audio.enabled');
-            audioBtn.onclick = this.toggleAudio.bind(this);
-            audioBtn.title = 'Audio toggle';
-            controls.appendChild(audioBtn);
-        }
+addAudioToggleButton() {
+    const controls = document.querySelector('.controls');
+    if (controls && !document.getElementById('audioToggleBtn')) {
+        const audioBtn = document.createElement('button');
+        audioBtn.id = 'audioToggleBtn';
+        
+        // ✅ Data-i18n hozzáadása
+        audioBtn.setAttribute('data-i18n', 'audio.enabled');
+        
+        audioBtn.innerHTML = '🔊 ' + this.t('audio.enabled');
+        audioBtn.onclick = this.toggleAudio.bind(this);
+        audioBtn.title = 'Audio toggle';
+        controls.appendChild(audioBtn);
     }
+}
+
     
-    addThemeToggleButton() {
-        const controls = document.querySelector('.controls');
-        if (controls && !document.getElementById('themeToggleBtn')) {
-            const themeBtn = document.createElement('button');
-            themeBtn.id = 'themeToggleBtn';
-            themeBtn.innerHTML = this.t('theme.dark');
-            themeBtn.onclick = this.toggleTheme.bind(this);
-            themeBtn.title = 'Theme toggle';
-            controls.appendChild(themeBtn);
-        }
+addThemeToggleButton() {
+    const controls = document.querySelector('.controls');
+    if (controls && !document.getElementById('themeToggleBtn')) {
+        const themeBtn = document.createElement('button');
+        themeBtn.id = 'themeToggleBtn';
+        
+        // ✅ Data-i18n hozzáadása
+        themeBtn.setAttribute('data-i18n', 'theme.dark');
+        
+        themeBtn.innerHTML = '🌙 ' + this.t('theme.dark');
+        themeBtn.onclick = this.toggleTheme.bind(this);
+        themeBtn.title = 'Theme toggle';
+        controls.appendChild(themeBtn);
     }
+}
     
-    addAdvancedFeaturesButton() {
-        const controls = document.querySelector('.controls');
-        if (controls && !document.getElementById('advancedBtn')) {
-            const advancedBtn = document.createElement('button');
-            advancedBtn.id = 'advancedBtn';
-            const advancedText = this.t('advanced.title').replace('⚙️ ', '') || 'Fejlett';
-            advancedBtn.innerHTML = '⚙️ ' + advancedText;
-            advancedBtn.onclick = this.showAdvancedFeatures.bind(this);
-            advancedBtn.title = 'Advanced features';
-            controls.appendChild(advancedBtn);
-        }
+addAdvancedFeaturesButton() {
+    const controls = document.querySelector('.controls');
+    if (controls && !document.getElementById('advancedBtn')) {
+        const advancedBtn = document.createElement('button');
+        advancedBtn.id = 'advancedBtn';
+        
+        // ✅ Data-i18n hozzáadása
+        advancedBtn.setAttribute('data-i18n', 'advanced.title');
+        
+        const advancedText = this.t('advanced.title').replace('⚙️ ', '') || 'Fejlett';
+        advancedBtn.innerHTML = '⚙️ ' + advancedText;
+        advancedBtn.onclick = this.showAdvancedFeatures.bind(this);
+        advancedBtn.title = 'Advanced features';
+        controls.appendChild(advancedBtn);
     }
+}
+
     
     addLanguageInfoButton() {
         const controls = document.querySelector('.controls');
