@@ -18,30 +18,35 @@
     <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()">🟡 Connecting...</div>
 
     <div class="game-container" id="gameContainer">
-        <h1>🎯 Perfect Circle</h1>
-        <p class="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
-        
+        <!-- Language selector script-ek hozzáadása a head-ben -->
+        <script src="js/i18n/languageDetector.js"></script>
+        <script src="js/i18n/i18nManager.js"></script>
+
+        <!-- HTML elemek data-i18n attribútumokkal -->
+        <h1 data-i18n="title">🎯 Perfect Circle</h1>
+        <p class="subtitle" data-i18n="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
+
         <div class="instructions">
-            <strong>Hogyan játssz:</strong> Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨
+            <strong data-i18n="instructions.title">Hogyan játssz:</strong> 
+            <span data-i18n="instructions.text">Kattints és húzd az egeret...</span>
         </div>
 
-        <!-- Offline notice -->
-        <div class="offline-notice" id="offlineNotice">
-            ⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek.
-        </div>
+        <!-- Gombok -->
+        <button id="startBtn" onclick="startDrawing()" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
+        <button id="clearBtn" onclick="clearCanvas()" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
 
-        <!-- PLAYER NAME SECTION -->
-        <div class="player-name-section">
-            <label for="playerName"><strong>👤 Játékos név:</strong></label>
-            <input type="text" id="playerName" class="player-name-input" placeholder="Add meg a neved" maxlength="20" value="">
-            <button onclick="savePlayerName()" style="padding: 8px 16px; font-size: 12px;">💾 Mentés</button>
-        </div>
+        <!-- Statisztikák -->
+        <div class="stat-label" data-i18n="stats.currentScore">Jelenlegi Pontszám</div>
+        <div class="stat-label" data-i18n="stats.bestScore">Legjobb Eredmény</div>
 
-        <div class="difficulty-selector">
-            <strong>Nehézség:</strong>
-            <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy">Könnyű 😊</button>
-            <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard">Nehéz 🌀</button>
-        </div>
+        <!-- Nehézség -->
+        <strong data-i18n="difficulty.label">Nehézség:</strong>
+        <button class="difficulty-btn active" data-i18n="difficulty.easy">Könnyű 😊</button>
+
+        <!-- Játékos név -->
+        <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
+        <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" maxlength="20">
+
 
         <div class="game-stats" id="gameStats">
             <div class="stat" id="currentScoreStat">
