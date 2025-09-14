@@ -146,30 +146,68 @@ class GameEngine {
         }
     }
     
-    transformCircle(centerX, centerY, radius) {
-        const overlay = document.getElementById('transformationOverlay');
-        const transformationText = document.getElementById('transformationText');
-        
-        const randomTransformation = TransformationManager.getRandomTransformation();
-        this.currentTransformation = randomTransformation;
-        
-        transformationText.textContent = `A köröd ${randomTransformation.name}-átlakult! ${randomTransformation.emoji}`;
+// gameEngine.js-ben cseréld le ezt a függvényt:
+transformCircle(centerX, centerY, radius) {
+    const overlay = document.getElementById('transformationOverlay');
+    const transformationText = document.getElementById('transformationText');
+    
+    const randomTransformation = TransformationManager.getRandomTransformation();
+    this.currentTransformation = randomTransformation;
+    
+    // Biztonságos szöveg beállítás
+    if (transformationText) {
+        if (window.perfectCircleApp && typeof window.perfectCircleApp.getTransformationText === 'function') {
+            transformationText.textContent = window.perfectCircleApp.getTransformationText(randomTransformation.name, randomTransformation.emoji);
+        } else {
+            transformationText.textContent = `A köröd ${randomTransformation.name}-átlakult! ${randomTransformation.emoji}`;
+        }
+    }
+    
+    if (overlay) {
         overlay.classList.add('show');
-        
+    }
+    
+    // Varázslatos effektek
+    if (window.EffectsManager && typeof window.EffectsManager.createMagicSparkles === 'function') {
         EffectsManager.createMagicSparkles(centerX, centerY, radius);
-        AudioManager.playTransformationSound();
-        
-        setTimeout(() => {
+    }
+    
+    // BIZTONSÁGOS AUDIO HÍVÁS
+    try {
+        if (window.AudioManager && typeof window.AudioManager.playTransformationSound === 'function') {
+            window.AudioManager.playTransformationSound();
+            console.log('🎵 Transzformációs hang lejátszva');
+        } else {
+            console.warn('🔇 AudioManager.playTransformationSound nem elérhető');
+            
+            // Alternatív hang próbálása
+            if (window.AudioManager && typeof window.AudioManager.playSuccessSound === 'function') {
+                window.AudioManager.playSuccessSound();
+                console.log('🎵 Alternatív hang lejátszva');
+            }
+        }
+    } catch (error) {
+        console.warn('🔇 Audio lejátszási hiba:', error);
+    }
+    
+    // Transzformáció rajzolása
+    setTimeout(() => {
+        if (this.ctx) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             randomTransformation.draw(centerX, centerY, radius, this.points);
-        }, 1500);
-        
-        setTimeout(() => {
+        }
+    }, 1500);
+    
+    // Overlay elrejtése
+    setTimeout(() => {
+        if (overlay) {
             overlay.classList.remove('show');
-        }, 3000);
-        
-        return randomTransformation.name;
-    }
+        }
+    }, 3000);
+    
+    return randomTransformation.name;
+}
+
     
     redrawTransformation() {
         if (this.currentTransformation && this.points.length > 0) {
