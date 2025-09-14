@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: radial-gradient(circle at center, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -21,29 +21,59 @@
             padding: 15px;
             color: white;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Kör alakú háttér elemek */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
         }
 
         .game-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%);
+            border-radius: 50px;
             padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.5);
             text-align: center;
             max-width: 600px;
             width: 100%;
-            color: #333;
+            color: #1e3c72;
             position: relative;
+            border: 3px solid rgba(30, 60, 114, 0.2);
         }
 
         h1 {
             margin-bottom: 8px;
-            color: #667eea;
+            color: #1e3c72;
             font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .subtitle {
             margin-bottom: 15px;
-            color: #666;
+            color: #2a5298;
             font-size: 1.1em;
         }
 
@@ -55,11 +85,13 @@
         }
 
         .stat {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 25px;
             min-width: auto;
             transition: all 0.3s ease;
+            border: 2px solid rgba(30, 60, 114, 0.1);
+            box-shadow: 0 4px 8px rgba(30, 60, 114, 0.1);
         }
 
         .stat.celebrating {
@@ -68,36 +100,41 @@
 
         @keyframes statCelebration {
             0% { transform: scale(1); }
-            25% { transform: scale(1.1); background: #fff3cd; }
-            50% { transform: scale(1.05); background: #d4edda; }
-            100% { transform: scale(1); background: #f8f9fa; }
+            25% { transform: scale(1.1); background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); }
+            50% { transform: scale(1.05); background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%); }
+            100% { transform: scale(1); background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%); }
         }
 
         .stat-label {
             font-size: 0.8em;
-            color: #666;
+            color: #2a5298;
             margin-bottom: 4px;
+            font-weight: 600;
         }
 
         .stat-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #333;
+            color: #1e3c72;
         }
 
         .canvas-container {
             position: relative;
             margin: 15px auto;
-            border: 3px solid #667eea;
-            border-radius: 15px;
+            border: 4px solid #1e3c72;
+            border-radius: 50%;
             overflow: hidden;
-            background: white;
+            background: radial-gradient(circle at center, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 
+                inset 0 0 20px rgba(30, 60, 114, 0.1),
+                0 10px 30px rgba(30, 60, 114, 0.3);
         }
 
         #gameCanvas {
             display: block;
             cursor: crosshair;
             touch-action: none;
+            border-radius: 50%;
         }
 
         .canvas-overlay {
@@ -110,25 +147,26 @@
             justify-content: center;
             font-size: 2em;
             font-weight: bold;
-            color: rgba(102, 126, 234, 0.7);
+            color: rgba(30, 60, 114, 0.7);
+            border-radius: 50%;
         }
 
-        /* Transzformáció overlay */
         .transformation-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            background: radial-gradient(circle at center, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.9) 100%);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-size: 1.5em;
             font-weight: bold;
-            color: #667eea;
+            color: #1e3c72;
             z-index: 10;
+            border-radius: 50%;
         }
 
         .transformation-overlay.show {
@@ -162,26 +200,30 @@
         }
 
         button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             border: none;
             padding: 12px 25px;
-            border-radius: 25px;
+            border-radius: 50px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             margin: 4px;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 
+                0 4px 15px rgba(30, 60, 114, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 
+                0 6px 20px rgba(30, 60, 114, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.2);
         }
 
         button:disabled {
-            background: #ccc;
+            background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
             cursor: not-allowed;
             transform: none;
         }
@@ -189,12 +231,13 @@
         .score-display {
             margin: 15px 0;
             padding: 18px;
-            background: linear-gradient(45deg, #ff6b6b, #ffa500);
-            border-radius: 15px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0277bd 100%);
+            border-radius: 30px;
             color: white;
             display: none;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 8px 25px rgba(79, 195, 247, 0.3);
         }
 
         .score-display.show {
@@ -217,18 +260,19 @@
         .breakdown-item {
             background: rgba(255, 255, 255, 0.2);
             padding: 8px;
-            border-radius: 8px;
+            border-radius: 15px;
         }
 
         .leaderboard {
             margin-top: 20px;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
             padding: 18px;
-            border-radius: 15px;
+            border-radius: 30px;
+            border: 2px solid rgba(30, 60, 114, 0.1);
         }
 
         .leaderboard h3 {
-            color: #333;
+            color: #1e3c72;
             margin-bottom: 12px;
         }
 
@@ -238,27 +282,29 @@
             padding: 8px;
             margin: 4px 0;
             background: white;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 20px;
+            border-left: 4px solid #1e3c72;
+            box-shadow: 0 2px 5px rgba(30, 60, 114, 0.1);
         }
 
         .score-entry.current {
-            border-left-color: #ff6b6b;
-            background: #fff5f5;
+            border-left-color: #4fc3f7;
+            background: #f0f8ff;
             animation: highlight 1s ease-out;
         }
 
         @keyframes highlight {
-            0% { background: #ffeb3b; }
-            100% { background: #fff5f5; }
+            0% { background: #fff3e0; }
+            100% { background: #f0f8ff; }
         }
 
         .instructions {
-            background: #e3f2fd;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 20px;
             margin-bottom: 15px;
             border-left: 4px solid #2196f3;
+            color: #1e3c72;
         }
 
         .difficulty-selector {
@@ -266,24 +312,26 @@
         }
 
         .difficulty-btn {
-            background: #f0f0f0;
-            color: #333;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #1e3c72;
             margin: 0 4px;
             padding: 8px 16px;
             font-size: 13px;
+            border-radius: 25px;
         }
 
         .difficulty-btn.active {
-            background: #667eea;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
         }
 
-        /* Konfetti és egyéb animációk */
+        /* Konfetti - kör alakú */
         .confetti {
             position: absolute;
             width: 10px;
             height: 10px;
-            background: #ff6b6b;
+            background: #4fc3f7;
+            border-radius: 50%;
             animation: confetti-fall 3s linear infinite;
             z-index: 1000;
         }
@@ -301,8 +349,8 @@
 
         .firework {
             position: absolute;
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             animation: firework 1s ease-out forwards;
             z-index: 1000;
@@ -328,10 +376,22 @@
         }
 
         @keyframes excellentPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-            25% { transform: scale(1.02); box-shadow: 0 25px 50px rgba(255, 215, 0, 0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 30px 60px rgba(255, 107, 107, 0.4); }
-            75% { transform: scale(1.02); box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4); }
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+            }
+            25% { 
+                transform: scale(1.02); 
+                box-shadow: 0 25px 50px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 30px 60px rgba(79, 195, 247, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+            }
+            75% { 
+                transform: scale(1.02); 
+                box-shadow: 0 25px 50px rgba(30, 60, 114, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+            }
         }
 
         .shake {
@@ -344,11 +404,37 @@
             75% { transform: translateX(5px); }
         }
 
+        /* Látogatásszámláló */
+        .visitor-counter {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            background: rgba(30, 60, 114, 0.8);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .visitor-counter::before {
+            content: '👁️';
+            font-size: 0.9em;
+        }
+
         /* Mobil optimalizálás */
         @media (max-width: 600px) {
             .game-container {
                 padding: 15px;
                 margin: 8px;
+                border-radius: 30px;
             }
             
             h1 {
@@ -362,6 +448,7 @@
             
             .stat {
                 padding: 10px;
+                border-radius: 20px;
             }
             
             .stat-label {
@@ -376,6 +463,13 @@
                 width: 100%;
                 height: auto;
             }
+
+            .visitor-counter {
+                bottom: 5px;
+                right: 10px;
+                font-size: 0.7em;
+                padding: 4px 8px;
+            }
         }
 
         @media (max-width: 400px) {
@@ -386,11 +480,73 @@
             .stat {
                 padding: 8px;
             }
+
+            .game-container {
+                border-radius: 25px;
+            }
+        }
+
+        /* Kör témájú animációk */
+        .circle-float {
+            animation: circleFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes circleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+        }
+
+        /* Extra kör alakú dekorációk */
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79, 195, 247, 0.1) 0%, transparent 70%);
+            animation: decorationFloat 8s ease-in-out infinite;
+        }
+
+        .decoration-circle:nth-child(1) {
+            width: 60px;
+            height: 60px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .decoration-circle:nth-child(2) {
+            width: 40px;
+            height: 40px;
+            top: 70%;
+            left: 85%;
+            animation-delay: 2s;
+        }
+
+        .decoration-circle:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            top: 40%;
+            left: 90%;
+            animation-delay: 4s;
+        }
+
+        @keyframes decorationFloat {
+            0%, 100% { 
+                transform: translateY(0px) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-20px) scale(1.1);
+                opacity: 0.6;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container" id="gameContainer">
+    <!-- Dekoratív körök -->
+    <div class="decoration-circle"></div>
+    <div class="decoration-circle"></div>
+    <div class="decoration-circle"></div>
+
+    <div class="game-container circle-float" id="gameContainer">
         <h1>🎯 Perfect Circle</h1>
         <p class="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
         
@@ -458,7 +614,41 @@
         </div>
     </div>
 
+    <!-- Látogatásszámláló -->
+    <div class="visitor-counter" id="visitorCounter">
+        Látogatások: <span id="visitCount">0</span>
+    </div>
+
     <script>
+        // Látogatásszámláló kezelése
+        class VisitorCounter {
+            static init() {
+                const visitKey = 'perfectcircle_visits';
+                let visits = localStorage.getItem(visitKey);
+                
+                if (!visits) {
+                    visits = 0;
+                }
+                
+                visits = parseInt(visits) + 1;
+                localStorage.setItem(visitKey, visits.toString());
+                
+                document.getElementById('visitCount').textContent = visits.toLocaleString('hu-HU');
+                
+                // Animáció a számláló frissítésekor
+                const counter = document.getElementById('visitorCounter');
+                counter.style.animation = 'none';
+                setTimeout(() => {
+                    counter.style.animation = 'pulse 0.5s ease-in-out';
+                }, 10);
+            }
+            
+            static getVisits() {
+                const visits = localStorage.getItem('perfectcircle_visits');
+                return visits ? parseInt(visits) : 0;
+            }
+        }
+
         // Játék változók
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -469,16 +659,15 @@
         let currentGameId = null;
         let audioContext;
 
-        // Kör transzformációs objektumok
+        // Kör transzformációs objektumok (ugyanazok mint előtte)
         const circleTransformations = [
             {
                 name: "Nap",
                 emoji: "☀️",
                 draw: (centerX, centerY, radius) => {
-                    // Nap rajzolása
                     ctx.save();
                     
-                    // Nap teste
+                    // Nap teste - kék témához igazított arany színek
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
                     ctx.fillStyle = '#FFD700';
@@ -514,6 +703,8 @@
                     ctx.fill();
                     
                     // Mosoly
+                    ctx.strokeStyle = '#FF8C00';
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.arc(centerX, centerY + radius * 0.1, radius * 0.3, 0, Math.PI);
                     ctx.stroke();
@@ -527,17 +718,17 @@
                 draw: (centerX, centerY, radius) => {
                     ctx.save();
                     
-                    // Hold teste
+                    // Hold teste - kék témához igazított ezüst színek
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.8, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#F0F8FF';
+                    ctx.fillStyle = '#E6F3FF';
                     ctx.fill();
-                    ctx.strokeStyle = '#C0C0C0';
+                    ctx.strokeStyle = '#4FC3F7';
                     ctx.lineWidth = 3;
                     ctx.stroke();
                     
                     // Hold kráterei
-                    ctx.fillStyle = '#E6E6FA';
+                    ctx.fillStyle = '#BBDEFB';
                     ctx.beginPath();
                     ctx.arc(centerX - radius * 0.3, centerY - radius * 0.2, radius * 0.15, 0, 2 * Math.PI);
                     ctx.fill();
@@ -549,7 +740,7 @@
                     ctx.fill();
                     
                     // Hold arca
-                    ctx.fillStyle = '#B0B0B0';
+                    ctx.fillStyle = '#2A5298';
                     // Szemek
                     ctx.beginPath();
                     ctx.arc(centerX - radius * 0.15, centerY - radius * 0.1, radius * 0.06, 0, 2 * Math.PI);
@@ -559,7 +750,8 @@
                     ctx.fill();
                     
                     // Mosoly
-                    ctx.strokeStyle = '#B0B0B0';
+                    ctx.strokeStyle = '#2A5298';
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.arc(centerX, centerY + radius * 0.15, radius * 0.2, 0, Math.PI);
                     ctx.stroke();
@@ -573,26 +765,26 @@
                 draw: (centerX, centerY, radius) => {
                     ctx.save();
                     
-                    // Kerék külső része
+                    // Kerék külső része - kék témához igazított
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#2F2F2F';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.fill();
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#0F2027';
                     ctx.lineWidth = 4;
                     ctx.stroke();
                     
                     // Felni
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.6, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#C0C0C0';
+                    ctx.fillStyle = '#4FC3F7';
                     ctx.fill();
-                    ctx.strokeStyle = '#808080';
+                    ctx.strokeStyle = '#2A5298';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
                     // Küllők
-                    ctx.strokeStyle = '#808080';
+                    ctx.strokeStyle = '#2A5298';
                     ctx.lineWidth = 3;
                     for (let i = 0; i < 5; i++) {
                         const angle = (i * Math.PI * 2) / 5;
@@ -610,7 +802,7 @@
                     // Központ
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#404040';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.fill();
                     
                     ctx.restore();
@@ -622,26 +814,26 @@
                 draw: (centerX, centerY, radius) => {
                     ctx.save();
                     
-                    // Kormány külső köre
+                    // Kormány külső köre - kék témához igazított barna
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.8, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#8B4513';
+                    ctx.fillStyle = '#5D4E75';
                     ctx.fill();
-                    ctx.strokeStyle = '#654321';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.lineWidth = 4;
                     ctx.stroke();
                     
                     // Belső kör
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.3, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#2F2F2F';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.fill();
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#0F2027';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
                     // Küllők
-                    ctx.strokeStyle = '#654321';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.lineWidth = 8;
                     for (let i = 0; i < 3; i++) {
                         const angle = (i * Math.PI * 2) / 3;
@@ -657,7 +849,7 @@
                     }
                     
                     // Logo a közepén
-                    ctx.fillStyle = '#FFD700';
+                    ctx.fillStyle = '#4FC3F7';
                     ctx.font = `${radius * 0.3}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.fillText('🚗', centerX, centerY + radius * 0.1);
@@ -692,8 +884,8 @@
                     ctx.fillStyle = '#FFFF99';
                     ctx.fill();
                     
-                    // Pepperoni
-                    ctx.fillStyle = '#8B0000';
+                    // Pepperoni - kék témához igazított
+                    ctx.fillStyle = '#2A5298';
                     const pepperoniPositions = [
                         {x: -0.3, y: -0.2}, {x: 0.3, y: -0.3}, {x: -0.2, y: 0.3},
                         {x: 0.2, y: 0.2}, {x: 0, y: -0.1}, {x: -0.1, y: 0.1}
@@ -733,17 +925,17 @@
                 draw: (centerX, centerY, radius) => {
                     ctx.save();
                     
-                    // Óra háttér
+                    // Óra háttér - kék témához igazított
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillStyle = '#F0F8FF';
                     ctx.fill();
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.lineWidth = 4;
                     ctx.stroke();
                     
                     // Számok
-                    ctx.fillStyle = '#000000';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.font = `${radius * 0.2}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -756,7 +948,7 @@
                     }
                     
                     // Órák jelölése
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.lineWidth = 2;
                     for (let i = 0; i < 12; i++) {
                         const angle = (i * Math.PI * 2) / 12;
@@ -772,7 +964,7 @@
                     }
                     
                     // Óramutató (3 óra)
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#2A5298';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
@@ -789,7 +981,7 @@
                     // Központ
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.05, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#000000';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.fill();
                     
                     ctx.restore();
@@ -801,9 +993,9 @@
                 draw: (centerX, centerY, radius) => {
                     ctx.save();
                     
-                    // Szirmok
-                    ctx.fillStyle = '#FFB6C1';
-                    ctx.strokeStyle = '#FF69B4';
+                    // Szirmok - kék témához igazított rózsaszín
+                    ctx.fillStyle = '#E1F5FE';
+                    ctx.strokeStyle = '#4FC3F7';
                     ctx.lineWidth = 2;
                     
                     for (let i = 0; i < 8; i++) {
@@ -827,7 +1019,7 @@
                     ctx.stroke();
                     
                     // Porzók
-                    ctx.fillStyle = '#FF4500';
+                    ctx.fillStyle = '#2A5298';
                     for (let i = 0; i < 6; i++) {
                         const angle = (i * Math.PI * 2) / 6;
                         const x = centerX + Math.cos(angle) * radius * 0.15;
@@ -856,10 +1048,10 @@
                     ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Mázas
+                    // Mázas - kék témához igazított
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.75, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#FF69B4';
+                    ctx.fillStyle = '#4FC3F7';
                     ctx.fill();
                     
                     // Lyuk a közepén
@@ -871,8 +1063,8 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // Színes szórás
-                    const sprinkleColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+                    // Színes szórás - kék témához igazított színek
+                    const sprinkleColors = ['#1E3C72', '#2A5298', '#4FC3F7', '#FFD700', '#FF6B6B', '#FFFFFF'];
                     ctx.lineWidth = 3;
                     
                     for (let i = 0; i < 20; i++) {
@@ -900,14 +1092,14 @@
                     // Kompasz háttér
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#F5F5DC';
+                    ctx.fillStyle = '#F0F8FF';
                     ctx.fill();
-                    ctx.strokeStyle = '#8B4513';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.lineWidth = 4;
                     ctx.stroke();
                     
                     // Irányok jelölése
-                    ctx.fillStyle = '#000000';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.font = `${radius * 0.15}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -921,11 +1113,11 @@
                     }
                     
                     // Kompasz tű
-                    ctx.strokeStyle = '#DC143C';
-                    ctx.fillStyle = '#DC143C';
+                    ctx.strokeStyle = '#4FC3F7';
+                    ctx.fillStyle = '#4FC3F7';
                     ctx.lineWidth = 4;
                     
-                    // Északi tű (piros)
+                    // Északi tű (kék)
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
                     ctx.lineTo(centerX, centerY - radius * 0.6);
@@ -936,7 +1128,7 @@
                     
                     // Déli tű (fehér)
                     ctx.fillStyle = '#FFFFFF';
-                    ctx.strokeStyle = '#000000';
+                    ctx.strokeStyle = '#1E3C72';
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
                     ctx.lineTo(centerX, centerY + radius * 0.6);
@@ -949,7 +1141,7 @@
                     // Központ
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius * 0.08, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#000000';
+                    ctx.fillStyle = '#1E3C72';
                     ctx.fill();
                     
                     ctx.restore();
@@ -1098,10 +1290,10 @@
             return randomTransformation.name;
         }
 
-        // Konfetti effekt
+        // Konfetti effekt - kék színsémával
         function createConfetti(intensity = 50) {
             const container = document.getElementById('gameContainer');
-            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd'];
+            const colors = ['#4fc3f7', '#29b6f6', '#0277bd', '#1e3c72', '#2a5298', '#FFD700'];
             
             for (let i = 0; i < intensity; i++) {
                 setTimeout(() => {
@@ -1125,7 +1317,7 @@
 
         function createFireworks(x, y, intensity = 20) {
             const container = document.getElementById('gameContainer');
-            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            const colors = ['#4fc3f7', '#29b6f6', '#0277bd', '#FFD700', '#FFFFFF'];
             
             for (let i = 0; i < intensity; i++) {
                 const firework = document.createElement('div');
@@ -1309,7 +1501,7 @@
             points.push(pos);
             
             ctx.lineWidth = 3;
-            ctx.strokeStyle = '#667eea';
+            ctx.strokeStyle = '#1e3c72';
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.lineTo(pos.x, pos.y);
@@ -1411,7 +1603,7 @@
         function drawIdealCircle(centerX, centerY, radius) {
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            ctx.strokeStyle = 'rgba(255, 107, 107, 0.5)';
+            ctx.strokeStyle = 'rgba(79, 195, 247, 0.5)';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.stroke();
@@ -1553,6 +1745,9 @@ Sok sikert! 🍀✨`);
         }
 
         function init() {
+            // Látogatásszámláló inicializálása
+            VisitorCounter.init();
+            
             updateStats();
             loadLeaderboard();
             
