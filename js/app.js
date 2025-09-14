@@ -1058,22 +1058,160 @@ Sok sikert a tökéletes kör rajzolásához! 🍀✨
     }
 
     // Fallback leaderboard váltás
-    handleLeaderboardSwitch(type) {
-        console.log(`🔄 Fallback leaderboard váltás: ${type}`);
-        
-        // Tab gombok frissítése
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        const targetTab = document.getElementById(type + 'Tab');
-        if (targetTab) {
-            targetTab.classList.add('active');
-        }
-        
-        if (type === 'local') {
+// Fallback leaderboard váltás
+// Fallback leaderboard váltás
+handleLeaderboardSwitch(type) {
+    console.log(`🔄 Fallback leaderboard váltás: ${type}`);
+    
+    // Tab gombok frissítése
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const targetTab = document.getElementById(type + 'Tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+    
+    if (type === 'local') {
+        // Helyi eredmények megjelenítése
+        try {
             this.displayFallbackLeaderboard();
-        } else if (type === 'global') {
-            this.displayGlobalNotAvailable();
+        } catch (error) {
+            console.error('❌ Helyi leaderboard fallback hiba:', error);
+            this.displayEmergencyFallback();
+        }
+    } else if (type === 'global') {
+        // Globális eredmények megjelenítése
+        this.displayGlobalNotAvailable();
+        
+        // Próbáljuk betölteni a globális eredményeket ha elérhető
+        if (window.firebaseAPI && window.firebaseAPI.isReady && window.firebaseAPI.isReady()) {
+            setTimeout(() => {
+                this.attemptGlobalLoad();
+            }, 1000);
         }
     }
+}
+// Globális eredmények betöltési kísérlet
+async attemptGlobalLoad() {
+    console.log('🌍 Globális eredmények betöltési kísérlet...');
+    
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
+    
+    if (!listContainer) return;
+    
+    try {
+        // Loading állapot megjelenítése
+        listContainer.innerHTML = `
+            <div class="score-entry loading">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 1.1em;">🔄 Globális eredmények betöltése...</div>
+                    <div style="color: #666; margin-top: 5px;">Kérlek várj...</div>
+                </div>
+            </div>
+        `;
+        
+        if (statusContainer) {
+            statusContainer.textContent = '🌍 Globális eredmények - 🔄 Betöltés...';
+        }
+        
+        // Próbáljuk elérni a globális leaderboard API-t
+        if (window.GlobalLeaderboard && typeof window.GlobalLeaderboard.loadGlobalScores === 'function') {
+            const globalScores = await window.GlobalLeaderboard.loadGlobalScores();
+            this.displayGlobalScores(globalScores);
+        } else if (window.firebaseAPI && typeof window.firebaseAPI.getTopScores === 'function') {
+            const globalScores = await window.firebaseAPI.getTopScores(10);
+            this.displayGlobalScores(globalScores);
+        } else {
+            throw new Error('Globális API nem elérhető');
+        }
+        
+    } catch (error) {
+        console.warn('❌ Globális eredmények betöltése sikertelen:', error);
+        
+        listContainer.innerHTML = `
+            <div class="score-entry error">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="color: #ff6b6b; font-size: 1.1em;">❌ Globális eredmények nem elérhetők</div>
+                    <div style="color: #666; margin-top: 5px; font-size: 0.9em;">
+                        ${error.message || 'Ismeretlen hiba'}
+                    </div>
+                    <button onclick="window.switchLeaderboard('local')" style="margin-top: 15px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        📱 Helyi eredmények megtekintése
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        if (statusContainer) {
+            statusContainer.textContent = '🌍 Globális eredmények - ❌ Hiba';
+        }
+    }
+}
+// Globális eredmények megjelenítése
+displayGlobalScores(scores) {
+    console.log('🌍 Globális eredmények megjelenítése:', scores);
+    
+    const listContainer = document.getElementById('leaderboardList');
+    const statusContainer = document.getElementById('leaderboardStatus');
+    
+    if (!listContainer) return;
+    
+    if (!scores || scores.length === 0) {
+        listContainer.innerHTML = `
+            <div class="score-entry">
+                <div style="text-align: center; padding: 20px;">
+                    <div>🌍 Még nincsenek globális eredmények</div>
+                    <div style="color: #666; margin-top: 5px; font-size: 0.9em;">
+                        Légy te az első aki feltölti az eredményét!
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (statusContainer) {
+            statusContainer.textContent = '🌍 Globális eredmények (0 játékos)';
+        }
+        return;
+    }
+    
+    // Eredmények megjelenítése
+    listContainer.innerHTML = scores.map((score, index) => {
+        const playerName = score.playerName || score.name || 'Névtelen';
+        const scoreValue = score.score || 0;
+        const timestamp = score.timestamp || score.date || Date.now();
+        const dateStr = new Date(timestamp).toLocaleDateString('hu-HU');
+        
+        // Nehézség és transzformáció
+        let extraInfo = '';
+        if (score.difficulty && score.difficulty !== 'easy') {
+            extraInfo += ` (${score.difficulty})`;
+        }
+        if (score.transformation && score.transformation.trim() !== '') {
+            extraInfo += ` ✨${score.transformation}`;
+        }
+        
+        // Rangsor emoji
+        let rankEmoji = '';
+        if (index === 0) rankEmoji = '🥇';
+        else if (index === 1) rankEmoji = '🥈';
+        else if (index === 2) rankEmoji = '🥉';
+        
+        return `
+            <div class="score-entry global-score">
+                <span class="rank">${rankEmoji}#${index + 1}</span>
+                <span class="name">${playerName}</span>
+                <span class="score">${scoreValue}${extraInfo}</span>
+                <span class="date">${dateStr}</span>
+            </div>
+        `;
+    }).join('');
+    
+    if (statusContainer) {
+        const playersText = this.t('common.players') || 'játékos';
+        statusContainer.textContent = `🌍 Globális eredmények (${scores.length} ${playersText})`;
+    }
+}
+
 
     // Globális leaderboard nem elérhető üzenet
     displayGlobalNotAvailable() {
