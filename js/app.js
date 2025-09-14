@@ -1,5 +1,52 @@
 // Fő alkalmazás inicializáló és koordinátor - Biztonságos verzió
 
+// BIZTONSÁGOS SCORE ADAT KÉSZÍTŐ FÜGGVÉNY
+window.createSafeScoreData = (playerName, score, difficulty, transformation) => {
+    console.log('🛡️ Biztonságos score adat készítése:', {
+        playerName, score, difficulty, transformation
+    });
+    
+    // Biztonságos értékek
+    const safePlayerName = String(playerName || 'Névtelen').trim();
+    const safeScore = Number(score);
+    const safeDifficulty = String(difficulty || 'easy');
+    const safeTransformation = String(transformation || '');
+    
+    // Validálás
+    if (isNaN(safeScore) || safeScore < 0 || safeScore > 100) {
+        throw new Error(`Érvénytelen pontszám: ${score} -> ${safeScore}`);
+    }
+    
+    if (safePlayerName.length === 0) {
+        throw new Error(`Érvénytelen játékos név: "${playerName}"`);
+    }
+    
+    const scoreData = {
+        playerName: safePlayerName,
+        score: safeScore,
+        difficulty: safeDifficulty,
+        transformation: safeTransformation,
+        date: new Date().toLocaleDateString('hu-HU'),
+        timestamp: Date.now(),
+        created: new Date().toISOString()
+    };
+    
+    console.log('✅ Biztonságos score adat:', scoreData);
+    
+    // Minden mező ellenőrzése
+    Object.keys(scoreData).forEach(key => {
+        const value = scoreData[key];
+        if (value === undefined || value === null) {
+            console.error(`❌ Undefined/null érték: ${key} = ${value}`);
+            throw new Error(`Undefined/null érték a ${key} mezőben`);
+        }
+        console.log(`✅ ${key}: ${value} (${typeof value})`);
+    });
+    
+    return scoreData;
+};
+
+
 class PerfectCircleApp {
     constructor() {
         this.initialized = false;
@@ -1293,17 +1340,141 @@ window.updateStats = () => {
 window.switchLeaderboard = (type) => {
     console.log(`🔄 Globális switchLeaderboard hívás: ${type}`);
     
-    const app = window.perfectCircleApp;
-    if (app && typeof app.switchLeaderboard === 'function') {
-        app.switchLeaderboard(type);
+
+
+// Biztonsági ellenőrzés
+if (isNaN(roundedScore) || roundedScore < 0 || roundedScore > 100) {
+    console.error('❌ Érvénytelen pontszám - mentés megszakítva:', roundedScore);
+    alert(`❌ Érvénytelen pontszám: ${roundedScore}\n\nA mentés nem lehetséges.`);
+    return;
+}
+
+console.log('🌍 Globális mentés feltétel ellenőrzés:', {
+    playerName: `"${playerName}"`,
+    anonymousName: `"${anonymousName}"`,
+    hasValidName: playerName && playerName.trim() !== '' && playerName !== anonymousName,
+    firebaseAPI: !!window.firebaseAPI,
+    firebaseReady: window.firebaseAPI ? window.firebaseAPI.isReady() : false
+});
+
+const hasValidPlayerName = playerName && 
+                          playerName.trim() !== '' && 
+                          playerName !== anonymousName && 
+                          playerName !== 'Névtelen' &&
+                          playerName !== 'Anonymous' &&
+                          playerName.length > 0;
+
+const isFirebaseReady = window.firebaseAPI && 
+                       typeof window.firebaseAPI.isReady === 'function' && 
+                       window.firebaseAPI.isReady();
+
+if (hasValidPlayerName) {
+    console.log('👤 ✅ Érvényes játékos név megvan');
+    
+    if (isFirebaseReady) {
+        console.log('🔥 ✅ Firebase elérhető - globális mentés indítása...');
+        
+        try {
+            // ✅ BIZTONSÁGOS MENTÉSI ADATOK KÉSZÍTÉSE
+            const difficulty = window.gameEngine ? window.gameEngine.getDifficulty() : 'easy';
+            
+            console.log('📦 Mentési adatok előkészítése:', {
+                playerName: playerName,
+                score: roundedScore,
+                difficulty: difficulty,
+                transformation: transformationName
+            });
+            
+            const safeScoreData = window.createSafeScoreData(
+                playerName,
+                roundedScore,
+                difficulty,
+                transformationName
+            );
+            
+            let globalSaveSuccess = false;
+            
+            // ✅ LEADERBOARD MANAGER MENTÉS
+            if (app && app.leaderboardManager && typeof app.leaderboardManager.saveGlobalScore === 'function') {
+                console.log('📤 LeaderboardManager globális mentés...');
+                
+                await app.leaderboardManager.saveGlobalScore(
+                    safeScoreData.playerName,
+                    safeScoreData.score,
+                    safeScoreData.difficulty,
+                    safeScoreData.transformation
+                );
+                
+                globalSaveSuccess = true;
+                console.log('✅ LeaderboardManager globális mentés sikeres!');
+                
+            } 
+            // ✅ KÖZVETLEN FIREBASE MENTÉS
+            else if (typeof window.firebaseAPI.saveScore === 'function') {
+                console.log('📤 Közvetlen Firebase mentés biztonságos adatokkal...');
+                console.log('📋 Küldendő adat:', safeScoreData);
+                
+                const result = await window.firebaseAPI.saveScore(safeScoreData);
+                globalSaveSuccess = true;
+                console.log('✅ Közvetlen Firebase mentés sikeres!', result);
+                
+            } else {
+                throw new Error('Nincs elérhető globális mentési metódus');
+            }
+            
+            // ✅ SIKERES MENTÉS UTÁN
+            if (globalSaveSuccess) {
+                console.log('🎉 Globális mentés teljesen sikeres!');
+                
+                // Felhasználó értesítése
+                setTimeout(() => {
+                    alert(`🌍 Globális eredmény mentve!\n\n🎮 ${safeScoreData.playerName}\n📊 ${safeScoreData.score} pont\n🎨 ${safeScoreData.transformation || 'Nincs transzformáció'}\n\n✅ Megjelenik a globális toplista-ban!`);
+                }, 1000);
+                
+                // Globális leaderboard frissítése ha aktív
+                const currentView = app?.leaderboardManager?.getCurrentView() || 'local';
+                if (currentView === 'global') {
+                    console.log('🔄 Globális leaderboard frissítése...');
+                    setTimeout(() => {
+                        if (typeof loadGlobalLeaderboardDirect === 'function') {
+                            loadGlobalLeaderboardDirect();
+                        } else if (app?.leaderboardManager?.loadGlobalLeaderboard) {
+                            app.leaderboardManager.loadGlobalLeaderboard();
+                        }
+                    }, 2000);
+                }
+            }
+
+        } catch (error) {
+            console.error('❌ Globális mentés sikertelen:', error);
+            
+            // Részletes hibaüzenet
+            let errorMessage = 'Ismeretlen hiba';
+            if (error.message.includes('invalid data')) {
+                errorMessage = 'Érvénytelen adatok - ellenőrizd a pontszámot';
+            } else if (error.message.includes('undefined')) {
+                errorMessage = 'Hiányzó adatok - próbáld újra';
+            } else if (error.code === 'permission-denied') {
+                errorMessage = 'Nincs jogosultság a mentéshez';
+            } else if (error.code === 'unavailable') {
+                errorMessage = 'Firebase szerver nem elérhető';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            // Felhasználó értesítése
+            setTimeout(() => {
+                alert(`❌ Globális mentés sikertelen!\n\nHiba: ${errorMessage}\n\n💾 A helyi eredmény mentve maradt.\n🔄 Próbáld újra később.`);
+            }, 500);
+        }
+        
     } else {
-        console.error('❌ PerfectCircleApp switchLeaderboard metódus nem elérhető');
-        // Fallback - alapvető tab váltás
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        const targetTab = document.getElementById(type + 'Tab');
-        if (targetTab) targetTab.classList.add('active');
+        console.warn('📴 Firebase nem elérhető');
     }
-};
+    
+} else {
+    console.log('👤 ❌ Nincs érvényes játékos név');
+}
 
 // Globális leaderboard betöltése - TISZTÍTOTT VERZIÓ
 window.loadGlobalLeaderboard = async () => {
@@ -1571,20 +1742,22 @@ window.showScore = async (score, analysis, transformationName = '') => {
                             
                         } 
                         // ✅ KÖZVETLEN FIREBASE MENTÉS
+                        // ✅ KÖZVETLEN FIREBASE MENTÉS BIZTONSÁGOS ADATOKKAL
                         else if (typeof window.firebaseAPI.saveScore === 'function') {
-                            console.log('📤 Közvetlen Firebase mentés...');
+                            console.log('📤 Közvetlen Firebase mentés biztonságos adatokkal...');
                             
-                            const scoreData = {
-                                playerName: playerName,
-                                score: roundedScore,
-                                difficulty: window.gameEngine ? window.gameEngine.getDifficulty() : 'easy',
-                                transformation: transformationName || '',
-                                date: new Date().toLocaleDateString('hu-HU'),
-                                timestamp: Date.now(),
-                                created: new Date().toISOString()
-                            };
+                            const difficulty = window.gameEngine ? window.gameEngine.getDifficulty() : 'easy';
+                            const safeScoreData = window.createSafeScoreData(
+                                playerName,
+                                roundedScore,
+                                difficulty,
+                                transformationName
+                            );
                             
-                            const result = await window.firebaseAPI.saveScore(scoreData);
+                            console.log('📋 Küldendő adat:', safeScoreData);
+                            
+                            const result = await window.firebaseAPI.saveScore(safeScoreData);
+
                             globalSaveSuccess = true;
                             console.log('✅ Közvetlen Firebase mentés sikeres!', result);
                             
@@ -1598,7 +1771,7 @@ window.showScore = async (score, analysis, transformationName = '') => {
                             
                             // Felhasználó értesítése
                             setTimeout(() => {
-                                alert(`🌍 Globális eredmény mentve!\n\n🎮 ${playerName}\n📊 ${roundedScore} pont\n🎨 ${transformationName || 'Nincs transzformáció'}\n\n✅ Megjelenik a globális toplista-ban!`);
+alert(`🌍 Globális eredmény mentve!\n\n🎮 ${safeScoreData.playerName}\n📊 ${safeScoreData.score} pont\n🎨 ${safeScoreData.transformation || 'Nincs transzformáció'}\n\n✅ Megjelenik a globális toplista-ban!`);
                             }, 1000);
                             
                             // Globális leaderboard frissítése ha aktív
