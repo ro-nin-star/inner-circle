@@ -90,61 +90,44 @@ saveScore: async (data) => {
         throw new Error('Firebase nem elérhető');
     }
     
-    // ✅ OBJEKTUMBÓL VAGY PARAMÉTEREKBŐL FELDOLGOZÁS
-    let playerName, score, difficulty, transformation;
+    // ✅ BIZTOS változók
+    const safePlayerName = String(data.playerName || 'Névtelen').trim();
+    const safeScore = Number(data.score);
+    const safeDifficulty = String(data.difficulty || 'easy');
+    const safeTransformation = String(data.transformation || '');
     
-    if (typeof data === 'object' && data !== null) {
-        // Ha objektumot kapunk (új stílus)
-        playerName = data.playerName || 'Névtelen';
-        score = Number(data.score);
-        difficulty = data.difficulty || 'easy';
-        transformation = data.transformation || '';
-        
-        console.log('🔥 Objektumból kinyert értékek:', { playerName, score, difficulty, transformation });
-    } else {
-        // Ha régi stílusú paramétereket kapunk
-        playerName = arguments[0] || 'Névtelen';
-        score = Number(arguments[1]);
-        difficulty = arguments[2] || 'easy';
-        transformation = arguments[3] || '';
-        
-        console.log('🔥 Paraméterekből kinyert értékek:', { playerName, score, difficulty, transformation });
+    console.log('🔥 Feldolgozott értékek:', { 
+        safePlayerName, 
+        safeScore, 
+        scoreType: typeof safeScore,
+        safeDifficulty, 
+        safeTransformation 
+    });
+    
+    if (isNaN(safeScore)) {
+        throw new Error(`Score NaN hiba: ${data.score} -> ${safeScore}`);
     }
     
-    // ✅ VALIDÁLÁS
-    if (typeof score !== 'number' || isNaN(score)) {
-        console.error('❌ Érvénytelen score:', score, typeof score);
-        throw new Error(`Érvénytelen score: ${score} (${typeof score})`);
-    }
+    const firebaseData = {
+        playerName: safePlayerName,
+        score: safeScore,
+        difficulty: safeDifficulty,
+        transformation: safeTransformation,
+        timestamp: serverTimestamp(), // ← Ez most már működni fog
+        date: new Date().toLocaleDateString('hu-HU'),
+        created: new Date().toISOString()
+    };
     
-    if (!playerName || playerName.trim().length === 0) {
-        console.error('❌ Érvénytelen playerName:', playerName);
-        throw new Error(`Érvénytelen playerName: ${playerName}`);
-    }
+    console.log('🔥 Firebase-nek küldött adat:', firebaseData);
     
     try {
-        const docRef = await addDoc(collection(db, 'scores'), {
-            playerName: String(playerName).trim(),
-            score: score,
-            difficulty: String(difficulty),
-            transformation: String(transformation),
-            timestamp: serverTimestamp(),
-            date: new Date().toLocaleDateString('hu-HU'),
-            created: new Date().toISOString()
-        });
-        
+        const docRef = await addDoc(collection(db, 'scores'), firebaseData);
         console.log('✅ Pontszám mentve:', docRef.id);
-        return { 
-            id: docRef.id, 
-            playerName: playerName, 
-            score: score, 
-            difficulty: difficulty, 
-            transformation: transformation 
-        };
+        return { id: docRef.id, ...firebaseData };
         
     } catch (error) {
         console.error('❌ Mentési hiba:', error);
-        console.error('❌ Küldött adatok:', { playerName, score, difficulty, transformation });
+        console.error('❌ Küldött adat:', firebaseData);
         throw error;
     }
 },
