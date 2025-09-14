@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfect Circle - Rajzolj Tökéletes Kört!</title>
+    <title data-i18n="title">Perfect Circle - Rajzolj Tökéletes Kört!</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
@@ -18,51 +18,47 @@
     <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()">🟡 Connecting...</div>
 
     <div class="game-container" id="gameContainer">
-        <!-- Language selector script-ek hozzáadása a head-ben -->
-        <script src="js/i18n/languageDetector.js"></script>
-        <script src="js/i18n/i18nManager.js"></script>
-
-        <!-- HTML elemek data-i18n attribútumokkal -->
         <h1 data-i18n="title">🎯 Perfect Circle</h1>
         <p class="subtitle" data-i18n="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
-
+        
         <div class="instructions">
             <strong data-i18n="instructions.title">Hogyan játssz:</strong> 
-            <span data-i18n="instructions.text">Kattints és húzd az egeret...</span>
+            <span data-i18n="instructions.text">Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨</span>
         </div>
 
-        <!-- Gombok -->
-        <button id="startBtn" onclick="startDrawing()" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
-        <button id="clearBtn" onclick="clearCanvas()" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
+        <!-- Offline notice -->
+        <div class="offline-notice" id="offlineNotice">
+            <span data-i18n="firebase.offlineNotice">⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek.</span>
+        </div>
 
-        <!-- Statisztikák -->
-        <div class="stat-label" data-i18n="stats.currentScore">Jelenlegi Pontszám</div>
-        <div class="stat-label" data-i18n="stats.bestScore">Legjobb Eredmény</div>
+        <!-- PLAYER NAME SECTION -->
+        <div class="player-name-section">
+            <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
+            <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" placeholder="Add meg a neved" maxlength="20" value="">
+            <button onclick="savePlayerName()" style="padding: 8px 16px; font-size: 12px;" data-i18n="buttons.save">💾 Mentés</button>
+        </div>
 
-        <!-- Nehézség -->
-        <strong data-i18n="difficulty.label">Nehézség:</strong>
-        <button class="difficulty-btn active" data-i18n="difficulty.easy">Könnyű 😊</button>
-
-        <!-- Játékos név -->
-        <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
-        <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" maxlength="20">
-
+        <div class="difficulty-selector">
+            <strong data-i18n="difficulty.label">Nehézség:</strong>
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy" data-i18n="difficulty.easy">Könnyű 😊</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard" data-i18n="difficulty.hard">Nehéz 🌀</button>
+        </div>
 
         <div class="game-stats" id="gameStats">
             <div class="stat" id="currentScoreStat">
-                <div class="stat-label">Jelenlegi Pontszám</div>
+                <div class="stat-label" data-i18n="stats.currentScore">Jelenlegi Pontszám</div>
                 <div class="stat-value" id="currentScore">0</div>
             </div>
             <div class="stat" id="bestScoreStat">
-                <div class="stat-label">Legjobb Eredmény</div>
+                <div class="stat-label" data-i18n="stats.bestScore">Legjobb Eredmény</div>
                 <div class="stat-value" id="bestScore">0</div>
             </div>
             <div class="stat" id="gamesPlayedStat">
-                <div class="stat-label">Játékok Száma</div>
+                <div class="stat-label" data-i18n="stats.gamesPlayed">Játékok Száma</div>
                 <div class="stat-value" id="gamesPlayed">0</div>
             </div>
             <div class="stat" id="averageScoreStat">
-                <div class="stat-label">Átlag Pontszám</div>
+                <div class="stat-label" data-i18n="stats.averageScore">Átlag Pontszám</div>
                 <div class="stat-value" id="averageScore">0</div>
             </div>
         </div>
@@ -71,39 +67,39 @@
             <canvas id="gameCanvas" width="400" height="400"></canvas>
             <div class="canvas-overlay" id="canvasOverlay"></div>
             <div class="transformation-overlay" id="transformationOverlay">
-                <div>✨ Varázslat történik... ✨</div>
+                <div data-i18n="transformations.transforming">✨ Varázslat történik... ✨</div>
                 <div style="font-size: 0.8em; margin-top: 10px;" id="transformationText">A köröd átalakul...</div>
             </div>
         </div>
 
         <div class="controls">
-            <button id="startBtn" onclick="startDrawing()">🎯 Rajzolás Kezdése</button>
-            <button id="clearBtn" onclick="clearCanvas()" disabled>🗑️ Törlés</button>
-            <button onclick="showInstructions()">❓ Segítség</button>
-            <button onclick="clearAllScores()">🗑️ Helyi Eredmények Törlése</button>
+            <button id="startBtn" onclick="startDrawing()" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
+            <button id="clearBtn" onclick="clearCanvas()" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
+            <button onclick="showInstructions()" data-i18n="buttons.help">❓ Segítség</button>
+            <button onclick="clearAllScores()" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
         </div>
 
         <div class="score-display" id="scoreDisplay">
-            <h3 id="scoreTitle">Eredmény</h3>
+            <h3 id="scoreTitle" data-i18n="scoreTitle.result">Eredmény</h3>
             <div style="font-size: 2em; margin: 10px 0;">
-                <span id="finalScore">0</span> / 100 pont
+                <span id="finalScore">0</span> / 100 <span data-i18n="common.points">pont</span>
             </div>
             <div class="score-breakdown" id="scoreBreakdown"></div>
         </div>
 
         <!-- LEADERBOARD WITH TABS -->
         <div class="leaderboard">
-            <h3>🏆 Ranglista</h3>
+            <h3 data-i18n="leaderboard.title">🏆 Ranglista</h3>
             <div class="leaderboard-tabs">
-                <button class="tab-btn active" onclick="switchLeaderboard('local')" id="localTab">📱 Helyi</button>
-                <button class="tab-btn" onclick="switchLeaderboard('global')" id="globalTab">🌍 Globális</button>
+                <button class="tab-btn active" onclick="switchLeaderboard('local')" id="localTab" data-i18n="leaderboard.local">📱 Helyi</button>
+                <button class="tab-btn" onclick="switchLeaderboard('global')" id="globalTab" data-i18n="leaderboard.global">🌍 Globális</button>
             </div>
-            <div class="leaderboard-status" id="leaderboardStatus">
+            <div class="leaderboard-status" id="leaderboardStatus" data-i18n="leaderboard.localResults">
                 📱 Helyi eredmények
             </div>
             <div id="leaderboardList">
                 <div class="score-entry">
-                    <span>Még nincsenek eredmények</span>
+                    <span data-i18n="leaderboard.noResults">Még nincsenek eredmények</span>
                 </div>
             </div>
         </div>
@@ -111,19 +107,31 @@
 
     <!-- Látogatásszámláló -->
     <div class="visitor-counter" id="visitorCounter" onclick="showVisitStats()">
-        Látogatások: <span class="visitor-number" id="visitCount">0</span>
+        <span data-i18n="visitors.label">Látogatások:</span> <span class="visitor-number" id="visitCount">0</span>
     </div>
 
-    <!-- Scripts -->
+    <!-- I18n Scripts ELŐSZÖR -->
+    <script src="js/i18n/languageDetector.js"></script>
+    <script src="js/i18n/i18nManager.js"></script>
+    
+    <!-- Firebase Scripts -->
     <script src="js/firebase/firebase-config.js" type="module"></script>
+    
+    <!-- Utility Scripts -->
     <script src="js/utils/audioManager.js"></script>
     <script src="js/utils/effectsManager.js"></script>
+    
+    <!-- Game Scripts -->
     <script src="js/game/transformations.js"></script>
     <script src="js/game/circleAnalyzer.js"></script>
     <script src="js/game/gameEngine.js"></script>
+    
+    <!-- Manager Scripts -->
     <script src="js/managers/scoreManager.js"></script>
     <script src="js/managers/visitorCounter.js"></script>
     <script src="js/managers/leaderboardManager.js"></script>
+    
+    <!-- Main App Script UTOLJÁRA -->
     <script src="js/app.js"></script>
 </body>
 </html>
