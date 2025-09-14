@@ -468,7 +468,7 @@ button:disabled {
 .visitor-counter {
     position: fixed;
     bottom: 15px;
-    left: 15px; /* Változás: balra helyezve */
+    left: 15px;
     background: rgba(30, 60, 114, 0.9);
     color: white;
     padding: 8px 15px;
@@ -503,44 +503,57 @@ button:disabled {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Firebase Status */
-.firebase-status {
+/* ÚJ KONTÉNER A FELSŐ FIX ELEMEKNEK */
+.top-fixed-header {
     position: fixed;
-    top: 15px;
-    left: 15px; /* Változás: balra helyezve */
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(15, 32, 39, 0.9);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+/* Firebase Status - most már a top-fixed-header-ben van */
+.firebase-status {
+    position: static; /* Fontos! Nincs fix pozíció, a szülője (top-fixed-header) kezeli */
+    margin: 0;
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.75em;
     font-weight: 600;
-    z-index: 9998;
+    z-index: auto; /* A szülő z-indexét örökli, vagy felülíródik */
     transition: all 0.3s ease;
     cursor: pointer;
     max-width: 150px;
     text-align: center;
+    color: white;
 }
 
 .firebase-status.online {
     background: rgba(76, 175, 80, 0.9);
-    color: white;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
 }
 
 .firebase-status.offline {
     background: rgba(244, 67, 54, 0.9);
-    color: white;
-    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
 }
 
 .firebase-status.connecting {
     background: rgba(255, 152, 0, 0.9);
-    color: white;
-    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
 }
 
 .firebase-status.error {
     background: rgba(244, 67, 54, 0.9);
-    color: white;
-    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
 }
 
 .firebase-status:hover {
@@ -548,109 +561,167 @@ button:disabled {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Nyelvválasztó pozíciója a jobb felső sarokban */
-.language-selector { /* Hozzáadtam egy osztályt, ha még nincs */
-    position: fixed;
-    top: 15px; /* Például 15px távolság a tetejétől */
-    right: 15px; /* Például 15px távolság a jobb szélétől */
-    z-index: 9999; /* Győződj meg róla, hogy felül van más elemeken */
+
+/* Nyelvválasztó (language-selector) - most már a top-fixed-header-ben van */
+.language-selector {
+    position: relative; /* Fontos! A menü ehhez képest legyen absolute */
+    margin: 0;
+    z-index: 10001; /* Magasabb z-index, mint a top-fixed-header, hogy a menü felette legyen */
+    /* A korábbi position: fixed; top: 15px; right: 15px; szabályokat TÖRÖLTEM! */
 }
 
-/* Ha a #languageSelector közvetlenül a gomb, akkor így: */
-#languageSelector {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 9999;
-    /* A többi stílusod marad, csak a pozíciót állítjuk be */
-    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
-    color: white !important;
-    border: 2px solid #388E3C !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-    font-weight: bold !important;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
-    transition: all 0.3s ease !important;
+/* Aktuális nyelv kijelzője (ez lesz a "gomb") */
+.language-selector .current-language {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: 2px solid #388E3C;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+    /* !important kulcsszavakat elhagytam, hacsak nem feltétlenül kell */
 }
 
-/* A nyelvválasztó menü pozíciójának beállítása (ha külön elem) */
-#languageMenu {
-    position: absolute; /* Az #languageSelector-höz képest fog elhelyezkedni */
-    top: calc(100% + 5px); /* Kicsit a gomb alá, 5px távolságra */
+/* Nyelvválasztó menü (lenyíló rész) */
+.language-selector .language-menu {
+    position: absolute;
+    top: calc(100% + 5px); /* A gomb alá, 5px távolságra */
     right: 0; /* A gomb jobb széléhez igazítva */
-    /* A többi stílusod marad */
-    border: 2px solid #4CAF50 !important;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3) !important;
-    background: white !important;
+    min-width: 150px; /* Kissé megnöveltem a minimális szélességet */
+    border: 2px solid #4CAF50;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    display: none; /* Alapértelmezetten rejtett, a JS 'open' class-szal jeleníti meg */
+    color: #333;
+    z-index: 10002; /* Még magasabb z-index, hogy a menü is felül legyen */
+    opacity: 0; /* Alapértelmezetten átlátszatlan */
+    transform: translateY(-10px); /* Kicsit elmozdítva felülre */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Animáció hozzáadása */
+    pointer-events: none; /* Alapértelmezetten ne lehessen rákattintani */
 }
 
-/* Média lekérdezések frissítése a nyelvválasztóhoz, ha szükséges */
-@media (max-width: 768px) {
-    #languageSelector,
-    .language-selector { /* Használd mindkettőt, ha a language-selector osztályt is használod */
-        top: 10px;
-        right: 10px;
-        font-size: 13px; /* Kisebb méret kisebb képernyőn */
-        padding: 8px 16px;
-    }
-
-    #languageMenu {
-        top: calc(100% + 5px);
-        right: 0;
-    }
+/* Amikor az 'open' osztály rákerül a language-selectorra, akkor jelenik meg */
+.language-selector.open .language-menu {
+    display: block; /* Vagy flex, ha a belső elemeket flexbox-al rendeznéd */
+    opacity: 1; /* Teljesen láthatóvá tesszük */
+    transform: translateY(0); /* Visszatér a normál pozícióba */
+    pointer-events: auto; /* Hogy kattintható legyen */
 }
 
-@media (max-width: 480px) {
-    #languageSelector,
-    .language-selector {
-        top: 5px;
-        right: 5px;
-        font-size: 12px;
-        padding: 6px 12px;
-    }
+/* Az egyes nyelvi opciók */
+.language-option {
+    padding: 8px 15px;
+    cursor: pointer;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    text-align: left;
+    white-space: nowrap; /* Hogy ne törjön a szöveg */
+    display: flex; /* Flexbox a zászló, név, státuszhoz */
+    align-items: center;
+    gap: 8px; /* Helyköz a belső elemek között */
 }
 
+.language-option:last-child {
+    border-bottom: none;
+}
 
 .language-option:hover {
-    background: linear-gradient(135deg, #E8F5E8, #C8E6C9) !important;
-    color: #2E7D32 !important;
-    font-weight: bold !important;
+    background: linear-gradient(135deg, #E8F5E8, #C8E6C9);
+    color: #2E7D32;
+    font-weight: bold;
 }
 
 .language-option.active {
-    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
-    color: white !important;
-    font-weight: bold !important;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    font-weight: bold;
 }
 
-/* Sötét téma támogatás */
-.dark-theme #languageSelector {
-    background: linear-gradient(135deg, #FF9800, #F57C00) !important;
-    border-color: #E65100 !important;
+/* Dark theme támogatás a frissített stílusokhoz */
+body.dark-theme {
+    background: radial-gradient(circle at center, #0f0f23 0%, #1a1a2e 50%, #000000 100%);
 }
 
-.dark-theme #languageSelector:hover {
-    background: linear-gradient(135deg, #F57C00, #FF9800) !important;
-    border-color: #BF360C !important;
+body.dark-theme .game-container {
+    background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(40,40,40,0.95) 100%);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-.dark-theme #languageMenu {
-    background: #424242 !important;
-    border-color: #FF9800 !important;
+body.dark-theme .current-language {
+    background: rgba(50, 50, 50, 0.95);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-.dark-theme .language-option {
-    color: #e0e0e0 !important;
-    border-bottom-color: #666 !important;
+body.dark-theme .language-menu {
+    background: #333;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .language-option:hover {
-    background: linear-gradient(135deg, #FFF3E0, #FFE0B2) !important;
-    color: #E65100 !important;
+body.dark-theme .language-option {
+    color: white;
 }
 
-.dark-theme .language-option.active {
-    background: linear-gradient(135deg, #FF9800, #F57C00) !important;
-    color: white !important;
+body.dark-theme .language-option:hover {
+    background: #444;
+}
+
+body.dark-theme .language-option.active {
+    background: #1976d2;
+    color: white;
+}
+
+body.dark-theme .top-fixed-header {
+    background: rgba(0, 0, 0, 0.9);
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
+    color: #e0e0e0;
+}
+
+body.dark-theme .firebase-status {
+    color: white;
+}
+
+body.dark-theme .language-selector .current-language {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    border-color: #E65100;
+    color: white;
+}
+
+body.dark-theme .language-selector .current-language:hover {
+    background: linear-gradient(135deg, #F57C00, #FF9800);
+    border-color: #BF360C;
+}
+
+body.dark-theme .language-selector .language-menu {
+    background: #2a2a2a;
+    border-color: #FF9800;
+    color: #e0e0e0;
+}
+
+body.dark-theme .language-option {
+    color: #e0e0e0;
+    border-bottom-color: #444;
+}
+
+body.dark-theme .language-option:hover {
+    background: linear-gradient(135deg, #444, #555);
+    color: #FFC107;
+}
+
+body.dark-theme .language-option.active {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    color: white;
 }
 
 /* Dev Info */
@@ -747,41 +818,6 @@ button:disabled {
     right: 10%;
 }
 
-/* Dark theme támogatás */
-body.dark-theme {
-    background: radial-gradient(circle at center, #0f0f23 0%, #1a1a2e 50%, #000000 100%);
-}
-
-body.dark-theme .game-container {
-    background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(40,40,40,0.95) 100%);
-    color: #e0e0e0;
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-body.dark-theme .current-language {
-    background: rgba(50, 50, 50, 0.95);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-body.dark-theme .language-menu {
-    background: #333;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-body.dark-theme .language-option {
-    color: white;
-}
-
-body.dark-theme .language-option:hover {
-    background: #444;
-}
-
-body.dark-theme .language-option.active {
-    background: #1976d2;
-    color: white;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .game-container {
@@ -824,15 +860,23 @@ body.dark-theme .language-option.active {
         padding: 6px 10px;
     }
     
+    /* Ezek a szabályok most már a .top-fixed-header-en belüli elemekre vonatkoznak,
+       így a 'position: fixed' már nem kell rájuk, csak a méretüket, padding-jüket állítjuk */
     .firebase-status {
-        top: 10px;
-        left: 10px;
         font-size: 0.7em;
+        padding: 6px 10px;
     }
     
-    .language-selector {
-        top: 10px;
-        right: 10px;
+    .language-selector .current-language { /* Ide kell a responszív stílus, ami a gombot érinti */
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+    
+    /* A languageMenu pozíciója már a language-selectorhoz képest relatív,
+       így a top/right értékek már nem globális fix pozíciók */
+    .language-selector .language-menu {
+        top: calc(100% + 5px); /* Maradhat ez a beállítás */
+        right: 0; /* Maradhat ez a beállítás */
     }
     
     .dev-info {
@@ -866,174 +910,10 @@ body.dark-theme .language-option.active {
     .subtitle {
         font-size: 1em;
     }
-}
-/* Új konténer a felső fix elemeknek */
-.top-fixed-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    /* Javított háttérszín a jobb kontraszt érdekében */
-    background: rgba(15, 32, 39, 0.9); /* Kissé sötétebb és kevésbé áttetsző */
-    backdrop-filter: blur(5px);
-    z-index: 10000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Erősebb árnyék a kiemeléshez */
-    color: white; /* Alapértelmezett szövegszín a fejlécen belül */
-}
 
-/* Firebase Status */
-.firebase-status {
-    position: static;
-    margin: 0;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75em;
-    font-weight: 600;
-    z-index: auto;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    max-width: 150px;
-    text-align: center;
-    /* Biztosítjuk, hogy a szöveg fehér legyen a háttérrel szemben */
-    color: white;
+    /* Reszponzív méret állítások a language-selectorra */
+    .language-selector .current-language {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
 }
-
-.firebase-status.online {
-    background: rgba(76, 175, 80, 0.9); /* Sötétebb zöld háttér */
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-}
-
-.firebase-status.offline {
-    background: rgba(244, 67, 54, 0.9); /* Sötétebb piros háttér */
-    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
-}
-
-.firebase-status.connecting {
-    background: rgba(255, 152, 0, 0.9); /* Sötétebb narancs háttér */
-    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
-}
-
-.firebase-status.error {
-    background: rgba(244, 67, 54, 0.9); /* Sötétebb piros háttér */
-    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
-}
-
-
-/* Nyelvválasztó (language-selector) */
-.language-selector {
-    position: relative;
-    margin: 0;
-    z-index: 1;
-}
-
-/* Aktuális nyelv kijelzője (ez lesz a "gomb") */
-.language-selector .current-language {
-    /* Megtartjuk a színes hátteret, ami jó kontrasztot ad a fehér szöveghez */
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white; /* Szöveg biztosan fehér */
-    border: 2px solid #388E3C;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    padding: 10px 15px;
-    border-radius: 25px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.9em;
-}
-
-/* Nyelvválasztó menü (lenyíló rész) */
-.language-selector .language-menu {
-    position: absolute;
-    top: calc(100% + 5px);
-    right: 0;
-    min-width: 120px;
-    border: 2px solid #4CAF50;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    background: white; /* Világos háttér */
-    border-radius: 10px;
-    overflow: hidden;
-    display: none;
-    color: #333; /* Alapértelmezett szövegszín a menüben (sötét) */
-}
-
-.language-selector.open .language-menu {
-    display: block;
-}
-
-.language-option {
-    padding: 8px 15px;
-    cursor: pointer;
-    color: #333; /* Biztosan sötét szöveg a világos háttéren */
-    border-bottom: 1px solid #e0e0e0;
-    transition: all 0.2s ease;
-    text-align: left;
-}
-
-.language-option:last-child {
-    border-bottom: none;
-}
-
-.language-option:hover {
-    background: linear-gradient(135deg, #E8F5E8, #C8E6C9); /* Világosabb háttér hover esetén */
-    color: #2E7D32; /* Sötétebb zöld szöveg hover esetén */
-    font-weight: bold;
-}
-
-.language-option.active {
-    background: linear-gradient(135deg, #4CAF50, #45a049); /* Színes háttér */
-    color: white; /* Fehér szöveg */
-    font-weight: bold;
-}
-
-/* Dark theme támogatás a frissített stílusokhoz */
-body.dark-theme .top-fixed-header {
-    background: rgba(0, 0, 0, 0.9); /* Még sötétebb háttér */
-    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
-    color: #e0e0e0; /* Világosabb alapértelmezett szövegszín */
-}
-
-body.dark-theme .firebase-status {
-    color: white; /* A Firebase státusz mindig fehér a sötét háttéren */
-}
-
-body.dark-theme .language-selector .current-language {
-    background: linear-gradient(135deg, #FF9800, #F57C00);
-    border-color: #E65100;
-    color: white; /* Szöveg biztosan fehér */
-}
-
-body.dark-theme .language-selector .current-language:hover {
-    background: linear-gradient(135deg, #F57C00, #FF9800);
-    border-color: #BF360C;
-}
-
-body.dark-theme .language-selector .language-menu {
-    background: #2a2a2a; /* Sötétebb háttér */
-    border-color: #FF9800;
-    color: #e0e0e0; /* Világos szöveg */
-}
-
-body.dark-theme .language-option {
-    color: #e0e0e0; /* Világos szöveg a sötét háttéren */
-    border-bottom-color: #444;
-}
-
-body.dark-theme .language-option:hover {
-    background: linear-gradient(135deg, #444, #555); /* Kissé világosabb sötét háttér hover esetén */
-    color: #FFC107; /* Sárgás szín a kiemeléshez */
-}
-
-body.dark-theme .language-option.active {
-    background: linear-gradient(135deg, #FF9800, #F57C00);
-    color: white; /* Fehér szöveg */
-}
-
-/* ... a többi CSS-ed változatlanul marad ... */
