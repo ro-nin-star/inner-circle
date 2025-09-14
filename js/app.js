@@ -2,81 +2,142 @@
 
 // BIZTONSÁGOS SCORE ADAT KÉSZÍTŐ FÜGGVÉNY
 // JAVÍTOTT createSafeScoreData - cseréld ki a teljes függvényt
+// TELJESEN ÚJ createSafeScoreData - cseréld ki az egészet!
 window.createSafeScoreData = (playerName, score, difficulty, transformation) => {
-    console.log('🛡️ Biztonságos score adat készítése - INPUT:', {
-        playerName, score, difficulty, transformation,
-        types: {
-            playerName: typeof playerName,
-            score: typeof score,
-            difficulty: typeof difficulty,
-            transformation: typeof transformation
+    console.log('🛡️ === SCORE ADAT KÉSZÍTÉS KEZDÉS ===');
+    console.log('RAW INPUT:', { playerName, score, difficulty, transformation });
+    console.log('INPUT TÍPUSOK:', {
+        playerName: typeof playerName,
+        score: typeof score,
+        difficulty: typeof difficulty,
+        transformation: typeof transformation
+    });
+    
+    // ✅ LÉPÉSENKÉNTI BIZTONSÁGOS KONVERTÁLÁS
+    
+    // 1. JÁTÉKOS NÉV
+    let safePlayerName;
+    try {
+        safePlayerName = String(playerName || 'Névtelen').trim();
+        if (safePlayerName.length === 0) {
+            safePlayerName = 'Névtelen';
         }
-    });
-    
-    // ✅ EXTRA BIZTONSÁGOS KONVERTÁLÁS
-    const safePlayerName = String(playerName || 'Névtelen').trim();
-    const safeScore = Math.round(Number(score) || 0); // Biztosan egész szám
-    const safeDifficulty = String(difficulty || 'easy').toLowerCase().trim();
-    const safeTransformation = String(transformation || '').trim();
-    
-    console.log('🔄 Konvertált értékek:', {
-        safePlayerName, safeScore, safeDifficulty, safeTransformation
-    });
-    
-    // ✅ SZIGORÚBB VALIDÁLÁS
-    if (!safePlayerName || safePlayerName.length === 0) {
-        throw new Error(`Érvénytelen játékos név: "${playerName}"`);
+        console.log('✅ Játékos név OK:', safePlayerName);
+    } catch (error) {
+        console.error('❌ Játékos név hiba:', error);
+        safePlayerName = 'Névtelen';
     }
     
-    if (isNaN(safeScore) || safeScore < 0 || safeScore > 100) {
-        throw new Error(`Érvénytelen pontszám: ${score} -> ${safeScore}`);
+    // 2. PONTSZÁM - EXTRA GONDOS KEZELÉS
+    let safeScore;
+    try {
+        console.log('🔢 Score feldolgozás - eredeti érték:', score, typeof score);
+        
+        // Először próbáljuk számmá konvertálni
+        const numScore = Number(score);
+        console.log('🔢 Number() eredmény:', numScore, typeof numScore);
+        
+        if (isNaN(numScore)) {
+            console.error('❌ Score NaN lett:', score, '->', numScore);
+            throw new Error(`Score nem konvertálható számmá: ${score}`);
+        }
+        
+        // Kerekítés és tartomány ellenőrzés
+        safeScore = Math.round(numScore);
+        console.log('🔢 Kerekített score:', safeScore);
+        
+        if (safeScore < 0) {
+            console.warn('⚠️ Negatív score, 0-ra állítva:', safeScore);
+            safeScore = 0;
+        } else if (safeScore > 100) {
+            console.warn('⚠️ 100 feletti score, 100-ra állítva:', safeScore);
+            safeScore = 100;
+        }
+        
+        console.log('✅ Végső score:', safeScore, typeof safeScore);
+        
+    } catch (error) {
+        console.error('❌ Score feldolgozási hiba:', error);
+        console.error('Eredeti score érték:', score);
+        throw new Error(`Score feldolgozási hiba: ${error.message} (eredeti: ${score})`);
     }
     
-    // Nehézség normalizálás
-    let normalizedDifficulty = safeDifficulty;
-    if (!['easy', 'hard'].includes(safeDifficulty)) {
-        console.warn('⚠️ Ismeretlen nehézség:', safeDifficulty, '-> easy');
-        normalizedDifficulty = 'easy';
+    // 3. NEHÉZSÉG
+    let safeDifficulty;
+    try {
+        safeDifficulty = String(difficulty || 'easy').toLowerCase().trim();
+        if (!['easy', 'hard'].includes(safeDifficulty)) {
+            console.warn('⚠️ Ismeretlen nehézség:', safeDifficulty, '-> easy');
+            safeDifficulty = 'easy';
+        }
+        console.log('✅ Nehézség OK:', safeDifficulty);
+    } catch (error) {
+        console.error('❌ Nehézség hiba:', error);
+        safeDifficulty = 'easy';
     }
     
-    // ✅ TISZTA ADATSTRUKTÚRA - csak a szükséges mezők
+    // 4. TRANSZFORMÁCIÓ
+    let safeTransformation;
+    try {
+        safeTransformation = String(transformation || '').trim();
+        console.log('✅ Transzformáció OK:', safeTransformation);
+    } catch (error) {
+        console.error('❌ Transzformáció hiba:', error);
+        safeTransformation = '';
+    }
+    
+    // 5. IDŐBÉLYEGEK
+    const currentTime = Date.now();
+    const currentISO = new Date().toISOString();
+    
+    console.log('✅ Időbélyegek:', { currentTime, currentISO });
+    
+    // 6. VÉGSŐ OBJEKTUM ÖSSZEÁLLÍTÁS
     const scoreData = {
         playerName: safePlayerName,
         score: safeScore,
-        difficulty: normalizedDifficulty,
+        difficulty: safeDifficulty,
         transformation: safeTransformation,
-        timestamp: Date.now(),
-        created: new Date().toISOString()
+        timestamp: currentTime,
+        created: currentISO
     };
     
-    console.log('📋 Előkészített scoreData:', scoreData);
+    console.log('📋 ÖSSZEÁLLÍTOTT OBJEKTUM:', scoreData);
     
-    // ✅ FINAL TÍPUS ELLENŐRZÉS
+    // 7. VÉGSŐ VALIDÁLÁS
+    console.log('🔍 === VÉGSŐ VALIDÁLÁS ===');
     Object.keys(scoreData).forEach(key => {
         const value = scoreData[key];
+        console.log(`Ellenőrzés - ${key}:`, value, `(${typeof value})`);
         
-        if (value === undefined || value === null) {
-            console.error(`❌ Null/undefined érték: ${key} = ${value}`);
-            throw new Error(`Null/undefined érték a ${key} mezőben`);
+        if (value === undefined) {
+            console.error(`❌ UNDEFINED ÉRTÉK: ${key}`);
+            throw new Error(`UNDEFINED érték a ${key} mezőben`);
         }
         
-        // Specifikus típus ellenőrzések
+        if (value === null) {
+            console.error(`❌ NULL ÉRTÉK: ${key}`);
+            throw new Error(`NULL érték a ${key} mezőben`);
+        }
+        
         if (key === 'score' || key === 'timestamp') {
-            if (typeof value !== 'number' || isNaN(value)) {
-                console.error(`❌ ${key} nem valid szám:`, value, typeof value);
-                throw new Error(`${key} nem valid szám: ${typeof value}`);
+            if (typeof value !== 'number') {
+                console.error(`❌ ${key} NEM SZÁM:`, value, typeof value);
+                throw new Error(`${key} nem szám típusú: ${typeof value}`);
             }
-        } else if (typeof value !== 'string') {
-            console.error(`❌ ${key} nem string:`, value, typeof value);
-            throw new Error(`${key} nem string: ${typeof value}`);
+            if (isNaN(value)) {
+                console.error(`❌ ${key} NaN:`, value);
+                throw new Error(`${key} NaN értékű`);
+            }
         }
-        
-        console.log(`✅ ${key}: ${value} (${typeof value})`);
     });
     
-    console.log('🎉 VÉGSŐ BIZTONSÁGOS SCORE ADAT:', scoreData);
+    console.log('🎉 === VALIDÁLÁS SIKERES ===');
+    console.log('🎉 VÉGSŐ BIZTONSÁGOS ADAT:', JSON.stringify(scoreData, null, 2));
+    
     return scoreData;
 };
+
 
 
 class PerfectCircleApp {
