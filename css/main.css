@@ -917,3 +917,209 @@ body.dark-theme .language-option.active {
         padding: 6px 12px;
     }
 }
+/* Thumbnail stílusok */
+.score-thumbnail, .leaderboard-thumbnail {
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.score-thumbnail:hover, .leaderboard-thumbnail:hover {
+    border-color: #4CAF50;
+    transform: scale(1.05);
+}
+
+.current-score-thumbnail {
+    margin-top: 10px;
+    border: 3px solid #4CAF50;
+    box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+}
+
+.no-thumbnail {
+    background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+    color: #999;
+}
+
+.score-entry {
+    transition: background-color 0.2s;
+}
+
+.score-entry:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+/* Pontszám animációk */
+.score-display {
+    position: relative;
+    overflow: visible;
+}
+
+.score-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.score-big-reveal {
+    font-size: 8rem;
+    font-weight: 900;
+    color: #4CAF50;
+    text-shadow: 
+        0 0 20px rgba(76, 175, 80, 0.8),
+        0 0 40px rgba(76, 175, 80, 0.6),
+        0 0 60px rgba(76, 175, 80, 0.4);
+    animation: scoreRevealAnimation 3s ease-out forwards;
+    text-align: center;
+    line-height: 1;
+}
+
+@keyframes scoreRevealAnimation {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    20% {
+        transform: scale(1.2) rotate(0deg);
+        opacity: 1;
+    }
+    40% {
+        transform: scale(0.9) rotate(0deg);
+        opacity: 1;
+    }
+    60% {
+        transform: scale(1.1) rotate(0deg);
+        opacity: 1;
+    }
+    80% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+}
+
+.score-particles {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.score-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: particleFloat 2s ease-out forwards;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--dx), var(--dy)) scale(0);
+        opacity: 0;
+    }
+}
+
+.score-grade-badge {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    animation: badgeBounce 0.6s ease-out;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+
+@keyframes badgeBounce {
+    0% { transform: scale(0) rotate(-180deg); }
+    50% { transform: scale(1.2) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.score-fireworks {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+}
+
+.firework {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    animation: fireworkExplode 1s ease-out forwards;
+}
+
+@keyframes fireworkExplode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(20);
+        opacity: 0;
+    }
+}
+
+/* Pontszám kategória színek */
+.score-perfect { color: #FFD700 !important; text-shadow: 0 0 30px #FFD700; }
+.score-excellent { color: #4CAF50 !important; text-shadow: 0 0 30px #4CAF50; }
+.score-good { color: #2196F3 !important; text-shadow: 0 0 30px #2196F3; }
+.score-fair { color: #FF9800 !important; text-shadow: 0 0 30px #FF9800; }
+.score-poor { color: #F44336 !important; text-shadow: 0 0 30px #F44336; }
+
+/* Pulse animáció a score display-hez */
+.score-display.score-revealed {
+    animation: scoreDisplayPulse 2s ease-out;
+    border: 3px solid #4CAF50;
+    box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+}
+
+@keyframes scoreDisplayPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Confetti animáció */
+.confetti {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 9997;
+    animation: confettiFall 3s linear forwards;
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
