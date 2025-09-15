@@ -13,6 +13,8 @@
         window.currentLeaderboardType = 'local';
         console.log('🔧 HTML szintű leaderboard típus beállítva:', window.currentLeaderboardType);
     </script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
 </head>
 
 <body>
@@ -64,25 +66,36 @@
             <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy" data-i18n="difficulty.easy">Könnyű 😊</button>
             <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard" data-i18n="difficulty.hard">Nehéz 🌀</button>
         </div>
+<!-- 🎯 RAJZOLÁS GOMB - FELÜL -->
+    <div class="draw-start-container">
+        <div class="arrow arrow-left">👈</div>
+        <div class="arrow arrow-top">👆</div>
+        <button class="draw-start-button" id="startDrawingBtn" onclick="startDrawing()">
+            🎨 Kezdj Rajzolni! 🎨
+        </button>
+        <div class="arrow arrow-right">👉</div>
+        <div class="arrow arrow-bottom">👇</div>
+    </div>
+<!-- ✅ JAVÍTOTT STATISZTIKÁK HTML -->
+<div class="stats-container">
+    <div class="stat-item">
+        <div class="stat-label">Jelenlegi</div>
+        <div class="stat-value" id="currentScore">0</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Legjobb</div>
+        <div class="stat-value" id="bestScore">0</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Játékok</div>
+        <div class="stat-value" id="gamesPlayed">0</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Átlag</div>
+        <div class="stat-value" id="averageScore">0</div>
+    </div>
+</div>
 
-        <div class="game-stats" id="gameStats">
-            <div class="stat" id="currentScoreStat">
-                <div class="stat-label" data-i18n="stats.currentScore">Jelenlegi Pontszám</div>
-                <div class="stat-value" id="currentScore">0</div>
-            </div>
-            <div class="stat" id="bestScoreStat">
-                <div class="stat-label" data-i18n="stats.bestScore">Legjobb Eredmény</div>
-                <div class="stat-value" id="bestScore">0</div>
-            </div>
-            <div class="stat" id="gamesPlayedStat">
-                <div class="stat-label" data-i18n="stats.gamesPlayed">Játékok Száma</div>
-                <div class="stat-value" id="gamesPlayed">0</div>
-            </div>
-            <div class="stat" id="averageScoreStat">
-                <div class="stat-label" data-i18n="stats.averageScore">Átlag Pontszám</div>
-                <div class="stat-value" id="averageScore">0</div>
-            </div>
-        </div>
 
         <!-- ✅ NÉGYZETES CANVAS CONTAINER -->
         <div class="canvas-container">
@@ -97,7 +110,7 @@
         </div>
 
         <div class="controls">
-            <button id="startBtn" data-i18n="buttons.startDrawing">🎯 Rajzolás Kezdése</button>
+            <button id="startBtn" data-i18n="buttons.startDrawing" >🎯 Rajzolás Kezdése</button>
             <button id="clearBtn" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
             <button id="helpBtn" data-i18n="buttons.help">❓ Segítség</button>
             <button id="clearScoresBtn" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>

@@ -982,3 +982,351 @@ h1 {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+/* ✅ JAVÍTOTT STATISZTIKÁK - EGY SORBAN */
+.stats-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 10px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: rgba(160, 76, 76, 0.8);
+    margin-bottom: 5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* 📱 MOBIL OPTIMALIZÁLÁS */
+@media (max-width: 768px) {
+    .stats-container {
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .stat-item {
+        min-width: 80px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-container {
+        gap: 5px;
+        padding: 8px;
+    }
+    
+    .stat-item {
+        min-width: 70px;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+    }
+}
+/* ⭐ EXTRA FANCY VERZIÓ */
+.draw-start-container-fancy {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    padding: 25px;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 70%);
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    animation: rainbowBorder 3s linear infinite;
+}
+
+.draw-start-container-fancy::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff0080, #ff0000);
+    border-radius: 20px;
+    z-index: -1;
+    animation: rainbowSpin 2s linear infinite;
+}
+
+@keyframes rainbowSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes rainbowBorder {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+/* ✅ RAJZOLÁS INDÍTÓ GOMB - FELÜL, NYILAKKAL */
+.draw-start-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.1));
+    border-radius: 15px;
+    border: 2px dashed rgba(255, 215, 0, 0.5);
+    animation: pulseGlow 2s infinite;
+}
+
+.draw-start-button {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #333;
+    border: none;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+}
+
+.draw-start-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+    background: linear-gradient(135deg, #FFED4E, #FFB347);
+}
+
+.draw-start-button:active {
+    transform: translateY(-1px);
+}
+
+/* 🏹 NYILAK A GOMB KÖRÜL */
+.arrow {
+    position: absolute;
+    font-size: 24px;
+    color: #FFD700;
+    animation: bounce 1.5s infinite;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    z-index: 1;
+}
+
+.arrow-left {
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation-delay: 0s;
+}
+
+.arrow-right {
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation-delay: 0.3s;
+}
+
+.arrow-top {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0.6s;
+}
+
+.arrow-bottom {
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0.9s;
+}
+
+/* 🌟 ANIMÁCIÓK */
+@keyframes pulseGlow {
+    0% { 
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.5);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        border-color: rgba(255, 215, 0, 0.8);
+    }
+    100% { 
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.5);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { 
+        transform: translateY(-50%) scale(1);
+    }
+    50% { 
+        transform: translateY(-50%) scale(1.2);
+    }
+}
+
+/* 📱 MOBIL OPTIMALIZÁLÁS */
+@media (max-width: 768px) {
+    .draw-start-container {
+        margin: 15px 0;
+        padding: 15px;
+    }
+    
+    .draw-start-button {
+        padding: 12px 25px;
+        font-size: 16px;
+    }
+    
+    .arrow {
+        font-size: 20px;
+    }
+    
+    .arrow-left {
+        left: 10px;
+    }
+    
+    .arrow-right {
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .draw-start-container {
+        margin: 10px 0;
+        padding: 10px;
+    }
+    
+    .draw-start-button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .arrow {
+        font-size: 18px;
+    }
+}
+
+/* ✅ JAVÍTOTT STATISZTIKÁK - EGY SORBAN */
+.stats-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 10px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: rgba(163, 86, 86, 0.8);
+    margin-bottom: 5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* 📱 STATISZTIKÁK MOBIL OPTIMALIZÁLÁS */
+@media (max-width: 768px) {
+    .stats-container {
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .stat-item {
+        min-width: 80px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-container {
+        gap: 5px;
+        padding: 8px;
+    }
+    
+    .stat-item {
+        min-width: 70px;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+    }
+}
+
+/* 🎭 FADE OUT ANIMÁCIÓ A GOMBHOZ */
+@keyframes fadeOut {
+    from { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+    to { 
+        opacity: 0; 
+        transform: scale(0.8); 
+    }
+}
