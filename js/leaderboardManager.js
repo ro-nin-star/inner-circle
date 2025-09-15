@@ -1,32 +1,60 @@
-// js/leaderboardManager.js
+// js/managers/leaderboardManager.js
 
-/**
- * Kezeli a helyi és globális ranglisták megjelenítését és interakcióit.
- * Integrálódik a Firebase-szel a globális pontszámokért.
- */
 class LeaderboardManager {
-    /**
-     * @param {PerfectCircleApp} appInstance - A PerfectCircleApp példány.
-     */
-    constructor(appInstance) {
-        this.app = appInstance; // Hivatkozás a PerfectCircleApp példányra
-        this.currentView = 'local'; // 'local' vagy 'global'
-        this.lastGlobalAttempt = 0;
-        this.globalRetryDelay = 10000; // 10 másodperc
-
-        // Ezeket a metódusokat bindingoljuk, hogy az event listenerek jól működjenek
-        this.switchLeaderboard = this.switchLeaderboard.bind(this);
-        this.loadGlobalLeaderboard = this.loadGlobalLeaderboard.bind(this);
-        this.loadLocalLeaderboard = this.loadLocalLeaderboard.bind(this);
-        this.saveGlobalScore = this.saveGlobalScore.bind(this); // Ez is bindolva van
-        this.refreshCurrentView = this.refreshCurrentView.bind(this);
+    constructor(app) {
+        this.app = app;
+        this.currentView = 'local';
+        this.lastAttempt = 0;
+        this.retryDelay = 10000; // 10 másodperc
     }
-
-    /**
-     * Frissíti a ranglista státusz üzenetét.
-     * @param {string} message - A megjelenítendő üzenet.
-     * @param {boolean} [isLoading=false] - Azt jelzi, hogy betöltési animációt kell-e mutatni.
-     */
+    
+    async saveGlobalScore(playerName, score, difficulty, transformation) {
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+            throw new Error('Firebase nem elérhető');
+        }
+        
+        const sanitizedName = playerName.trim().substring(0, 20) || 'Névtelen';
+        
+        try {
+            const scoreId = await window.firebaseAPI.saveScore(sanitizedName, score, difficulty, transformation);
+            console.log('✅ Globális pontszám mentve:', scoreId);
+            return scoreId;
+        } catch (error) {
+            console.error('❌ Globális pontszám mentése sikertelen:', error);
+            throw error;
+        }
+    }
+    
+    async loadGlobalScores() {
+        const now = Date.now();
+        if (now - this.lastAttempt < this.retryDelay) {
+            throw new Error('Túl gyakori próbálkozás - várj 10 másodpercet');
+        }
+        
+        this.lastAttempt = now;
+        
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+            console.log('🔄 Firebase újracsatlakozási kísérlet...');
+            try {
+                await window.firebaseAPI.reconnect();
+                if (!window.firebaseAPI.isReady()) {
+                    throw new Error('Újracsatlakozás sikertelen');
+                }
+            } catch (error) {
+                throw new Error('Firebase nem elérhető');
+            }
+        }
+        
+        try {
+            const scores = await window.firebaseAPI.getTopScores(10);
+            console.log(`📊 ${scores.length} globális eredmény betöltve`);
+            return scores;
+        } catch (error) {
+            console.error('❌ Globális pontszámok betöltése sikertelen:', error);
+            throw error;
+        }
+    }
+    
     updateStatus(message, isLoading = false) {
         const statusEl = document.getElementById('leaderboardStatus');
         if (statusEl) {
@@ -37,216 +65,194 @@ class LeaderboardManager {
             }
         }
     }
-
-    /**
-     * Megjeleníti a pontszámokat a ranglistán.
-     * @param {Array<Object>} scores - A megjelenítendő pontszámok listája.
-     * @param {boolean} [isGlobal=false] - Azt jelzi, hogy globális ranglistát jelenít-e meg.
-     * @param {string|number|null} [highlightId=null] - Egy pontszám ID-je, amit ki kell emelni.
-     */
+    
     displayScores(scores, isGlobal = false, highlightId = null) {
         const leaderboardList = document.getElementById('leaderboardList');
-        if (!leaderboardList) return;
-
-        if (scores.length === 0) {
-            leaderboardList.innerHTML = `<div class="score-entry"><span>${this.app.t('leaderboard.noResults')}</span></div>`;
+        
+        if (!leaderboardList) {
+            console.error('Leaderboard lista elem nem található');
             return;
         }
-
+        
+        if (scores.length === 0) {
+            const noResultsText = this.app ? this.app.t('leaderboard.noResults') : 'Még nincsenek eredmények';
+            leaderboardList.innerHTML = `<div class="score-entry"><span>${noResultsText}</span></div>`;
+            return;
+        }
+        
         leaderboardList.innerHTML = scores.map((score, index) => {
             const isHighlighted = score.id === highlightId;
-            const difficultyEmoji = { easy: '🟢😊', hard: '🔴🌀' };
+            const difficultyEmoji = { 
+                easy: '🟢😊', 
+                hard: '🔴🌀' 
+            };
             const transformationDisplay = score.transformation ? ` ✨${score.transformation}` : '';
-
+            
             let rankClass = '';
             if (index === 0) rankClass = 'rank-1';
             else if (index < 3) rankClass = 'top-3';
-
-            const playerName = isGlobal ? score.playerName : this.app.t('player.you'); // Vagy 'Te', ha van ilyen
-            const scoreValue = score.score || 0; // Biztonságos érték
-
-            // Dátum formázás lokalizálva
-            // A Firebase timestamp eltérhet a Date objektumtól (Firestore Timestamp vs ISO string)
-            const date = score.date || score.timestamp?.toDate().toLocaleDateString(this.app.currentLanguage) || '';
-            const displayDate = typeof date === 'string' ? date : date.toLocaleDateString(this.app.currentLanguage);
-
-
+            
+            const playerName = isGlobal ? score.playerName : (this.app ? this.app.t('player.you') : 'Te');
+            const difficulty = score.difficulty || 'easy';
+            const pointsText = this.app ? this.app.t('common.points') : 'pont';
+            
             return `
-                <div class="score-entry ${isHighlighted ? 'current' : ''} ${rankClass}">
+                <div class="score-entry ${isHighlighted ? 'current' : ''} ${rankClass}" data-id="${score.id}">
                     <span>${index + 1}. ${playerName}</span>
-                    <span>${scoreValue} ${this.app.t('common.points')}${transformationDisplay}</span>
-                    <span>${difficultyEmoji[score.difficulty]} ${displayDate}</span>
+                    <span>${score.score} ${pointsText}${transformationDisplay}</span>
+                    <span>${difficultyEmoji[difficulty]} ${score.date}</span>
                 </div>
             `;
         }).join('');
-    }
-
-    /**
-     * Elment egy pontszámot a globális Firebase adatbázisba.
-     * @param {string} playerName - A játékos neve.
-     * @param {number} score - A pontszám.
-     * @param {string} difficulty - A nehézségi szint ('easy' vagy 'hard').
-     * @param {string} transformation - A kör transzformációjának neve.
-     * @returns {Promise<boolean>} - True, ha sikeres a mentés.
-     * @throws {Error} - Ha a Firebase nem elérhető vagy hiba történik.
-     */
-    async saveGlobalScore(playerName, score, difficulty, transformation) {
-        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
-            throw new Error(this.app.t('firebase.notAvailable'));
-        }
-
-        const sanitizedName = playerName.trim().substring(0, 20) || this.app.t('player.anonymous');
-
-        try {
-            await window.firebaseAPI.saveScore(sanitizedName, score, difficulty, transformation);
-            return true;
-        } catch (error) {
-            console.error('❌ Globális pontszám mentése sikertelen:', error);
-            throw error;
+        
+        // Highlight effekt hozzáadása
+        if (highlightId && window.EffectsManager) {
+            setTimeout(() => {
+                window.EffectsManager.highlightLeaderboardEntry(highlightId);
+            }, 100);
         }
     }
-
-    /**
-     * Betölti a globális pontszámokat a Firebase-ből.
-     * @returns {Promise<Array<Object>>} - A globális pontszámok listája.
-     * @throws {Error} - Ha a Firebase nem elérhető vagy túl gyakori a próbálkozás.
-     */
-    async loadGlobalScores() {
-        const now = Date.now();
-        if (now - this.lastGlobalAttempt < this.globalRetryDelay) {
-            throw new Error(this.app.t('leaderboard.tooFrequentAttempt'));
-        }
-
-        this.lastGlobalAttempt = now;
-
-        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
-            console.log('🔄 Firebase újracsatlakozási kísérlet...');
-            try {
-                await window.firebaseAPI.reconnect();
-                if (!window.firebaseAPI.isReady()) {
-                    throw new Error(this.app.t('firebase.reconnectFailed'));
-                }
-            } catch (error) {
-                throw new Error(this.app.t('firebase.notAvailable'));
-            }
-        }
-
-        try {
-            const scores = await window.firebaseAPI.getTopScores(10);
-            return scores;
-        } catch (error) {
-            console.error('❌ Globális pontszámok betöltése sikertelen:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Vált a helyi és globális ranglista nézet között.
-     * @param {'local'|'global'} type - A megjelenítendő ranglista típusa.
-     */
+    
     switchLeaderboard(type) {
         this.currentView = type;
-
-        document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-        const tabButton = document.getElementById(type + 'Tab');
-        if (tabButton) {
-            tabButton.classList.add('active');
+        
+        // Tab gombok frissítése
+        document.querySelectorAll('.tab-btn[data-leaderboard-type]').forEach(btn => btn.classList.remove('active'));
+        const activeTab = document.querySelector(`[data-leaderboard-type="${type}"]`);
+        if (activeTab) {
+            activeTab.classList.add('active');
         }
-
+        
         if (type === 'local') {
-            this.updateStatus(this.app.t('leaderboard.localResults'));
-            this.loadLocalLeaderboard();
-        } else {
-            this.loadGlobalLeaderboard();
-        }
-    }
-
-    /**
-     * Betölti és megjeleníti a globális ranglistát.
-     */
-    async loadGlobalLeaderboard() {
-        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
-            this.updateStatus(this.app.t('firebase.connecting'), true);
-
-            try {
-                // Megpróbáljuk újra csatlakoztatni a Firebase-t
-                await window.firebaseAPI.reconnect();
-            } catch (error) {
-                // Ha a reconnect sem segít
-                this.updateStatus(this.app.t('firebase.notAvailableCheckRules'));
-                this.displayScores([]);
-                return;
-            }
-            // Ha a reconnect sikeres volt, de még mindig nem "ready", akkor is hiba
-            if (!window.firebaseAPI.isReady()) {
-                this.updateStatus(this.app.t('firebase.notAvailableCheckRules'));
-                this.displayScores([]);
-                return;
-            }
-        }
-
-        this.updateStatus(this.app.t('leaderboard.loading'), true);
-
-        try {
-            const scores = await this.loadGlobalScores();
-            this.displayScores(scores, true);
-            this.updateStatus(`${this.app.t('leaderboard.globalResults')} (${scores.length} ${this.app.t('common.players')})`);
-        } catch (error) {
-            if (error.message.includes(this.app.t('leaderboard.tooFrequentAttempt'))) {
-                this.updateStatus(this.app.t('leaderboard.waitRetry'));
-            } else if (error.message.includes('permission-denied')) {
-                this.updateStatus(this.app.t('firebase.rulesErrorSolution'));
-            } else {
-                this.updateStatus(this.app.t('leaderboard.globalNotAvailable'));
-            }
-            this.displayScores([]);
-            console.error('❌ Globális leaderboard betöltési hiba:', error);
-        }
-    }
-
-    /**
-     * Betölti és megjeleníti a helyi ranglistát.
-     * @param {string|number|null} [highlightId=null] - Egy pontszám ID-je, amit ki kell emelni.
-     */
-    loadLocalLeaderboard(highlightId = null) {
-        // Feltételezzük, hogy a ScoreManager is globalizált a window objektumon
-        const scores = window.ScoreManager ? window.ScoreManager.getScores() : [];
-        this.displayScores(scores, false, highlightId);
-        this.updateStatus(`${this.app.t('leaderboard.localResults')} (${scores.length} ${this.app.t('common.games')})`);
-    }
-
-    /**
-     * Visszaadja az aktuálisan kiválasztott ranglista nézetet.
-     * @returns {'local'|'global'}
-     */
-    getCurrentView() {
-        return this.currentView;
-    }
-
-    /**
-     * Frissíti az aktuális ranglista nézetet.
-     */
-    refreshCurrentView() {
-        if (this.currentView === 'local') {
+            const localText = this.app ? this.app.t('leaderboard.localResults') : '📱 Helyi eredmények';
+            this.updateStatus(localText);
             this.loadLocalLeaderboard();
         } else {
             this.loadGlobalLeaderboard();
         }
     }
     
-    /**
-     * Exportálja a helyi ranglistát (dummy funkció, implementálandó).
-     */
-    exportLeaderboard() {
-        this.app.showError('errors.notImplemented'); // Például
+    async loadGlobalLeaderboard() {
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+            const connectingText = this.app ? this.app.t('firebase.connecting') : '🔄 Kapcsolódás...';
+            this.updateStatus(connectingText, true);
+            
+            try {
+                await window.firebaseAPI.reconnect();
+            } catch (error) {
+                const errorText = this.app ? this.app.t('firebase.notAvailableCheckRules') : '❌ Firebase nem elérhető - Ellenőrizd a Firestore Rules-t';
+                this.updateStatus(errorText);
+                this.displayScores([]);
+                return;
+            }
+        }
+
+        const loadingText = this.app ? this.app.t('leaderboard.loading') : 'Eredmények betöltése...';
+        this.updateStatus(loadingText, true);
+        
+        try {
+            const scores = await this.loadGlobalScores();
+            this.displayScores(scores, true);
+            const playersText = this.app ? this.app.t('common.players') : 'játékos';
+            const globalText = this.app ? this.app.t('leaderboard.globalResults') : '🌍 Globális toplista';
+            this.updateStatus(`${globalText} (${scores.length} ${playersText})`);
+        } catch (error) {
+            if (error.message.includes('Túl gyakori')) {
+                const waitText = this.app ? this.app.t('leaderboard.waitRetry') : '⏳ Várj 10 másodpercet az újrapróbálkozás előtt';
+                this.updateStatus(waitText);
+            } else if (error.message.includes('permission-denied')) {
+                const rulesErrorText = this.app ? this.app.t('firebase.rulesErrorSolution') : '❌ Firestore Rules hiba - Kattints a státuszra a megoldásért';
+                this.updateStatus(rulesErrorText);
+            } else {
+                const notAvailableText = this.app ? this.app.t('leaderboard.globalNotAvailable') : '❌ Globális eredmények nem elérhetők - Próbáld később';
+                this.updateStatus(notAvailableText);
+            }
+            this.displayScores([]);
+            console.error('❌ Globális leaderboard betöltési hiba:', error);
+        }
+    }
+    
+    loadLocalLeaderboard(highlightId = null) {
+        if (!window.ScoreManager) {
+            console.error('❌ ScoreManager nem elérhető');
+            return;
+        }
+        
+        const scores = window.ScoreManager.getScores();
+        this.displayScores(scores, false, highlightId);
+        const gamesText = this.app ? this.app.t('common.games') : 'játék';
+        const localText = this.app ? this.app.t('leaderboard.localResults') : '📱 Helyi eredmények';
+        this.updateStatus(`${localText} (${scores.length} ${gamesText})`);
+    }
+    
+    getCurrentView() {
+        return this.currentView;
+    }
+    
+    refreshCurrentView(highlightId = null) {
+        if (this.currentView === 'local') {
+            this.loadLocalLeaderboard(highlightId);
+        } else {
+            this.loadGlobalLeaderboard();
+        }
     }
 
-    /**
-     * Importálja a helyi ranglistát (dummy funkció, implementálandó).
-     */
+    // Export/Import funkciók
+    exportLeaderboard() {
+        try {
+            if (!window.ScoreManager) {
+                throw new Error('ScoreManager nem elérhető');
+            }
+            
+            const scores = window.ScoreManager.getScores();
+            const dataStr = JSON.stringify(scores, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `perfect-circle-scores-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            const successText = this.app ? this.app.t('advanced.exportSuccess') : 'Eredmények sikeresen exportálva!';
+            alert(successText);
+        } catch (error) {
+            const errorText = this.app ? this.app.t('advanced.exportError') : 'Hiba az eredmények exportálásakor.';
+            alert(`${errorText}: ${error.message}`);
+        }
+    }
+    
     importLeaderboard() {
-        this.app.showError('errors.notImplemented'); // Például
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedScores = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedScores)) {
+                        throw new Error('Invalid format');
+                    }
+                    
+                    const result = window.ScoreManager.importScores(importedScores);
+                    const successText = this.app ? 
+                        this.app.t('advanced.importSuccess', { imported: result.imported, total: result.total }) :
+                        `Eredmények sikeresen importálva: ${result.imported} új, ${result.total} összesen.`;
+                    alert(successText);
+                    this.refreshCurrentView();
+                } catch (error) {
+                    const errorText = this.app ? this.app.t('advanced.fileError') : 'Fájl olvasási hiba';
+                    alert(`${errorText}: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
     }
 }
 
-export default LeaderboardManager;
+// Globális hozzáférés biztosítása
+window.LeaderboardManager = LeaderboardManager;

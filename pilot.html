@@ -3,115 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Teszt</title>
+    <title>Firebase Adatok Megjelenítése</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
         }
+
         .container {
-            background: white;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
-        .status {
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-card .number {
+            font-size: 2em;
             font-weight: bold;
         }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .loading {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .loading::before {
+            content: "⏳";
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .scores-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .score-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .score-item.rank-1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+            border: 2px solid #f39c12;
+        }
+
+        .score-item.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+        }
+
+        .score-item.rank-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.2em;
+            min-width: 30px;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .score-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9em;
+        }
+
+        .score-value {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+
+        .difficulty {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .difficulty.easy {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .difficulty.hard {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .date {
+            color: #7f8c8d;
+            font-size: 0.8em;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 0.9em;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Firebase Konfiguráció Teszt</h1>
-        <div id="status" class="status loading">Firebase inicializálása...</div>
-        <div id="details"></div>
+        <h1>🎯 Perfect Circle - Firebase Adatok</h1>
         
-        <h3>Konfiguráció részletei:</h3>
-        <ul>
-            <li><strong>Project ID:</strong> perfectcircle-8f981</li>
-            <li><strong>Auth Domain:</strong> perfectcircle-8f981.firebaseapp.com</li>
-            <li><strong>Storage Bucket:</strong> perfectcircle-8f981.firebasestorage.app</li>
-        </ul>
+        <!-- Statisztikák -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Összes Játék</h3>
+                <div class="number" id="totalGames">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Aktív Játékosok</h3>
+                <div class="number" id="totalPlayers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Legjobb Pontszám</h3>
+                <div class="number" id="bestScore">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Átlag Pontszám</h3>
+                <div class="number" id="avgScore">-</div>
+            </div>
+        </div>
+
+        <!-- Vezérlők -->
+        <div class="controls">
+            <button onclick="loadScores()">🔄 Frissítés</button>
+            <button onclick="loadTopScores(10)">🏆 Top 10</button>
+            <button onclick="loadTopScores(50)">📊 Top 50</button>
+            <button onclick="loadRecentScores()">⏰ Legfrissebb</button>
+            <button onclick="exportData()">💾 Export</button>
+        </div>
+
+        <!-- Szűrők -->
+        <div class="filters">
+            <select id="difficultyFilter" onchange="applyFilters()">
+                <option value="">Minden nehézség</option>
+                <option value="easy">Könnyű</option>
+                <option value="hard">Nehéz</option>
+            </select>
+            
+            <select id="timeFilter" onchange="applyFilters()">
+                <option value="">Minden idő</option>
+                <option value="today">Ma</option>
+                <option value="week">Ez a hét</option>
+                <option value="month">Ez a hónap</option>
+            </select>
+        </div>
+
+        <!-- Eredmények -->
+        <div class="scores-container">
+            <h2>📋 Eredmények</h2>
+            <div id="loadingIndicator" class="loading">Adatok betöltése...</div>
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="scoresContainer"></div>
+        </div>
     </div>
 
     <script type="module">
-        // Firebase modulok importálása
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+        // Firebase importok és konfiguráció
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            limit, 
+            getDocs, 
+            serverTimestamp, 
+            where,
+            startAfter,
+            endBefore 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // Státusz elemek lekérése
-        const statusElement = document.getElementById('status');
-        const detailsElement = document.getElementById('details');
+        const firebaseConfig = {
+            apiKey: "AIzaSyCsN0iILNbrGpofT5hGsaXtWrQ0WJpBDKM",
+            authDomain: "perfectcircle-8f981.firebaseapp.com",
+            projectId: "perfectcircle-8f981",
+            storageBucket: "perfectcircle-8f981.firebasestorage.app",
+            messagingSenderId: "314252830723",
+            appId: "1:314252830723:web:bc4f681f74247d6de20636",
+            measurementId: "G-6XR5FNJLHF"
+        };
 
-        try {
-            // Firebase konfiguráció
-            const firebaseConfig = {
-                apiKey: "AIzaSyCsN0iILNbrGpofT5hGsaXtWrQ0WJpBDKM",
-                authDomain: "perfectcircle-8f981.firebaseapp.com",
-                projectId: "perfectcircle-8f981",
-                storageBucket: "perfectcircle-8f981.firebasestorage.app",
-                messagingSenderId: "314252830723",
-                appId: "1:314252830723:web:bc4f681f74247d6de20636",
-                measurementId: "G-6XR5FNJLHF"
-            };
+        // Firebase inicializálás
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Globális változók
+        let allScores = [];
+        let filteredScores = [];
 
-            // Firebase inicializálása
-            const app = initializeApp(firebaseConfig);
-            console.log('Firebase app inicializálva:', app);
-
-            // Analytics inicializálása
-            const analytics = getAnalytics(app);
-            console.log('Firebase Analytics inicializálva:', analytics);
-
-            // Sikeres inicializálás jelzése
-            statusElement.className = 'status success';
-            statusElement.textContent = '✅ Firebase sikeresen inicializálva!';
+        // Adatok betöltése
+        async function loadScores() {
+            showLoading(true);
+            hideError();
             
-            detailsElement.innerHTML = `
-                <h3>Inicializálás részletei:</h3>
-                <ul>
-                    <li><strong>App Name:</strong> ${app.name}</li>
-                    <li><strong>Project ID:</strong> ${app.options.projectId}</li>
-                    <li><strong>Analytics:</strong> Aktiválva</li>
-                    <li><strong>Időpont:</strong> ${new Date().toLocaleString('hu-HU')}</li>
-                </ul>
-            `;
-
-        } catch (error) {
-            // Hiba esetén
-            console.error('Firebase inicializálási hiba:', error);
-            
-            statusElement.className = 'status error';
-            statusElement.textContent = '❌ Firebase inicializálási hiba!';
-            
-            detailsElement.innerHTML = `
-                <h3>Hiba részletei:</h3>
-                <p><strong>Üzenet:</strong> ${error.message}</p>
-                <p><strong>Típus:</strong> ${error.name}</p>
-                <p><strong>Időpont:</strong> ${new Date().toLocaleString('hu-HU')}</p>
-            `;
+            try {
+                const scoresRef = collection(db, 'scores');
+                const q = query(scoresRef, orderBy('score', 'desc'), limit(100));
+                const querySnapshot = await getDocs(q);
+                
+                allScores = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allScores.push({
+                        id: doc.id,
+                        ...data,
+                        date: data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date()
+                    });
+                });
+                
+                filteredScores = [...allScores];
+                displayScores(filteredScores);
+                updateStatistics(allScores);
+                showLoading(false);
+                
+                console.log(`✅ ${allScores.length} eredmény betöltve`);
+                
+            } catch (error) {
+                console.error('❌ Adatok betöltési hiba:', error);
+                showError(`Hiba az adatok betöltésekor: ${error.message}`);
+                showLoading(false);
+            }
         }
+
+        // Top pontszámok betöltése
+        async function loadTopScores(limitCount) {
+            showLoading(true);
+            hideError();
+            
+            try {
+                const scoresRef = collection(db, 'scores');
+                const q = query(scoresRef, orderBy('score', 'desc'), limit(limitCount));
+                const querySnapshot = await getDocs(q);
+                
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    scores.push({
+                        id: doc.id,
+                        ...data,
+                        date: data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date()
+                    });
+                });
+                
+                filteredScores = scores;
+                displayScores(filteredScores);
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('❌ Top pontszámok betöltési hiba:', error);
+                showError(`Hiba a top pontszámok betöltésekor: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Legfrissebb eredmények
+        async function loadRecentScores() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                const scoresRef = collection(db, 'scores');
+                const q = query(scoresRef, orderBy('timestamp', 'desc'), limit(50));
+                const querySnapshot = await getDocs(q);
+                
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    scores.push({
+                        id: doc.id,
+                        ...data,
+                        date: data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date()
+                    });
+                });
+                
+                filteredScores = scores;
+                displayScores(filteredScores);
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('❌ Legfrissebb eredmények betöltési hiba:', error);
+                showError(`Hiba a legfrissebb eredmények betöltésekor: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Eredmények megjelenítése
+        function displayScores(scores) {
+            const container = document.getElementById('scoresContainer');
+            
+            if (scores.length === 0) {
+                container.innerHTML = '<div class="no-data">Nincsenek eredmények a megadott szűrőkkel.</div>';
+                return;
+            }
+            
+            container.innerHTML = scores.map((score, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+                
+                const difficulty = score.difficulty || 'easy';
+                const transformation = score.transformation ? ` ✨${score.transformation}` : '';
+                
+                return `
+                    <div class="score-item ${rankClass}">
+                        <div class="player-info">
+                            <span class="rank">${rank}.</span>
+                            <span class="player-name">${score.playerName || 'Névtelen'}</span>
+                        </div>
+                        <div class="score-details">
+                            <span class="score-value">${score.score} pont${transformation}</span>
+                            <span class="difficulty ${difficulty}">${difficulty === 'easy' ? '😊 Könnyű' : '🌀 Nehéz'}</span>
+                            <span class="date">${formatDate(score.date)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Statisztikák frissítése
+        function updateStatistics(scores) {
+            if (scores.length === 0) {
+                document.getElementById('totalGames').textContent = '0';
+                document.getElementById('totalPlayers').textContent = '0';
+                document.getElementById('bestScore').textContent = '0';
+                document.getElementById('avgScore').textContent = '0';
+                return;
+            }
+            
+            const totalGames = scores.length;
+            const uniquePlayers = new Set(scores.map(s => s.playerName)).size;
+            const bestScore = Math.max(...scores.map(s => s.score));
+            const avgScore = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
+            
+            document.getElementById('totalGames').textContent = totalGames.toLocaleString();
+            document.getElementById('totalPlayers').textContent = uniquePlayers.toLocaleString();
+            document.getElementById('bestScore').textContent = bestScore.toLocaleString();
+            document.getElementById('avgScore').textContent = avgScore.toLocaleString();
+        }
+
+        // Szűrők alkalmazása
+        function applyFilters() {
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            
+            let filtered = [...allScores];
+            
+            // Nehézség szűrő
+            if (difficultyFilter) {
+                filtered = filtered.filter(score => score.difficulty === difficultyFilter);
+            }
+            
+            // Idő szűrő
+            if (timeFilter) {
+                const now = new Date();
+                let startDate;
+                
+                switch (timeFilter) {
+                    case 'today':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        break;
+                    case 'week':
+                        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'month':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        break;
+                }
+                
+                if (startDate) {
+                    filtered = filtered.filter(score => score.date >= startDate);
+                }
+            }
+            
+            filteredScores = filtered;
+            displayScores(filteredScores);
+        }
+
+        // Adatok exportálása
+        function exportData() {
+            if (filteredScores.length === 0) {
+                alert('Nincsenek exportálandó adatok!');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(filteredScores, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `perfect-circle-scores-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            console.log(`📥 ${filteredScores.length} eredmény exportálva`);
+        }
+
+        // Segédfüggvények
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('hu-HU', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Globális függvények hozzáadása a window objektumhoz
+        window.loadScores = loadScores;
+        window.loadTopScores = loadTopScores;
+        window.loadRecentScores = loadRecentScores;
+        window.applyFilters = applyFilters;
+        window.exportData = exportData;
+
+        // Oldal betöltésekor automatikus adatbetöltés
+        document.addEventListener('DOMContentLoaded', () => {
+            loadScores();
+        });
+
+        // Automatikus frissítés 30 másodpercenként
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadScores();
+            }
+        }, 30000);
     </script>
 </body>
 </html>
