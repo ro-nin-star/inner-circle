@@ -82,56 +82,116 @@ async function initializeFirebase() {
 
 // Firebase API
 window.firebaseAPI = {
-// ✅ JAVÍTOTT SAVESCORE FÜGGVÉNY - cseréld ki a firebase-config.js-ben
-saveScore: async (data) => {
-    console.log('🔥 Firebase saveScore - kapott adat:', data);
-    
-    if (!firebaseReady) {
-        throw new Error('Firebase nem elérhető');
-    }
-    
-    // ✅ BIZTOS változók
-    const safePlayerName = String(data.playerName || 'Névtelen').trim();
-    const safeScore = Number(data.score);
-    const safeDifficulty = String(data.difficulty || 'easy');
-    const safeTransformation = String(data.transformation || '');
-    
-    console.log('🔥 Feldolgozott értékek:', { 
-        safePlayerName, 
-        safeScore, 
-        scoreType: typeof safeScore,
-        safeDifficulty, 
-        safeTransformation 
-    });
-    
-    if (isNaN(safeScore)) {
-        throw new Error(`Score NaN hiba: ${data.score} -> ${safeScore}`);
-    }
-    
-    const firebaseData = {
-        playerName: safePlayerName,
-        score: safeScore,
-        difficulty: safeDifficulty,
-        transformation: safeTransformation,
-        timestamp: serverTimestamp(), // ← Ez most már működni fog
-        date: new Date().toLocaleDateString('hu-HU'),
-        created: new Date().toISOString()
-    };
-    
-    console.log('🔥 Firebase-nek küldött adat:', firebaseData);
-    
-    try {
-        const docRef = await addDoc(collection(db, 'scores'), firebaseData);
-        console.log('✅ Pontszám mentve:', docRef.id);
-        return { id: docRef.id, ...firebaseData };
+    // ✅ JAVÍTOTT SAVESCORE FÜGGVÉNY THUMBNAIL TÁMOGATÁSSAL
+    saveScore: async (data) => {
+        console.log('🔥 Firebase saveScore - kapott adat:', data);
+        console.log('🔥 Thumbnail ellenőrzés:', {
+            hasThumbnail: !!data.thumbnail,
+            thumbnailType: typeof data.thumbnail,
+            thumbnailLength: data.thumbnail ? data.thumbnail.length : 0,
+            thumbnailSize: data.thumbnail ? Math.round(data.thumbnail.length / 1024) + 'KB' : 'N/A'
+        });
         
-    } catch (error) {
-        console.error('❌ Mentési hiba:', error);
-        console.error('❌ Küldött adat:', firebaseData);
-        throw error;
-    }
-},
-
+        if (!firebaseReady) {
+            throw new Error('Firebase nem elérhető');
+        }
+        
+        // ✅ BIZTOS változók
+        const safePlayerName = String(data.playerName || 'Névtelen').trim();
+        const safeScore = Number(data.score);
+        const safeDifficulty = String(data.difficulty || 'easy');
+        const safeTransformation = String(data.transformation || '');
+        const safeThumbnail = data.thumbnail || null; // ✅ THUMBNAIL KEZELÉS
+        
+        console.log('🔥 Feldolgozott értékek:', { 
+            safePlayerName, 
+            safeScore, 
+            scoreType: typeof safeScore,
+            safeDifficulty, 
+            safeTransformation,
+            hasThumbnail: !!safeThumbnail,
+            thumbnailSize: safeThumbnail ? Math.round(safeThumbnail.length / 1024) + 'KB' : 'nincs'
+        });
+        
+        if (isNaN(safeScore)) {
+            throw new Error(`Score NaN hiba: ${data.score} -> ${safeScore}`);
+        }
+        
+        // ✅ THUMBNAIL VALIDÁLÁS
+        if (safeThumbnail) {
+            if (typeof safeThumbnail !== 'string') {
+                console.warn('⚠️ Thumbnail nem string típusú, átalakítás...');
+            }
+            
+            if (!safeThumbnail.startsWith('data:image/')) {
+                console.warn('⚠️ Thumbnail nem valid base64 image!');
+            } else {
+                console.log('✅ Thumbnail valid base64 image');
+            }
+        }
+        
+        const firebaseData = {
+            playerName: safePlayerName,
+            score: safeScore,
+            difficulty: safeDifficulty,
+            transformation: safeTransformation,
+            thumbnail: safeThumbnail, // ✅ THUMBNAIL MEZŐ HOZZÁADVA
+            timestamp: serverTimestamp(),
+            date: new Date().toLocaleDateString('hu-HU'),
+            created: new Date().toISOString()
+        };
+        
+        console.log('🔥 Firebase-nek küldött adat:', {
+            ...firebaseData,
+            thumbnail: firebaseData.thumbnail ? `[${Math.round(firebaseData.thumbnail.length / 1024)}KB image]` : null
+        });
+        
+        try {
+            const docRef = await addDoc(collection(db, 'scores'), firebaseData);
+            console.log('✅ Pontszám mentve thumbnaillal:', docRef.id);
+            
+            // ✅ VISSZATÉRÉSI ÉRTÉK THUMBNAIL-LAL
+            const result = { 
+                id: docRef.id, 
+                ...firebaseData,
+                thumbnailSaved: !!safeThumbnail
+            };
+            
+            console.log('✅ Mentés eredménye:', {
+                id: result.id,
+                score: result.score,
+                playerName: result.playerName,
+                thumbnailSaved: result.thumbnailSaved
+            });
+            
+            return result;
+            
+        } catch (error) {
+            console.error('❌ Mentési hiba:', error);
+            console.error('❌ Küldött adat mérete:', JSON.stringify(firebaseData).length, 'karakter');
+            
+            // ✅ HA TÚLSÁGOSAN NAGY A THUMBNAIL, PRÓBÁLJUK NÉLKÜLE
+            if (error.code === 'invalid-argument' && safeThumbnail) {
+                console.log('🔄 Túl nagy thumbnail, újrapróbálás nélküle...');
+                
+                const dataWithoutThumbnail = {
+                    ...firebaseData,
+                    thumbnail: null
+                };
+                
+                try {
+                    const docRef = await addDoc(collection(db, 'scores'), dataWithoutThumbnail);
+                    console.log('✅ Pontszám mentve thumbnail nélkül:', docRef.id);
+                    return { id: docRef.id, ...dataWithoutThumbnail, thumbnailSaved: false };
+                } catch (retryError) {
+                    console.error('❌ Újrapróbálás is sikertelen:', retryError);
+                    throw retryError;
+                }
+            }
+            
+            throw error;
+        }
+    },
 
     getTopScores: async (limitCount = 10) => {
         if (!firebaseReady) {
@@ -149,10 +209,24 @@ saveScore: async (data) => {
             const scores = [];
             
             querySnapshot.forEach((doc) => {
-                scores.push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                
+                // ✅ THUMBNAIL ELLENŐRZÉS A BETÖLTÉSNÉL
+                const scoreData = { 
+                    id: doc.id, 
+                    ...data 
+                };
+                
+                if (data.thumbnail) {
+                    console.log(`📸 Score ${doc.id} tartalmaz thumbnail-t (${Math.round(data.thumbnail.length / 1024)}KB)`);
+                } else {
+                    console.log(`📷 Score ${doc.id} nem tartalmaz thumbnail-t`);
+                }
+                
+                scores.push(scoreData);
             });
             
-            console.log(`📊 ${scores.length} eredmény betöltve`);
+            console.log(`📊 ${scores.length} eredmény betöltve, ebből ${scores.filter(s => s.thumbnail).length} tartalmaz thumbnail-t`);
             return scores;
             
         } catch (error) {
@@ -262,16 +336,60 @@ saveScore: async (data) => {
     
     reconnect: async () => {
         return await initializeFirebase();
+    },
+
+    // ✅ THUMBNAIL TESZT FÜGGVÉNY
+    testThumbnail: async () => {
+        console.log('🧪 Thumbnail teszt indítása...');
+        
+        if (!firebaseReady) {
+            console.error('❌ Firebase nem elérhető');
+            return false;
+        }
+        
+        // Kis teszt thumbnail készítése
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        
+        // Egyszerű kör rajzolása
+        ctx.fillStyle = '#ff6b6b';
+        ctx.beginPath();
+        ctx.arc(50, 50, 40, 0, Math.PI * 2);
+        ctx.fill();
+        
+        const testThumbnail = canvas.toDataURL('image/jpeg', 0.8);
+        console.log('🧪 Teszt thumbnail készítve:', Math.round(testThumbnail.length / 1024) + 'KB');
+        
+        try {
+            const testData = {
+                playerName: 'Teszt',
+                score: 99,
+                difficulty: 'easy',
+                transformation: 'teszt',
+                thumbnail: testThumbnail
+            };
+            
+            const result = await window.firebaseAPI.saveScore(testData);
+            console.log('✅ Thumbnail teszt sikeres:', result.id);
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Thumbnail teszt sikertelen:', error);
+            return false;
+        }
     }
 };
 
-// Firebase info megjelenítő
+// Firebase info megjelenítő - KIBŐVÍTETT VERZIÓ
 window.showFirebaseInfo = () => {
     const status = firebaseReady ? 'Online' : 'Offline';
     const info = `
 🔥 Firebase Státusz: ${status}
 🏗️ Projekt: perfectcircle-8f981
 📊 Firestore: ${firebaseReady ? 'Működik' : 'Hiba'}
+📸 Thumbnail támogatás: ${firebaseReady ? 'Aktív' : 'Inaktív'}
 
 ${!firebaseReady ? `
 ❌ PROBLÉMA MEGOLDÁSA:
@@ -293,8 +411,39 @@ service cloud.firestore {
 3. Publish gomb
 4. Frissítsd az oldalt (F5)
 ` : '✅ Minden rendben!'}
+
+🧪 THUMBNAIL TESZT:
+Konzolban írd be: window.firebaseAPI.testThumbnail()
     `;
     alert(info);
+};
+
+// ✅ THUMBNAIL HIBAKERESÉSI FÜGGVÉNY
+window.debugFirebaseThumbnails = async () => {
+    console.log('🔍 === FIREBASE THUMBNAIL HIBAKERESÉS ===');
+    console.log('- Firebase ready:', firebaseReady);
+    console.log('- firebaseAPI:', !!window.firebaseAPI);
+    console.log('- saveScore:', typeof window.firebaseAPI?.saveScore);
+    console.log('- ThumbnailGenerator:', !!window.ThumbnailGenerator);
+    
+    if (window.ThumbnailGenerator) {
+        const testCanvas = document.getElementById('gameCanvas');
+        if (testCanvas) {
+            const thumbnail = window.ThumbnailGenerator.captureCanvasThumbnail('gameCanvas');
+            console.log('- Teszt thumbnail készült:', !!thumbnail);
+            console.log('- Thumbnail mérete:', thumbnail ? Math.round(thumbnail.length / 1024) + 'KB' : 'N/A');
+            
+            if (thumbnail && firebaseReady) {
+                console.log('🧪 Firebase thumbnail teszt indítása...');
+                const testResult = await window.firebaseAPI.testThumbnail();
+                console.log('- Firebase teszt eredménye:', testResult);
+            }
+        } else {
+            console.log('- gameCanvas elem nem található');
+        }
+    }
+    
+    console.log('=== HIBAKERESÉS VÉGE ===');
 };
 
 // Globális hozzáférés
@@ -302,6 +451,7 @@ window.updateFirebaseStatus = updateFirebaseStatus;
 
 // Inicializálás indítása
 initializeFirebase();
+
 // Firebase imports globális elérhetővé tétele a visitor counter számára
 window.firebaseImports = {
     collection,
@@ -313,20 +463,14 @@ window.firebaseImports = {
     serverTimestamp,
     where,
     doc: (db, path, id) => {
-        // doc függvény implementálása collection alapján
         return { path: `${path}/${id}`, id: id };
     },
     setDoc: async (docRef, data) => {
-        // setDoc implementálása addDoc-kal
         const collectionPath = docRef.path.split('/')[0];
         const docId = docRef.id;
-        
-        // Sajnos a jelenlegi import-ok nem tartalmaznak setDoc-ot
-        // Használjuk az addDoc-ot helyette
         return await addDoc(collection(db, collectionPath), { ...data, customId: docId });
     },
     getDoc: async (docRef) => {
-        // getDoc implementálása getDocs-szal
         const collectionPath = docRef.path.split('/')[0];
         const docId = docRef.id;
         
@@ -350,13 +494,11 @@ window.firebaseImports = {
         };
     },
     updateDoc: async (docRef, data) => {
-        // updateDoc helyett új dokumentum létrehozása
         console.log('⚠️ updateDoc nem implementált, új dokumentum létrehozása...');
         const collectionPath = docRef.path.split('/')[0];
         return await addDoc(collection(db, collectionPath), data);
     },
     increment: (value) => {
-        // increment helyett egyszerű szám visszaadása
         return value;
     }
 };
@@ -365,3 +507,4 @@ window.firebaseImports = {
 window.db = db;
 
 console.log('✅ Firebase imports és db globálisan elérhetők a visitor counter számára');
+console.log('📸 Firebase thumbnail támogatás aktiválva');

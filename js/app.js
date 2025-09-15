@@ -1139,71 +1139,54 @@ window.showScore = async (score, analysis, transformationName = '') => {
                                       playerName !== anonymousName && 
                                       playerName !== 'Névtelen';
 
-            if (hasValidPlayerName) {
-                console.log('👤 ✅ Érvényes játékos név megvan:', playerName);
-                
-                try {
-                    const difficulty = window.gameEngine ? window.gameEngine.getDifficulty() : 'easy';
-                    
-                    // MEGLÉVŐ LEADERBOARD MANAGER HASZNÁLATA
-                    if (app && app.leaderboardManager) {
-                        // Ha van saveGlobalScore metódus
-                        if (typeof app.leaderboardManager.saveGlobalScore === 'function') {
-                            console.log('📤 LeaderboardManager globális mentés...');
-                            await app.leaderboardManager.saveGlobalScore(
-                                playerName,
-                                roundedScore,
-                                difficulty,
-                                transformationName
-                            );
-                            console.log('✅ Globális mentés sikeres!');
-                        } 
-                        // Vagy ha van submitScore metódus
-                        else if (typeof app.leaderboardManager.submitScore === 'function') {
-                            console.log('📤 LeaderboardManager submitScore...');
-                            await app.leaderboardManager.submitScore(
-                                playerName,
-                                roundedScore,
-                                difficulty,
-                                transformationName
-                            );
-                            console.log('✅ Score submit sikeres!');
-                        }
-                        else {
-                            console.log('⚠️ Nincs globális mentési metódus, fallback használata...');
-                            
-                            // Fallback mentés
-                            if (window.saveScoreToFirebase) {
-                                const scoreData = {
-                                    playerName: playerName,
-                                    score: roundedScore,
-                                    difficulty: difficulty,
-                                    transformation: transformationName
-                                };
-                                await window.saveScoreToFirebase(scoreData);
-                                console.log('✅ Fallback Firebase mentés sikeres!');
-                            }
-                        }
-                    } else {
-                        console.log('⚠️ Nincs elérhető LeaderboardManager, fallback mentés...');
-                        
-                        // Fallback mentés
-                        if (window.saveScoreToFirebase) {
-                            const scoreData = {
-                                playerName: playerName,
-                                score: roundedScore,
-                                difficulty: difficulty,
-                                transformation: transformationName
-                            };
-                            await window.saveScoreToFirebase(scoreData);
-                            console.log('✅ Fallback Firebase mentés sikeres!');
-                        }
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Globális mentés hiba:', error);
-                }
+// A showScore függvényben, a mentési résznél:
+if (hasValidPlayerName) {
+    console.log('👤 ✅ Érvényes játékos név megvan:', playerName);
+    
+    try {
+        const difficulty = window.gameEngine ? window.gameEngine.getDifficulty() : 'easy';
+        
+        // ✅ THUMBNAIL KÉSZÍTÉSE
+        let thumbnail = null;
+        if (window.ThumbnailGenerator) {
+            thumbnail = await window.ThumbnailGenerator.captureTransformationThumbnail(1000);
+            console.log('📸 Thumbnail készítve globális mentéshez:', !!thumbnail);
+        }
+        
+        // MEGLÉVŐ LEADERBOARD MANAGER HASZNÁLATA
+        if (app && app.leaderboardManager) {
+            if (typeof app.leaderboardManager.saveGlobalScore === 'function') {
+                console.log('📤 LeaderboardManager globális mentés thumbnaillal...');
+                await app.leaderboardManager.saveGlobalScore(
+                    playerName,
+                    roundedScore,
+                    difficulty,
+                    transformationName,
+                    thumbnail  // ✅ THUMBNAIL PARAMÉTER
+                );
+                console.log('✅ Globális mentés sikeres!');
             } else {
+                console.log('⚠️ Nincs globális mentési metódus, fallback használata...');
+                
+                // Fallback mentés thumbnaillal
+                if (window.saveScoreToFirebase) {
+                    const scoreData = {
+                        playerName: playerName,
+                        score: roundedScore,
+                        difficulty: difficulty,
+                        transformation: transformationName,
+                        thumbnail: thumbnail  // ✅ THUMBNAIL HOZZÁADÁSA
+                    };
+                    await window.saveScoreToFirebase(scoreData);
+                    console.log('✅ Fallback Firebase mentés sikeres thumbnaillal!');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Globális mentés hiba:', error);
+    }
+}
+ else {
                 console.log('👤 ⚠️ Nincs érvényes játékos név, globális mentés kihagyva');
             }
 
@@ -1304,35 +1287,31 @@ window.addEventListener('load', function() {
                     return this.currentView;
                 },
                 
-                saveGlobalScore: async function(playerName, score, difficulty, transformation) {
-                    console.log('💾 LeaderboardManager saveGlobalScore:', { playerName, score, difficulty, transformation });
-                    
-                    try {
-                        if (window.saveScoreToFirebase) {
-                            const scoreData = {
-                                playerName: playerName,
-                                score: score,
-                                difficulty: difficulty,
-                                transformation: transformation
-                            };
-                            return await window.saveScoreToFirebase(scoreData);
-                        } else if (window.firebaseAPI && window.firebaseAPI.saveScore) {
-                            const scoreData = {
-                                playerName: playerName,
-                                score: score,
-                                difficulty: difficulty,
-                                transformation: transformation
-                            };
-                            return await window.firebaseAPI.saveScore(scoreData);
-                        } else {
-                            console.warn('⚠️ Nincs elérhető Firebase mentési metódus');
-                            return null;
-                        }
-                    } catch (error) {
-                        console.error('❌ Globális score mentési hiba:', error);
-                        return null;
-                    }
-                }
+  saveGlobalScore: async function(playerName, score, difficulty, transformation, thumbnail = null) {
+        console.log('💾 LeaderboardManager saveGlobalScore thumbnaillal:', { playerName, score, difficulty, transformation, thumbnail: !!thumbnail });
+        
+        try {
+            const scoreData = {
+                playerName: playerName,
+                score: score,
+                difficulty: difficulty,
+                transformation: transformation,
+                thumbnail: thumbnail  // ✅ THUMBNAIL HOZZÁADÁSA
+            };
+            
+            if (window.saveScoreToFirebase) {
+                return await window.saveScoreToFirebase(scoreData);
+            } else if (window.firebaseAPI && window.firebaseAPI.saveScore) {
+                return await window.firebaseAPI.saveScore(scoreData);
+            } else {
+                console.warn('⚠️ Nincs elérhető Firebase mentési metódus');
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Globális score mentési hiba:', error);
+            return null;
+        }
+    }
             };
             
             console.log('✅ LeaderboardManager alapverzió létrehozva');

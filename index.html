@@ -13,207 +13,15 @@
         window.currentLeaderboardType = 'local';
         console.log('🔧 HTML szintű leaderboard típus beállítva:', window.currentLeaderboardType);
     </script>
-    
-    <style>
-        /* Thumbnail stílusok */
-        .score-thumbnail, .leaderboard-thumbnail {
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .score-thumbnail:hover, .leaderboard-thumbnail:hover {
-            border-color: #4CAF50;
-            transform: scale(1.05);
-        }
-
-        .current-score-thumbnail {
-            margin-top: 10px;
-            border: 3px solid #4CAF50;
-            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
-        }
-
-        .no-thumbnail {
-            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
-            color: #999;
-        }
-
-        .score-entry {
-            transition: background-color 0.2s;
-        }
-
-        .score-entry:hover {
-            background-color: rgba(76, 175, 80, 0.1);
-        }
-
-        .leaderboard-entry {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .leaderboard-entry:last-child {
-            border-bottom: none;
-        }
-
-        .thumbnail-container {
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-
-        .entry-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .entry-main {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 2px;
-        }
-
-        .entry-details {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        /* Score animáció stílusok */
-        .score-animation-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .score-big-reveal {
-            font-size: 4em;
-            font-weight: bold;
-            text-align: center;
-            color: white;
-            animation: scoreReveal 2.5s ease;
-        }
-
-        .score-perfect { color: #FFD700; text-shadow: 0 0 20px #FFD700; }
-        .score-excellent { color: #4CAF50; text-shadow: 0 0 15px #4CAF50; }
-        .score-good { color: #2196F3; text-shadow: 0 0 10px #2196F3; }
-        .score-fair { color: #FF9800; text-shadow: 0 0 10px #FF9800; }
-        .score-poor { color: #F44336; text-shadow: 0 0 10px #F44336; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes scoreReveal {
-            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-            50% { transform: scale(1.2) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-
-        .score-grade-badge {
-            position: absolute;
-            top: -15px;
-            right: -15px;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            animation: badgeAppear 0.5s ease;
-        }
-
-        @keyframes badgeAppear {
-            from { transform: scale(0) rotate(180deg); opacity: 0; }
-            to { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-
-        .score-particles {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            pointer-events: none;
-            z-index: 9998;
-        }
-
-        .score-particle {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: particleExplode 1.5s ease-out forwards;
-        }
-
-        @keyframes particleExplode {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
-        }
-
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            top: -10px;
-            animation: confettiFall 3s linear forwards;
-            z-index: 9997;
-        }
-
-        @keyframes confettiFall {
-            to { transform: translateY(100vh) rotate(720deg); }
-        }
-
-        .score-fireworks {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9996;
-        }
-
-        .firework {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            animation: fireworkExplode 1s ease-out forwards;
-        }
-
-        @keyframes fireworkExplode {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(20); opacity: 0; }
-        }
-
-        .score-revealed {
-            animation: scoreDisplayReveal 1s ease;
-        }
-
-        @keyframes scoreDisplayReveal {
-            0% { transform: scale(0.8) rotateY(-90deg); opacity: 0; }
-            50% { transform: scale(1.1) rotateY(0deg); opacity: 1; }
-            100% { transform: scale(1) rotateY(0deg); opacity: 1; }
-        }
-    </style>
 </head>
 
 <body>
-    <!-- Dekoratív körök -->
+    <!-- Játékos animált háttér elemek -->
     <div class="decoration-circle"></div>
     <div class="decoration-circle"></div>
     <div class="decoration-circle"></div>
 
-    <!-- ===== EZ A FELSŐ FIX FEJLÉC, AMI MINDENT TARTALMAZ ===== -->
+    <!-- ===== JÁTÉKOS FELSŐ FIX FEJLÉC ===== -->
     <div class="top-fixed-header">
         <!-- Firebase Status -->
         <div class="firebase-status connecting" id="firebaseStatus" data-i18n="firebase.connecting">🟡 Kapcsolódás...</div>
@@ -235,12 +43,12 @@
         <p class="subtitle" data-i18n="subtitle">Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!</p>
         
         <div class="instructions">
-            <strong data-i18n="instructions.title">Hogyan játssz:</strong> 
+            <strong data-i18n="instructions.title">🎮 Hogyan játssz:</strong> 
             <span data-i18n="instructions.text">Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨</span>
         </div>
 
         <!-- Offline notice -->
-        <div class="offline-notice" id="offlineNotice">
+        <div class="offline-notice" id="offlineNotice" style="display: none;">
             <span data-i18n="firebase.offlineNotice">⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek.</span>
         </div>
 
@@ -248,11 +56,11 @@
         <div class="player-name-section">
             <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
             <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" placeholder="Add meg a neved" maxlength="20" value="">
-            <button id="saveNameBtn" style="padding: 8px 16px; font-size: 12px;" data-i18n="buttons.save">💾 Mentés</button>
+            <button id="saveNameBtn" data-i18n="buttons.save">💾 Mentés</button>
         </div>
 
         <div class="difficulty-selector">
-            <strong data-i18n="difficulty.label">Nehézség:</strong>
+            <strong data-i18n="difficulty.label">🎯 Nehézség:</strong><br>
             <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy" data-i18n="difficulty.easy">Könnyű 😊</button>
             <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard" data-i18n="difficulty.hard">Nehéz 🌀</button>
         </div>
@@ -276,10 +84,10 @@
             </div>
         </div>
 
-        <!-- Canvas container -->
+        <!-- ✅ NÉGYZETES CANVAS CONTAINER -->
         <div class="canvas-container">
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            <canvas id="idealCircleCanvas" width="400" height="400"></canvas>
+            <canvas id="gameCanvas" width="460" height="460"></canvas>
+            <canvas id="idealCircleCanvas" width="460" height="460"></canvas>
             <div class="canvas-overlay" id="canvasOverlay"></div>
             <div class="transformation-overlay" id="transformationOverlay">
                 <div class="transformation-content">
@@ -296,8 +104,8 @@
         </div>
 
         <!-- Pontszám megjelenítő -->
-        <div class="score-display" id="scoreDisplay">
-            <h3 id="scoreTitle" data-i18n="scoreTitle.result">Eredmény</h3>
+        <div class="score-display" id="scoreDisplay" style="display: none;">
+            <h3 id="scoreTitle" data-i18n="scoreTitle.result">🏆 Eredmény</h3>
             <div class="score-number">
                 <span id="finalScore">0</span>/100 <span data-i18n="common.points">pont</span>
             </div>
@@ -379,12 +187,12 @@
 
     <!-- Látogatásszámláló -->
     <div class="visitor-counter" id="visitorCounter" onclick="showVisitStats()">
-        <span data-i18n="visitors.label">Látogatások:</span> <span class="visitor-number" id="visitCount">0</span>
+        <span data-i18n="visitors.label">👥 Látogatások:</span> <span class="visitor-number" id="visitCount">0</span>
     </div>
 
     <!-- Fejlesztői információk -->
     <div class="dev-info">
-        <span data-i18n="dev.version">v2.0</span> | 
+        <span data-i18n="dev.version">v2.1</span> | 
         <span onclick="window.debugGameEngine?.()" data-i18n="dev.debug">Debug</span>
     </div>
 
@@ -398,7 +206,7 @@
             title: "Perfect Circle - Rajzolj Tökéletes Kört!",
             subtitle: "Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!",
             instructions: {
-                title: "Hogyan játssz:",
+                title: "🎮 Hogyan játssz:",
                 text: "Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨"
             },
             buttons: {
@@ -413,7 +221,7 @@
                 placeholder: "Add meg a neved"
             },
             difficulty: {
-                label: "Nehézség:",
+                label: "🎯 Nehézség:",
                 easy: "Könnyű 😊",
                 hard: "Nehéz 🌀"
             },
@@ -432,7 +240,7 @@
                 points: "pont"
             },
             scoreTitle: {
-                result: "Eredmény"
+                result: "🏆 Eredmény"
             },
             transformation: {
                 magic: "✨ Varázslat történik... ✨"
@@ -442,10 +250,10 @@
                 offlineNotice: "⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek."
             },
             visitors: {
-                label: "Látogatások:"
+                label: "👥 Látogatások:"
             },
             dev: {
-                version: "v2.0",
+                version: "v2.1",
                 debug: "Debug"
             }
         };
@@ -1218,22 +1026,33 @@
         };
 
         // Firebase score mentés globálisan
-        window.saveScoreToFirebase = async function(scoreData) {
-            try {
-                if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
-                    console.log('⚠️ Firebase nem elérhető, score nem mentve globálisan');
-                    return null;
-                }
-                
-                const result = await window.firebaseAPI.saveScore(scoreData);
-                console.log('✅ Score mentve Firebase-be:', result);
-                return result;
-                
-            } catch (error) {
-                console.error('❌ Firebase score mentési hiba:', error);
-                return null;
-            }
-        };
+// A showScore függvényben (már van, de ellenőrizzük):
+// ✅ JAVÍTOTT - csak átadja az adatot, nem készít új thumbnail-t
+window.saveScoreToFirebase = async function(scoreData) {
+    try {
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+            console.log('⚠️ Firebase nem elérhető, score nem mentve globálisan');
+            return null;
+        }
+        
+        console.log('📤 Firebase mentés indítása:', {
+            playerName: scoreData.playerName,
+            score: scoreData.score,
+            hasThumbnail: !!scoreData.thumbnail,
+            thumbnailSize: scoreData.thumbnail ? Math.round(scoreData.thumbnail.length / 1024) + 'KB' : 'nincs'
+        });
+        
+        const result = await window.firebaseAPI.saveScore(scoreData);
+        console.log('✅ Score mentve Firebase-be:', result?.id);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Firebase score mentési hiba:', error);
+        return null;
+    }
+};
+
+
     </script>
 
     <!-- Inicializálás -->
