@@ -54,28 +54,22 @@
             <span data-i18n="firebase.offlineNotice">⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek.</span>
         </div>
 
-        <!-- PLAYER NAME SECTION -->
-        <div class="player-name-section">
-            <label for="playerName"><strong data-i18n="player.label">👤 Játékos név:</strong></label>
-            <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" placeholder="Add meg a neved" maxlength="20" value="">
-            <button id="saveNameBtn" data-i18n="buttons.save">💾 Mentés</button>
-        </div>
+        <!-- PLAYER NAME SECTION ÉS NEHÉZSÉG VÁLASZTÓ EGY SORBAN -->
+        <div class="player-difficulty-row">
+            <div class="player-name-section">
+                <label for="playerName"><strong data-i18n="player.label">Név:</strong></label>
+                <input type="text" id="playerName" class="player-name-input" data-i18n="player.placeholder" placeholder="Add meg a neved" maxlength="20" value="">
+                <button id="saveNameBtn" data-i18n="buttons.save">💾 Mentés</button>
+            </div>
 
-        <div class="difficulty-selector">
-            <strong data-i18n="difficulty.label">🎯 Nehézség:</strong><br>
-            <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy" data-i18n="difficulty.easy">Könnyű 😊</button>
-            <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard" data-i18n="difficulty.hard">Nehéz 🌀</button>
+            <div class="difficulty-selector">
+                <strong data-i18n="difficulty.label">🎯 Nehézség:</strong><br>
+                <button class="difficulty-btn active" onclick="setDifficulty('easy')" data-difficulty="easy" data-i18n="difficulty.easy">Könnyű 😊</button>
+                <button class="difficulty-btn" onclick="setDifficulty('hard')" data-difficulty="hard" data-i18n="difficulty.hard">Nehéz 🌀</button>
+            </div>
         </div>
 <!-- 🎯 RAJZOLÁS GOMB - FELÜL -->
-    <div class="draw-start-container">
-        <div class="arrow arrow-left">👈</div>
-        <div class="arrow arrow-top">👆</div>
-        <button class="draw-start-button" id="startDrawingBtn" onclick="startDrawing()">
-            🎨 Kezdj Rajzolni! 🎨
-        </button>
-        <div class="arrow arrow-right">👉</div>
-        <div class="arrow arrow-bottom">👇</div>
-    </div>
+
 <!-- ✅ JAVÍTOTT STATISZTIKÁK HTML -->
 <div class="stats-container">
     <div class="stat-item">
@@ -230,7 +224,7 @@
                 clearScores: "🗑️ Helyi Eredmények Törlése"
             },
             player: {
-                label: "👤 Játékos név:",
+                label: "Név:",
                 placeholder: "Add meg a neved"
             },
             difficulty: {

@@ -1330,3 +1330,229 @@ h1 {
         transform: scale(0.8); 
     }
 }
+/* ÚJ SZABÁLYOK */
+
+.player-difficulty-row {
+    display: flex; /* Flexbox használata a tartalmak sorba rendezéséhez */
+    justify-content: space-between; /* A két rész elosztása a rendelkezésre álló térben */
+    align-items: center; /* Függőlegesen középre igazítás */
+    margin-bottom: 20px; /* Alulra egy kis térköz */
+    flex-wrap: wrap; /* Tördelés kisebb képernyőkön, ha nem férnek el */
+    gap: 15px; /* Elemek közötti távolság */
+}
+
+.player-name-section {
+    flex: 1; /* A játékosnév szekció foglalja el a rendelkezésre álló helyet */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Elemek közötti távolság */
+    /* text-align: left;  Ez alapból balra igazít, de flex elemnél a justify-content is befolyásolja */
+}
+
+.player-name-input {
+    flex: 1; /* A beviteli mező kitölti a rendelkezésre álló helyet */
+    max-width: 250px; /* Max szélesség beállítása, ha túl hosszú lenne a sor */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.difficulty-selector {
+    display: flex; /* Nehézség gombok rendezése */
+    align-items: center;
+    gap: 10px; /* Gombok közötti távolság */
+    flex-wrap: wrap; /* Kisebb képernyőkön tördelés */
+}
+
+.difficulty-selector strong {
+    white-space: nowrap; /* A "Nehézség:" szöveg ne törjön sorba */
+}
+
+/* Létező stílusok, amiket ellenőrizhetsz/módosíthatsz */
+
+.game-container {
+    max-width: 800px; /* Vagy amilyen szélességet szeretnél */
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    text-align: center; /* Ezt valószínűleg módosítani kell, ha globálisan minden középen volt */
+}
+
+/* Ha a .player-name-section címkéjét is balra akarod igazítani, akkor érdemes egy blokk szintű elemet, pl. div-et használni, vagy a flexboxot pontosabban beállítani */
+.player-name-section label {
+    margin-right: 5px; /* Kis térköz a label után */
+}
+
+/* Általános gomb stílusok, ha még nincsenek */
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+.difficulty-btn {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.difficulty-btn.active {
+    background-color: #4CAF50; /* Zöld szín az aktív gombnak */
+    color: white;
+    font-weight: bold;
+}
+/* --- ÚJ ÉS FRISSÍTETT SZABÁLYOK A player-difficulty-row-hoz --- */
+
+/* Felülírjuk a korábbi .player-name-section és .difficulty-selector stílusokat */
+
+.player-difficulty-row {
+    display: flex;             /* Engedélyezi a flexbox elrendezést */
+    justify-content: space-between; /* Szétteríti az elemeket a konténer két szélére */
+    align-items: center;       /* Függőlegesen középre igazítja a belső flex elemeket */
+    margin-bottom: 25px;       /* Alulra egy kis térköz */
+    flex-wrap: wrap;           /* Kisebb képernyőn törjön sorba */
+    gap: 20px;                 /* Elemek közötti távolság */
+    width: 100%;               /* Biztosítja, hogy a konténer kitöltse a rendelkezésre álló szélességet */
+    text-align: left;          /* Biztosítja, hogy a szövegek balra legyenek igazítva ebben a konténerben */
+}
+
+/* Játékosnév szekció stílusa */
+.player-name-section {
+    flex: 1;                   /* Rugalmasan kitölti a rendelkezésre álló helyet */
+    min-width: 280px;          /* Minimum szélesség, hogy ne legyen túl kicsi kisebb képernyőn sem */
+    display: flex;             /* A belső elemek (label, input, button) is flexbox-ként viselkednek */
+    align-items: center;       /* Függőlegesen középre igazítja a belső elemeket */
+    gap: 10px;                 /* Belső elemek közötti távolság */
+    justify-content: flex-start; /* Balra igazítja a belső elemeket */
+    text-align: left;          /* Biztosítja, hogy a szövegek balra legyenek igazítva */
+    background: none;          /* Felülírjuk a korábbi background-ot, hogy ne legyen duplikált stílus */
+    box-shadow: none;          /* Felülírjuk a korábbi box-shadow-t */
+    padding: 0;                /* Felülírjuk a korábbi padding-et */
+    margin: 0;                 /* Felülírjuk a korábbi margin-t */
+}
+
+/* Játékosnév input mező stílusa */
+.player-name-input {
+    flex: 1;                   /* Az input mező kitölti a rendelkezésre álló teret */
+    max-width: 200px;          /* Maximum szélesség korlátozása, hogy ne legyen túl hosszú */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 25px;       /* Kerekített sarkok, ahogy a többi gombnál is van */
+    font-size: 1em;
+    box-sizing: border-box;    /* Fontos, hogy a padding ne növelje a szélességet */
+    text-align: left;          /* Az input szöveg balra igazítása */
+    background: white;         /* Fehér háttér az inputnak */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Megtartjuk az input árnyékát */
+    margin: 0;                 /* Felülírjuk a korábbi margin-t */
+}
+
+/* Mentés gomb stílusa a player-name-section-ben */
+.player-name-section #saveNameBtn {
+    background: linear-gradient(45deg, #4ecdc4, #44a08d); /* Frissített háttér szín */
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.player-name-section #saveNameBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Nehézségválasztó szekció stílusa */
+.difficulty-selector {
+    display: flex;             /* A belső elemek (label, gombok) is flexbox-ként viselkednek */
+    align-items: center;       /* Függőlegesen középre igazítja a belső elemeket */
+    gap: 10px;                 /* Gombok közötti távolság */
+    flex-wrap: wrap;           /* Kisebb képernyőkön tördelés */
+    justify-content: flex-end; /* Jobbra igazítja a nehézségválasztó elemeket */
+    text-align: right;         /* Biztosítja, hogy a szövegek jobbra legyenek igazítva */
+    background: none;          /* Felülírjuk a korábbi background-ot */
+    margin: 0;                 /* Felülírjuk a korábbi margin-t */
+}
+
+.difficulty-selector strong {
+    white-space: nowrap;       /* A "Nehézség:" szöveg ne törjön sorba */
+    margin-right: 5px;         /* Kis térköz a gombok előtt */
+    color: #333;               /* Szín beállítása, ha a háttér miatt nem látszana */
+}
+
+/* Nehézség gombok stílusa */
+.difficulty-btn {
+    background: linear-gradient(45deg, #ffeaa7, #fab1a0);
+    border: none;
+    color: #2d3436;
+    padding: 10px 18px; /* Kicsit kisebb padding, hogy elférjenek */
+    margin: 0; /* Felülírjuk a korábbi margin-t */
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Comic Sans MS', cursive;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-btn.active {
+    background: linear-gradient(45deg, #fdcb6e, #e17055);
+    transform: scale(1.05); /* Kicsit kisebb skálázás, hogy ne essen ki a sorból */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* A game-container alapértelmezett text-align: center; értékének kezelése */
+/* Ahol szükség van rá, ott manuálisan középre igazítjuk */
+.game-container {
+    /* Ezt a részt módosíthatod a meglévő .game-container szabályodon belül, vagy felülírhatod */
+    /* Például, ha a text-align: center; zavarja a flexbox-ot, akkor kikapcsolhatod */
+    text-align: initial; /* Ez visszaállítja az alapértelmezett (balra) igazítást */
+}
+
+/* Ezeket az elemeket, amelyek korábban középen voltak, újra középre igazítjuk */
+.game-container h1,
+.game-container p.subtitle,
+.game-container .instructions,
+.game-container .controls,
+.game-container .score-display,
+.game-container .leaderboard,
+.game-container .detailed-instructions,
+.game-container .stats-container, /* Hozzáadtam */
+.game-container .draw-start-container /* Hozzáadtam */
+{
+    text-align: center;
+}
+
+/* Média lekérdezés a kisebb képernyőkre, ahol valószínűleg egymás alá fognak kerülni */
+@media (max-width: 768px) {
+    .player-difficulty-row {
+        flex-direction: column; /* Egymás alá rendezi az elemeket */
+        align-items: center;    /* Középre igazítja a konténereket */
+        gap: 15px;
+    }
+
+    .player-name-section,
+    .difficulty-selector {
+        width: 100%;            /* Szélesség kitöltése */
+        justify-content: center; /* Középre igazítja a belső elemeket */
+        text-align: center;
+    }
+
+    .player-name-input {
+        max-width: 100%;        /* Input mező is kitölti a szélességet */
+    }
+
+    .difficulty-selector strong {
+        margin-right: 0;        /* Nem kell extra térköz */
+        margin-bottom: 5px;     /* Kis térköz a gombok felett */
+        display: block;         /* Blokként viselkedjen, hogy a gombok alá kerüljön */
+    }
+}

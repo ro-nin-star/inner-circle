@@ -18,7 +18,7 @@ const translations = {
     },
     
     player: {
-        label: '👤 Játékos név:',
+        label: 'Nssév:',
         placeholder: 'Add meg a neved',
         nameSaved: 'Név mentve: {name} ✅',
         anonymous: 'Névtelen'

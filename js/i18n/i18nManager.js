@@ -95,7 +95,7 @@ class I18nManager {
                 'stats.bestScore': 'Legjobb Eredmény',
                 'stats.gamesPlayed': 'Játékok Száma',
                 'stats.averageScore': 'Átlag Pontszám',
-                'player.label': '👤 Játékos név:',
+                'player.label': 'Név:',
                 'player.placeholder': 'Add meg a neved',
                 'player.nameSaved': 'Név mentve: {name} ✅',
                 'player.you': 'Te',
