@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Adatok Megjelenítése</title>
+    <title>Perfect Circle - Firebase Adatok</title>
     <style>
         * {
             margin: 0;
@@ -32,6 +32,39 @@
             color: #333;
             margin-bottom: 30px;
             font-size: 2.5em;
+        }
+
+        .firebase-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .firebase-status.online {
+            background: #4caf50;
+            color: white;
+        }
+
+        .firebase-status.offline {
+            background: #f44336;
+            color: white;
+        }
+
+        .firebase-status.connecting {
+            background: #ff9800;
+            color: white;
+        }
+
+        .firebase-status.error {
+            background: #e91e63;
+            color: white;
         }
 
         .stats-grid {
@@ -229,14 +262,35 @@
             color: #7f8c8d;
             font-style: italic;
         }
+
+        .firebase-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
+    <!-- Firebase Status -->
+    <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()">🟡 Connecting...</div>
+
     <div class="container">
         <h1>🎯 Perfect Circle - Firebase Adatok</h1>
         
+        <!-- Firebase információk -->
+        <div class="firebase-info" id="firebaseInfo">
+            <strong>🔥 Firebase kapcsolat ellenőrzése...</strong>
+        </div>
+        
         <!-- Statisztikák -->
         <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Firebase Státusz</h3>
+                <div class="number" id="firebaseStatusText">-</div>
+            </div>
             <div class="stat-card">
                 <h3>Összes Játék</h3>
                 <div class="number" id="totalGames">-</div>
@@ -249,14 +303,11 @@
                 <h3>Legjobb Pontszám</h3>
                 <div class="number" id="bestScore">-</div>
             </div>
-            <div class="stat-card">
-                <h3>Átlag Pontszám</h3>
-                <div class="number" id="avgScore">-</div>
-            </div>
         </div>
 
         <!-- Vezérlők -->
         <div class="controls">
+            <button onclick="testFirebaseConnection()">🔥 Firebase Teszt</button>
             <button onclick="loadScores()">🔄 Frissítés</button>
             <button onclick="loadTopScores(10)">🏆 Top 10</button>
             <button onclick="loadTopScores(50)">📊 Top 50</button>
@@ -290,22 +341,11 @@
     </div>
 
     <script type="module">
-        // Firebase importok és konfiguráció
+        // Firebase importok - a te konfigurációddal
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            query, 
-            orderBy, 
-            limit, 
-            getDocs, 
-            serverTimestamp, 
-            where,
-            startAfter,
-            endBefore 
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+        // Firebase konfiguráció - a te konfigurációd
         const firebaseConfig = {
             apiKey: "AIzaSyCsN0iILNbrGpofT5hGsaXtWrQ0WJpBDKM",
             authDomain: "perfectcircle-8f981.firebaseapp.com",
@@ -316,16 +356,140 @@
             measurementId: "G-6XR5FNJLHF"
         };
 
-        // Firebase inicializálás
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
+        // Firebase állapot kezelés
+        let app, db;
+        let firebaseReady = false;
+
         // Globális változók
         let allScores = [];
         let filteredScores = [];
 
+        // Státusz frissítő függvény
+        function updateFirebaseStatus(status, message) {
+            const statusEl = document.getElementById('firebaseStatus');
+            const statusTextEl = document.getElementById('firebaseStatusText');
+            const infoEl = document.getElementById('firebaseInfo');
+            
+            statusEl.className = `firebase-status ${status}`;
+            
+            switch(status) {
+                case 'online':
+                    statusEl.innerHTML = '🟢 Online';
+                    if (statusTextEl) statusTextEl.textContent = 'Online';
+                    if (infoEl) infoEl.innerHTML = `<strong>✅ Firebase működik!</strong> ${message || ''}`;
+                    break;
+                case 'offline':
+                    statusEl.innerHTML = '🔴 Offline';
+                    if (statusTextEl) statusTextEl.textContent = 'Offline';
+                    if (infoEl) infoEl.innerHTML = `<strong>❌ Firebase offline!</strong> ${message || ''}`;
+                    break;
+                case 'connecting':
+                    statusEl.innerHTML = '🟡 Connecting...';
+                    if (statusTextEl) statusTextEl.textContent = 'Connecting';
+                    if (infoEl) infoEl.innerHTML = `<strong>🔄 Firebase kapcsolódás...</strong> ${message || ''}`;
+                    break;
+                case 'error':
+                    statusEl.innerHTML = '❌ Error';
+                    if (statusTextEl) statusTextEl.textContent = 'Error';
+                    if (infoEl) infoEl.innerHTML = `<strong>🚫 Firebase hiba!</strong> ${message || ''}`;
+                    break;
+            }
+            
+            console.log(`🔥 Firebase: ${status} - ${message || ''}`);
+        }
+
+        // Firebase inicializálás
+        async function initializeFirebase() {
+            updateFirebaseStatus('connecting', 'Inicializálás...');
+            
+            try {
+                console.log('🔥 Firebase inicializálása...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                
+                // Egyszerű kapcsolat teszt
+                console.log('🔗 Firestore teszt...');
+                const testQuery = query(collection(db, 'scores'), limit(1));
+                const querySnapshot = await getDocs(testQuery);
+                
+                firebaseReady = true;
+                updateFirebaseStatus('online', `${querySnapshot.size} dokumentum elérhető`);
+                console.log('✅ Firebase sikeresen működik!');
+                
+                // Automatikus adatbetöltés
+                await loadScores();
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Firebase hiba:', error);
+                firebaseReady = false;
+                
+                if (error.code === 'permission-denied') {
+                    updateFirebaseStatus('error', 'Firestore Rules hiba - Kattints a megoldásért!');
+                } else {
+                    updateFirebaseStatus('offline', error.code || error.message);
+                }
+                
+                return false;
+            }
+        }
+
+        // Firebase kapcsolat tesztelése
+        async function testFirebaseConnection() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                updateFirebaseStatus('connecting', 'Kapcsolat tesztelése...');
+                
+                // Teszt query
+                const testQuery = query(collection(db, 'scores'), limit(5));
+                const querySnapshot = await getDocs(testQuery);
+                
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    scores.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateFirebaseStatus('online', `Teszt sikeres! ${scores.length} dokumentum`);
+                
+                // Teszt eredmények megjelenítése
+                const container = document.getElementById('scoresContainer');
+                container.innerHTML = `
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                        <h3>🔥 Firebase Kapcsolat Teszt Sikeres!</h3>
+                        <p><strong>Projekt:</strong> ${firebaseConfig.projectId}</p>
+                        <p><strong>Kollekcio:</strong> scores</p>
+                        <p><strong>Dokumentumok:</strong> ${scores.length} találat</p>
+                        <p><strong>Státusz:</strong> ✅ Működik</p>
+                        
+                        ${scores.length > 0 ? `
+                            <h4>Minta adatok:</h4>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px; overflow: auto;">
+${JSON.stringify(scores[0], null, 2)}
+                            </pre>
+                        ` : '<p>Nincs adat a scores kollekcióban.</p>'}
+                    </div>
+                `;
+                
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('❌ Firebase teszt hiba:', error);
+                updateFirebaseStatus('error', error.message);
+                showError(`Firebase teszt hiba: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
         // Adatok betöltése
         async function loadScores() {
+            if (!firebaseReady) {
+                showError('Firebase nem elérhető. Próbáld újra később.');
+                return;
+            }
+            
             showLoading(true);
             hideError();
             
@@ -360,6 +524,11 @@
 
         // Top pontszámok betöltése
         async function loadTopScores(limitCount) {
+            if (!firebaseReady) {
+                showError('Firebase nem elérhető.');
+                return;
+            }
+            
             showLoading(true);
             hideError();
             
@@ -382,6 +551,8 @@
                 displayScores(filteredScores);
                 showLoading(false);
                 
+                console.log(`✅ Top ${limitCount} eredmény betöltve`);
+                
             } catch (error) {
                 console.error('❌ Top pontszámok betöltési hiba:', error);
                 showError(`Hiba a top pontszámok betöltésekor: ${error.message}`);
@@ -391,6 +562,11 @@
 
         // Legfrissebb eredmények
         async function loadRecentScores() {
+            if (!firebaseReady) {
+                showError('Firebase nem elérhető.');
+                return;
+            }
+            
             showLoading(true);
             hideError();
             
@@ -412,6 +588,8 @@
                 filteredScores = scores;
                 displayScores(filteredScores);
                 showLoading(false);
+                
+                console.log(`✅ ${scores.length} legfrissebb eredmény betöltve`);
                 
             } catch (error) {
                 console.error('❌ Legfrissebb eredmények betöltési hiba:', error);
@@ -461,19 +639,16 @@
                 document.getElementById('totalGames').textContent = '0';
                 document.getElementById('totalPlayers').textContent = '0';
                 document.getElementById('bestScore').textContent = '0';
-                document.getElementById('avgScore').textContent = '0';
                 return;
             }
             
             const totalGames = scores.length;
             const uniquePlayers = new Set(scores.map(s => s.playerName)).size;
             const bestScore = Math.max(...scores.map(s => s.score));
-            const avgScore = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
             
             document.getElementById('totalGames').textContent = totalGames.toLocaleString();
             document.getElementById('totalPlayers').textContent = uniquePlayers.toLocaleString();
             document.getElementById('bestScore').textContent = bestScore.toLocaleString();
-            document.getElementById('avgScore').textContent = avgScore.toLocaleString();
         }
 
         // Szűrők alkalmazása
@@ -532,6 +707,38 @@
             console.log(`📥 ${filteredScores.length} eredmény exportálva`);
         }
 
+        // Firebase info megjelenítő
+        window.showFirebaseInfo = () => {
+            const status = firebaseReady ? 'Online ✅' : 'Offline ❌';
+            const info = `
+🔥 Firebase Státusz: ${status}
+🏗️ Projekt: ${firebaseConfig.projectId}
+📊 Firestore: ${firebaseReady ? 'Működik' : 'Hiba'}
+📋 Eredmények: ${allScores.length} betöltve
+
+${!firebaseReady ? `
+❌ PROBLÉMA MEGOLDÁSA:
+1. Firebase Console > Firestore Database > Rules
+2. Másold be ezt a szabályt:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /scores/{document} {
+      allow read, write: if true;
+    }
+  }
+}
+
+3. Kattints a "Publish" gombra
+4. Frissítsd az oldalt (F5)
+` : `✅ Minden rendben! 
+📊 ${allScores.length} eredmény elérhető
+🎯 Legutóbbi frissítés: ${new Date().toLocaleTimeString('hu-HU')}`}
+            `;
+            alert(info);
+        };
+
         // Segédfüggvények
         function showLoading(show) {
             document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
@@ -558,23 +765,61 @@
         }
 
         // Globális függvények hozzáadása a window objektumhoz
+        window.testFirebaseConnection = testFirebaseConnection;
         window.loadScores = loadScores;
         window.loadTopScores = loadTopScores;
         window.loadRecentScores = loadRecentScores;
         window.applyFilters = applyFilters;
         window.exportData = exportData;
 
-        // Oldal betöltésekor automatikus adatbetöltés
+        // Firebase API globálisan elérhetővé tétele (kompatibilitás)
+        window.firebaseAPI = {
+            saveScore: async (data) => {
+                if (!firebaseReady) throw new Error('Firebase nem elérhető');
+                
+                const firebaseData = {
+                    playerName: data.playerName || 'Névtelen',
+                    score: Number(data.score),
+                    difficulty: data.difficulty || 'easy',
+                    transformation: data.transformation || '',
+                    timestamp: serverTimestamp(),
+                    date: new Date().toLocaleDateString('hu-HU')
+                };
+                
+                const docRef = await addDoc(collection(db, 'scores'), firebaseData);
+                return { id: docRef.id, ...firebaseData };
+            },
+            
+            getTopScores: async (limitCount = 10) => {
+                if (!firebaseReady) throw new Error('Firebase nem elérhető');
+                
+                const q = query(collection(db, 'scores'), orderBy('score', 'desc'), limit(limitCount));
+                const querySnapshot = await getDocs(q);
+                
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    scores.push({ id: doc.id, ...doc.data() });
+                });
+                
+                return scores;
+            },
+            
+            isReady: () => firebaseReady,
+            reconnect: async () => await initializeFirebase()
+        };
+
+        // Automatikus inicializálás
         document.addEventListener('DOMContentLoaded', () => {
-            loadScores();
+            initializeFirebase();
         });
 
         // Automatikus frissítés 30 másodpercenként
         setInterval(() => {
-            if (document.visibilityState === 'visible') {
+            if (document.visibilityState === 'visible' && firebaseReady) {
                 loadScores();
             }
         }, 30000);
+
     </script>
 </body>
 </html>
