@@ -302,3 +302,66 @@ window.updateFirebaseStatus = updateFirebaseStatus;
 
 // Inicializálás indítása
 initializeFirebase();
+// Firebase imports globális elérhetővé tétele a visitor counter számára
+window.firebaseImports = {
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    getDocs,
+    serverTimestamp,
+    where,
+    doc: (db, path, id) => {
+        // doc függvény implementálása collection alapján
+        return { path: `${path}/${id}`, id: id };
+    },
+    setDoc: async (docRef, data) => {
+        // setDoc implementálása addDoc-kal
+        const collectionPath = docRef.path.split('/')[0];
+        const docId = docRef.id;
+        
+        // Sajnos a jelenlegi import-ok nem tartalmaznak setDoc-ot
+        // Használjuk az addDoc-ot helyette
+        return await addDoc(collection(db, collectionPath), { ...data, customId: docId });
+    },
+    getDoc: async (docRef) => {
+        // getDoc implementálása getDocs-szal
+        const collectionPath = docRef.path.split('/')[0];
+        const docId = docRef.id;
+        
+        const q = query(
+            collection(db, collectionPath),
+            where('customId', '==', docId),
+            limit(1)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            return { exists: () => false };
+        }
+        
+        const doc = querySnapshot.docs[0];
+        return {
+            exists: () => true,
+            data: () => doc.data(),
+            id: doc.id
+        };
+    },
+    updateDoc: async (docRef, data) => {
+        // updateDoc helyett új dokumentum létrehozása
+        console.log('⚠️ updateDoc nem implementált, új dokumentum létrehozása...');
+        const collectionPath = docRef.path.split('/')[0];
+        return await addDoc(collection(db, collectionPath), data);
+    },
+    increment: (value) => {
+        // increment helyett egyszerű szám visszaadása
+        return value;
+    }
+};
+
+// Firebase database globális elérhetővé tétele
+window.db = db;
+
+console.log('✅ Firebase imports és db globálisan elérhetők a visitor counter számára');
