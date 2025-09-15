@@ -721,120 +721,144 @@ window.updateStats = () => {
     }
 };
 
-// ✅ LEADERBOARD KAPCSOLÓ FÜGGVÉNYEK
+// ✅ LEADERBOARD KAPCSOLÓ FÜGGVÉNYEK - JAVÍTOTT VERZIÓ
 window.switchLeaderboard = (type) => {
     console.log(`🔄 Globális switchLeaderboard hívás: ${type}`);
     
-    if (window.perfectCircleApp) {
-        window.perfectCircleApp.switchLeaderboard(type);
-    } else {
-        console.error('❌ PerfectCircleApp nem elérhető');
+    // Tab gombok frissítése
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    const targetTab = document.getElementById(type + 'Tab');
+    if (targetTab) targetTab.classList.add('active');
+    
+    // Status frissítése
+    const statusContainer = document.getElementById('leaderboardStatus');
+    if (statusContainer) {
+        statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
+    }
+    
+    // Megfelelő leaderboard betöltése
+    if (type === 'local') {
+        // Helyi leaderboard
+        if (window.refreshLeaderboard) {
+            window.refreshLeaderboard();
+        } else if (window.perfectCircleApp) {
+            window.perfectCircleApp.displayFallbackLeaderboard();
+        }
+    } else if (type === 'global') {
+        // Globális leaderboard - közvetlen hívás
+        window.loadGlobalLeaderboard();
     }
 };
 
 window.loadGlobalLeaderboard = async function() {
     console.log('🌍 Globális loadGlobalLeaderboard hívás');
     
-    if (window.LeaderboardManager && window.LeaderboardManager.loadGlobalLeaderboard) {
-        await window.LeaderboardManager.loadGlobalLeaderboard();
-    } else {
-        console.warn('⚠️ LeaderboardManager loadGlobalLeaderboard nem elérhető');
-        
-        // Fallback - próbáljuk a HTML-ben definiált függvényt
-        const leaderboardList = document.getElementById('leaderboardList');
-        const leaderboardStatus = document.getElementById('leaderboardStatus');
-        
-        if (!leaderboardList) return;
-        
-        // Loading állapot
-        leaderboardList.innerHTML = '<div class="score-entry">🔄 Globális eredmények betöltése...</div>';
-        if (leaderboardStatus) {
-            leaderboardStatus.textContent = '🌍 Globális eredmények betöltése...';
+    const leaderboardList = document.getElementById('leaderboardList');
+    const leaderboardStatus = document.getElementById('leaderboardStatus');
+    
+    if (!leaderboardList) {
+        console.error('❌ leaderboardList elem nem található');
+        return;
+    }
+    
+    // Loading állapot
+    leaderboardList.innerHTML = '<div class="score-entry">🔄 Globális eredmények betöltése...</div>';
+    if (leaderboardStatus) {
+        leaderboardStatus.textContent = '🌍 Globális eredmények betöltése...';
+    }
+    
+    try {
+        // Várunk a Firebase API-ra
+        let attempts = 0;
+        while ((!window.firebaseAPI || !window.firebaseAPI.isReady || !window.firebaseAPI.isReady()) && attempts < 50) {
+            console.log(`⏳ Várakozás Firebase API-ra... (${attempts}/50)`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
         
-        try {
-            // Várunk a Firebase API-ra
-            if (window.firebaseAPI && window.firebaseAPI.isReady && window.firebaseAPI.isReady()) {
-                const globalScores = await window.firebaseAPI.getTopScores(20);
-                
-                console.log('✅ Globális eredmények betöltve app.js-ből:', globalScores.length);
-                
-                // Status frissítés
-                if (leaderboardStatus) {
-                    leaderboardStatus.textContent = `🌍 ${globalScores.length} globális eredmény`;
-                }
-                
-                // Lista megjelenítése
-                if (globalScores.length === 0) {
-                    leaderboardList.innerHTML = `
-                        <div class="score-entry">
-                            <span>Még nincsenek globális eredmények</span>
-                        </div>
-                    `;
-                } else {
-                    leaderboardList.innerHTML = globalScores.map((score, index) => {
-                        // Dátum formázása
-                        let dateText = 'Ma';
-                        if (score.timestamp && score.timestamp.seconds) {
-                            const date = new Date(score.timestamp.seconds * 1000);
-                            dateText = date.toLocaleDateString('hu-HU');
-                        } else if (score.date) {
-                            dateText = score.date;
-                        }
-                        
-                        // Thumbnail kezelése
-                        const thumbnailHTML = score.thumbnail ? 
-                            `<div class="thumbnail-container">
-                                <img src="${score.thumbnail}" 
-                                     class="leaderboard-thumbnail" 
-                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" 
-                                     onclick="window.ThumbnailGenerator?.showThumbnailModal('${score.thumbnail}')"
-                                     title="Kattints a nagyításhoz">
-                            </div>` : 
-                            `<div class="thumbnail-container">
-                                <div class="no-thumbnail" style="width: 40px; height: 40px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">🌍</div>
-                            </div>`;
-                        
-                        return `
-                            <div class="leaderboard-entry" data-score-id="${score.id}">
-                                ${thumbnailHTML}
-                                <div class="entry-content">
-                                    <div class="entry-main">
-                                        <span class="rank" style="font-weight: bold; color: #666; min-width: 30px;">#${index + 1}</span>
-                                        <span class="name" style="font-weight: 500; color: #333; margin-right: 8px;">${score.playerName || 'Névtelen'}</span>
-                                        <span class="score" style="font-weight: bold; color: #4CAF50; margin-left: auto;">${score.score} pont</span>
-                                    </div>
-                                    <div class="entry-details">
-                                        <span style="color: #888;">🌍 ${dateText}</span>
-                                        ${score.transformation ? ` • <span style="color: #666;">🎨 ${score.transformation}</span>` : ''}
-                                        ${score.difficulty && score.difficulty !== 'easy' ? ` • <span style="color: #ff9800;">🌀 ${score.difficulty}</span>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-                
-            } else {
-                throw new Error('Firebase nem elérhető');
-            }
-            
-        } catch (error) {
-            console.error('❌ Globális leaderboard betöltési hiba app.js-ben:', error);
-            
-            // Hiba megjelenítése
+        if (!window.firebaseAPI || !window.firebaseAPI.isReady || !window.firebaseAPI.isReady()) {
+            throw new Error('Firebase API nem elérhető 5 másodperc után');
+        }
+        
+        console.log('✅ Firebase API elérhető, adatok lekérése...');
+        const globalScores = await window.firebaseAPI.getTopScores(20);
+        
+        console.log('✅ Globális eredmények betöltve:', globalScores.length);
+        
+        // Status frissítés
+        if (leaderboardStatus) {
+            leaderboardStatus.textContent = `🌍 ${globalScores.length} globális eredmény`;
+        }
+        
+        // Lista megjelenítése
+        if (globalScores.length === 0) {
             leaderboardList.innerHTML = `
-                <div class="score-entry" style="color: #f44336;">
-                    <span>❌ Hiba a globális eredmények betöltésekor</span>
-                    <div style="font-size: 12px; margin-top: 5px; color: #666;">
-                        ${error.message}
-                    </div>
+                <div class="score-entry">
+                    <span>Még nincsenek globális eredmények</span>
                 </div>
             `;
-            
-            if (leaderboardStatus) {
-                leaderboardStatus.textContent = '❌ Globális eredmények nem elérhetők';
-            }
+        } else {
+            leaderboardList.innerHTML = globalScores.map((score, index) => {
+                // Dátum formázása
+                let dateText = 'Ma';
+                if (score.timestamp && score.timestamp.seconds) {
+                    const date = new Date(score.timestamp.seconds * 1000);
+                    dateText = date.toLocaleDateString('hu-HU');
+                } else if (score.date) {
+                    dateText = score.date;
+                }
+                
+                // Thumbnail kezelése
+                const thumbnailHTML = score.thumbnail ? 
+                    `<div class="thumbnail-container">
+                        <img src="${score.thumbnail}" 
+                             class="leaderboard-thumbnail" 
+                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" 
+                             onclick="window.ThumbnailGenerator?.showThumbnailModal('${score.thumbnail}')"
+                             title="Kattints a nagyításhoz">
+                    </div>` : 
+                    `<div class="thumbnail-container">
+                        <div class="no-thumbnail" style="width: 40px; height: 40px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">🌍</div>
+                    </div>`;
+                
+                return `
+                    <div class="leaderboard-entry" data-score-id="${score.id}">
+                        ${thumbnailHTML}
+                        <div class="entry-content">
+                            <div class="entry-main">
+                                <span class="rank" style="font-weight: bold; color: #666; min-width: 30px;">#${index + 1}</span>
+                                <span class="name" style="font-weight: 500; color: #333; margin-right: 8px;">${score.playerName || 'Névtelen'}</span>
+                                <span class="score" style="font-weight: bold; color: #4CAF50; margin-left: auto;">${score.score} pont</span>
+                            </div>
+                            <div class="entry-details">
+                                <span style="color: #888;">🌍 ${dateText}</span>
+                                ${score.transformation ? ` • <span style="color: #666;">🎨 ${score.transformation}</span>` : ''}
+                                ${score.difficulty && score.difficulty !== 'easy' ? ` • <span style="color: #ff9800;">🌀 ${score.difficulty}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+    } catch (error) {
+        console.error('❌ Globális leaderboard betöltési hiba:', error);
+        
+        // Hiba megjelenítése
+        leaderboardList.innerHTML = `
+            <div class="score-entry" style="color: #f44336;">
+                <span>❌ Hiba a globális eredmények betöltésekor</span>
+                <div style="font-size: 12px; margin-top: 5px; color: #666;">
+                    ${error.message}
+                </div>
+                <div style="font-size: 11px; margin-top: 3px; color: #999;">
+                    Firebase státusz: ${window.firebaseAPI ? (window.firebaseAPI.isReady ? window.firebaseAPI.isReady() ? 'Elérhető' : 'Nem kész' : 'Nincs isReady') : 'Nincs API'}
+                </div>
+            </div>
+        `;
+        
+        if (leaderboardStatus) {
+            leaderboardStatus.textContent = '❌ Globális eredmények nem elérhetők';
         }
     }
 };
@@ -842,10 +866,12 @@ window.loadGlobalLeaderboard = async function() {
 window.loadLocalLeaderboard = (highlightId = null) => {
     console.log('📱 Globális loadLocalLeaderboard hívás');
     
-    if (window.perfectCircleApp) {
-        window.perfectCircleApp.loadLocalLeaderboard(highlightId);
+    if (window.refreshLeaderboard) {
+        window.refreshLeaderboard();
+    } else if (window.perfectCircleApp) {
+        window.perfectCircleApp.displayFallbackLeaderboard();
     } else {
-        console.error('❌ PerfectCircleApp nem elérhető');
+        console.error('❌ Nincs elérhető helyi leaderboard függvény');
     }
 };
 
@@ -1013,12 +1039,12 @@ window.showScore = async (score, analysis, transformationName = '') => {
     console.log('✅ showScore befejezve');
 };
 
-// ✅ LEADERBOARD MANAGER FÜGGVÉNYEK BIZTOSÍTÁSA
+// ✅ LEADERBOARD MANAGER FÜGGVÉNYEK BIZTOSÍTÁSA - JAVÍTOTT VERZIÓ
 window.addEventListener('load', function() {
     setTimeout(() => {
         console.log('🔧 LeaderboardManager függvények ellenőrzése...');
         
-        // Ha nincs LeaderboardManager, létrehozzuk alapverzióval
+        // Egyszerűbb megoldás - csak akkor hozzuk létre ha tényleg nincs
         if (!window.LeaderboardManager) {
             console.log('🆕 LeaderboardManager alapverzió létrehozása...');
             
@@ -1026,129 +1052,37 @@ window.addEventListener('load', function() {
                 currentView: 'local',
                 
                 switchLeaderboard: function(type) {
-                    console.log('🔄 Alapverzió switchLeaderboard:', type);
-                    this.currentView = type;
-                    
-                    // Tab gombok frissítése
-                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                    const targetTab = document.getElementById(type + 'Tab');
-                    if (targetTab) targetTab.classList.add('active');
-                    
-                    // Status frissítése
-                    const statusContainer = document.getElementById('leaderboardStatus');
-                    if (statusContainer) {
-                        statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
-                    }
-                    
-                    // Megfelelő leaderboard betöltése
-                    if (type === 'local') {
-                        this.loadLocalLeaderboard();
-                    } else {
-                        this.loadGlobalLeaderboard();
-                    }
+                    console.log('🔄 LeaderboardManager switchLeaderboard:', type);
+                    // Használjuk a globális függvényt
+                    window.switchLeaderboard(type);
                 },
                 
                 loadLocalLeaderboard: function(highlightId = null) {
-                    console.log('📱 Alapverzió loadLocalLeaderboard');
-                    if (window.refreshLeaderboard) {
-                        window.refreshLeaderboard();
-                    } else if (window.perfectCircleApp) {
-                        window.perfectCircleApp.displayFallbackLeaderboard();
-                    }
+                    console.log('📱 LeaderboardManager loadLocalLeaderboard');
+                    window.loadLocalLeaderboard(highlightId);
                 },
                 
                 loadGlobalLeaderboard: async function() {
-                    console.log('🌍 Alapverzió loadGlobalLeaderboard');
-                    if (window.loadGlobalLeaderboard && window.loadGlobalLeaderboard !== this.loadGlobalLeaderboard) {
-                        await window.loadGlobalLeaderboard();
-                    } else {
-                        // Fallback globális megjelenítés
-                        const leaderboardList = document.getElementById('leaderboardList');
-                        const leaderboardStatus = document.getElementById('leaderboardStatus');
-                        
-                        if (leaderboardStatus) {
-                            leaderboardStatus.textContent = '🔄 Globális eredmények betöltése...';
-                        }
-                        
-                        if (leaderboardList) {
-                            leaderboardList.innerHTML = '<div class="score-entry">🔄 Globális eredmények betöltése...</div>';
-                            
-                            try {
-                                if (window.firebaseAPI && window.firebaseAPI.isReady && window.firebaseAPI.isReady()) {
-                                    const globalScores = await window.firebaseAPI.getTopScores(20);
-                                    
-                                    if (leaderboardStatus) {
-                                        leaderboardStatus.textContent = `🌍 ${globalScores.length} globális eredmény`;
-                                    }
-                                    
-                                    if (globalScores.length === 0) {
-                                        leaderboardList.innerHTML = '<div class="score-entry"><span>Még nincsenek globális eredmények</span></div>';
-                                    } else {
-                                        leaderboardList.innerHTML = globalScores.map((score, index) => {
-                                            let dateText = 'Ma';
-                                            if (score.timestamp && score.timestamp.seconds) {
-                                                const date = new Date(score.timestamp.seconds * 1000);
-                                                dateText = date.toLocaleDateString('hu-HU');
-                                            } else if (score.date) {
-                                                dateText = score.date;
-                                            }
-                                            
-                                            const thumbnailHTML = score.thumbnail ? 
-                                                `<div class="thumbnail-container">
-                                                    <img src="${score.thumbnail}" 
-                                                         class="leaderboard-thumbnail" 
-                                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" 
-                                                         onclick="window.ThumbnailGenerator?.showThumbnailModal('${score.thumbnail}')"
-                                                         title="Kattints a nagyításhoz">
-                                                </div>` : 
-                                                `<div class="thumbnail-container">
-                                                    <div class="no-thumbnail" style="width: 40px; height: 40px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">🌍</div>
-                                                </div>`;
-                                            
-                                            return `
-                                                <div class="leaderboard-entry" data-score-id="${score.id}">
-                                                    ${thumbnailHTML}
-                                                    <div class="entry-content">
-                                                        <div class="entry-main">
-                                                            <span class="rank" style="font-weight: bold; color: #666; min-width: 30px;">#${index + 1}</span>
-                                                            <span class="name" style="font-weight: 500; color: #333; margin-right: 8px;">${score.playerName || 'Névtelen'}</span>
-                                                            <span class="score" style="font-weight: bold; color: #4CAF50; margin-left: auto;">${score.score} pont</span>
-                                                        </div>
-                                                        <div class="entry-details">
-                                                            <span style="color: #888;">🌍 ${dateText}</span>
-                                                            ${score.transformation ? ` • <span style="color: #666;">🎨 ${score.transformation}</span>` : ''}
-                                                            ${score.difficulty && score.difficulty !== 'easy' ? ` • <span style="color: #ff9800;">🌀 ${score.difficulty}</span>` : ''}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            `;
-                                        }).join('');
-                                    }
-                                } else {
-                                    throw new Error('Firebase nem elérhető');
-                                }
-                            } catch (error) {
-                                console.error('❌ Globális leaderboard hiba:', error);
-                                leaderboardList.innerHTML = `
-                                    <div class="score-entry" style="color: #f44336;">
-                                        <span>❌ Hiba a globális eredmények betöltésekor</span>
-                                        <div style="font-size: 12px; margin-top: 5px; color: #666;">${error.message}</div>
-                                    </div>
-                                `;
-                                if (leaderboardStatus) {
-                                    leaderboardStatus.textContent = '❌ Globális eredmények nem elérhetők';
-                                }
-                            }
-                        }
-                    }
+                    console.log('🌍 LeaderboardManager loadGlobalLeaderboard');
+                    await window.loadGlobalLeaderboard();
                 },
                 
                 getCurrentView: function() {
+                    // Ellenőrizzük melyik tab aktív
+                    const localTab = document.getElementById('localTab');
+                    const globalTab = document.getElementById('globalTab');
+                    
+                    if (localTab && localTab.classList.contains('active')) {
+                        return 'local';
+                    } else if (globalTab && globalTab.classList.contains('active')) {
+                        return 'global';
+                    }
+                    
                     return this.currentView;
                 },
                 
                 saveGlobalScore: async function(playerName, score, difficulty, transformation) {
-                    console.log('💾 Alapverzió saveGlobalScore:', { playerName, score, difficulty, transformation });
+                    console.log('💾 LeaderboardManager saveGlobalScore:', { playerName, score, difficulty, transformation });
                     
                     try {
                         if (window.saveScoreToFirebase) {
@@ -1181,50 +1115,11 @@ window.addEventListener('load', function() {
             console.log('✅ LeaderboardManager alapverzió létrehozva');
         } else {
             console.log('✅ Meglévő LeaderboardManager megtalálva');
-            
-            // Hiányzó metódusok pótlása
-            if (!window.LeaderboardManager.getCurrentView) {
-                window.LeaderboardManager.getCurrentView = function() {
-                    return this.currentView || 'local';
-                };
-            }
-            
-            if (!window.LeaderboardManager.saveGlobalScore && !window.LeaderboardManager.submitScore) {
-                window.LeaderboardManager.saveGlobalScore = async function(playerName, score, difficulty, transformation) {
-                    console.log('💾 Pótolt saveGlobalScore:', { playerName, score, difficulty, transformation });
-                    
-                    try {
-                        if (window.saveScoreToFirebase) {
-                            const scoreData = {
-                                playerName: playerName,
-                                score: score,
-                                difficulty: difficulty,
-                                transformation: transformation
-                            };
-                            return await window.saveScoreToFirebase(scoreData);
-                        } else if (window.firebaseAPI && window.firebaseAPI.saveScore) {
-                            const scoreData = {
-                                playerName: playerName,
-                                score: score,
-                                difficulty: difficulty,
-                                transformation: transformation
-                            };
-                            return await window.firebaseAPI.saveScore(scoreData);
-                        } else {
-                            console.warn('⚠️ Nincs elérhető Firebase mentési metódus');
-                            return null;
-                        }
-                    } catch (error) {
-                        console.error('❌ Globális score mentési hiba:', error);
-                        return null;
-                    }
-                };
-            }
         }
         
         console.log('🔧 LeaderboardManager függvények ellenőrzése befejezve');
         
-    }, 1500); // 1.5 másodperc várakozás
+    }, 500); // Rövidebb várakozás
 });
 
 // Biztonságos inicializálás
