@@ -229,7 +229,6 @@
 
     <script src="leaderboard-fix.js"></script>
 
-
     <!-- Main App Script UTOLJÁRA -->
     <script src="js/app.js"></script>
 
@@ -279,208 +278,220 @@
     </script>
 
     <!-- EMERGENCY BUTTON HANDLERS -->
-     <script>
-// HIÁNYZÓ FÜGGVÉNYEK PÓTLÁSA
-window.showScore = function(score, breakdown) {
-    console.log('🏆 showScore called:', score, breakdown);
-    
-    // Score display elem megkeresése
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const finalScore = document.getElementById('finalScore');
-    const scoreBreakdown = document.getElementById('scoreBreakdown');
-    
-    if (!scoreDisplay) {
-        console.error('❌ scoreDisplay elem nem található');
-        return;
-    }
-    
-    // Pontszám megjelenítése
-    if (finalScore) {
-        finalScore.textContent = Math.round(score);
-    }
-    
-    // Breakdown megjelenítése
-    if (scoreBreakdown && breakdown) {
-        let breakdownHTML = '';
-        
-        if (breakdown.shape !== undefined) {
-            breakdownHTML += `<div class="breakdown-item">🔵 Köralak: ${Math.round(breakdown.shape)}/40</div>`;
-        }
-        if (breakdown.closure !== undefined) {
-            breakdownHTML += `<div class="breakdown-item">🔗 Záródás: ${Math.round(breakdown.closure)}/20</div>`;
-        }
-        if (breakdown.smoothness !== undefined) {
-            breakdownHTML += `<div class="breakdown-item">🌊 Egyenletesség: ${Math.round(breakdown.smoothness)}/25</div>`;
-        }
-        if (breakdown.size !== undefined) {
-            breakdownHTML += `<div class="breakdown-item">📏 Méret: ${Math.round(breakdown.size)}/15</div>`;
-        }
-        
-        scoreBreakdown.innerHTML = breakdownHTML;
-    }
-    
-    // Score display megjelenítése
-    scoreDisplay.style.display = 'block';
-    
-    // Scroll to score
-    scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    console.log('✅ Score megjelenítve');
-};
-
-// CANVAS CONTEXT JAVÍTÁS
-window.fixCanvasContext = function() {
-    console.log('🔧 Canvas context javítás...');
-    
-    const idealCircleCanvas = document.getElementById('idealCircleCanvas');
-    const idealComparisonCanvas = document.getElementById('idealComparisonCanvas');
-    
-    if (idealCircleCanvas) {
-        const ctx = idealCircleCanvas.getContext('2d');
-        if (ctx) {
-            console.log('✅ idealCircleCanvas context OK');
-            // Canvas méret beállítása
-            idealCircleCanvas.width = 400;
-            idealCircleCanvas.height = 400;
-        } else {
-            console.error('❌ idealCircleCanvas context hiba');
-        }
-    }
-    
-    if (idealComparisonCanvas) {
-        const ctx = idealComparisonCanvas.getContext('2d');
-        if (ctx) {
-            console.log('✅ idealComparisonCanvas context OK');
-            // Canvas méret beállítása
-            idealComparisonCanvas.width = 200;
-            idealComparisonCanvas.height = 200;
-        } else {
-            console.error('❌ idealComparisonCanvas context hiba');
-        }
-    }
-};
-
-// HIÁNYZÓ SCORE MANAGER FÜGGVÉNYEK
-window.updateStats = function() {
-    console.log('📊 updateStats called');
-    
-    if (window.ScoreManager) {
-        const stats = window.ScoreManager.getStats();
-        
-        // Statisztikák frissítése
-        const currentScore = document.getElementById('currentScore');
-        const bestScore = document.getElementById('bestScore');
-        const gamesPlayed = document.getElementById('gamesPlayed');
-        const averageScore = document.getElementById('averageScore');
-        
-        if (currentScore) currentScore.textContent = stats.currentScore || 0;
-        if (bestScore) bestScore.textContent = stats.bestScore || 0;
-        if (gamesPlayed) gamesPlayed.textContent = stats.gamesPlayed || 0;
-        if (averageScore) averageScore.textContent = Math.round(stats.averageScore) || 0;
-        
-        console.log('✅ Statisztikák frissítve:', stats);
-    } else {
-        console.log('⚠️ ScoreManager nem elérhető');
-    }
-};
-
-// HIÁNYZÓ VISITOR STATS FÜGGVÉNY
-window.showVisitStats = function() {
-    console.log('👥 showVisitStats called');
-    
-    const visitCount = localStorage.getItem('perfectcircle_visits') || 0;
-    const firstVisit = localStorage.getItem('perfectcircle_first_visit');
-    const lastVisit = localStorage.getItem('perfectcircle_last_visit');
-    
-    let message = `👥 Látogatási statisztikák:\n\n`;
-    message += `🔢 Összes látogatás: ${visitCount}\n`;
-    
-    if (firstVisit) {
-        const firstDate = new Date(firstVisit);
-        message += `🆕 Első látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
-    }
-    
-    if (lastVisit) {
-        const lastDate = new Date(lastVisit);
-        message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}`;
-    }
-    
-    alert(message);
-};
-
-// DIFFICULTY SETTER JAVÍTÁS
-window.setDifficulty = function(level) {
-    console.log('⚙️ setDifficulty called:', level);
-    
-    // Összes difficulty gomb inactive
-    document.querySelectorAll('.difficulty-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Aktív gomb megjelölése
-    const activeBtn = document.querySelector(`[data-difficulty="${level}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-    }
-    
-    // Nehézség mentése
-    localStorage.setItem('perfectcircle_difficulty', level);
-    
-    // GameEngine értesítése
-    if (window.gameEngine && window.gameEngine.setDifficulty) {
-        window.gameEngine.setDifficulty(level);
-    }
-    
-    console.log(`✅ Nehézség beállítva: ${level}`);
-};
-
-// DOM READY UTÁN FUTTATÁS
-document.addEventListener('DOMContentLoaded', function() {
-    // Canvas context javítás
-    setTimeout(() => {
-        window.fixCanvasContext();
-    }, 100);
-    
-    // Statisztikák frissítése
-    setTimeout(() => {
-        window.updateStats();
-    }, 200);
-    
-    // Difficulty gombok javítása
-    document.querySelectorAll('.difficulty-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const difficulty = this.getAttribute('data-difficulty');
-            if (difficulty) {
-                window.setDifficulty(difficulty);
+    <script>
+        // AUTOMATIKUS LEADERBOARD FRISSÍTŐ
+        window.refreshLeaderboard = function() {
+            try {
+                const leaderboardList = document.getElementById('leaderboardList');
+                const leaderboardStatus = document.getElementById('leaderboardStatus');
+                
+                if (!leaderboardList || !window.ScoreManager) return;
+                
+                const scores = window.ScoreManager.getScores();
+                
+                // Status frissítés
+                if (leaderboardStatus) {
+                    leaderboardStatus.textContent = `📱 ${scores.length} helyi eredmény`;
+                }
+                
+                // Lista frissítés
+                if (scores.length === 0) {
+                    leaderboardList.innerHTML = `
+                        <div class="score-entry">
+                            <span>Még nincsenek eredmények</span>
+                        </div>
+                    `;
+                } else {
+                    leaderboardList.innerHTML = scores.map((score, index) => {
+                        return `
+                            <div class="score-entry" data-score-id="${score.id}">
+                                <span class="rank">#${index + 1}</span>
+                                <span class="name">${score.playerName || 'Névtelen'}</span>
+                                <span class="score">${score.score}</span>
+                                <span class="date">${score.date || 'Ma'}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                console.log(`✅ Leaderboard frissítve: ${scores.length} eredmény`);
+                
+            } catch (error) {
+                console.error('❌ Leaderboard frissítési hiba:', error);
             }
+        };
+
+        // Automatikus frissítés indítása
+        setInterval(window.refreshLeaderboard, 2000);
+        console.log('✅ Automatikus leaderboard frissítő beállítva');
+
+        // SHOWSCORE FELÜLÍRÁSA - CSAK EGY HELYEN!
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                console.log('🔄 showScore felülírása...');
+                
+                // Eredeti showScore mentése
+                const originalShowScore = window.showScore;
+                
+                // ÚJ showScore függvény
+                window.showScore = async function(score, analysis, transformationName = '') {
+                    console.log('🏆 ÚJ showScore hívva:', { score, analysis, transformationName });
+                    
+                    try {
+                        // Score validálás
+                        const roundedScore = Math.round(Number(score));
+                        if (isNaN(roundedScore)) {
+                            console.error('❌ Érvénytelen score:', score);
+                            return;
+                        }
+                        
+                        // UI elemek
+                        const elements = {
+                            scoreDisplay: document.getElementById('scoreDisplay'),
+                            finalScore: document.getElementById('finalScore'),
+                            currentScore: document.getElementById('currentScore'),
+                            scoreBreakdown: document.getElementById('scoreBreakdown')
+                        };
+                        
+                        // Score megjelenítés
+                        if (elements.finalScore) elements.finalScore.textContent = roundedScore;
+                        if (elements.currentScore) elements.currentScore.textContent = roundedScore;
+                        
+                        // Breakdown megjelenítés
+                        if (elements.scoreBreakdown && analysis) {
+                            let breakdownHTML = '';
+                            if (analysis.shape !== undefined) breakdownHTML += `<div>🔵 Köralak: ${Math.round(analysis.shape)}/40</div>`;
+                            if (analysis.closure !== undefined) breakdownHTML += `<div>🔗 Záródás: ${Math.round(analysis.closure)}/20</div>`;
+                            if (analysis.smoothness !== undefined) breakdownHTML += `<div>🌊 Egyenletesség: ${Math.round(analysis.smoothness)}/25</div>`;
+                            if (analysis.size !== undefined) breakdownHTML += `<div>📏 Méret: ${Math.round(analysis.size)}/15</div>`;
+                            elements.scoreBreakdown.innerHTML = breakdownHTML;
+                        }
+                        
+                        // Score display megjelenítése
+                        if (elements.scoreDisplay) {
+                            elements.scoreDisplay.style.display = 'block';
+                            elements.scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        
+                        // MENTÉS ÉS FRISSÍTÉS
+                        if (roundedScore > 0 && window.ScoreManager) {
+                            console.log('💾 Score mentése...');
+                            
+                            const difficulty = window.gameEngine?.getDifficulty() || 'easy';
+                            
+                            const savedScore = window.ScoreManager.saveScore(
+                                roundedScore,
+                                analysis,
+                                difficulty,
+                                transformationName
+                            );
+                            
+                            console.log('✅ Score mentve:', savedScore);
+                            
+                            // LEADERBOARD AZONNALI FRISSÍTÉSE
+                            setTimeout(() => {
+                                window.refreshLeaderboard();
+                                console.log('🔄 Leaderboard frissítve showScore után');
+                            }, 100);
+                            
+                            // Statisztikák frissítése
+                            setTimeout(() => {
+                                if (window.updateStats) {
+                                    window.updateStats();
+                                }
+                            }, 200);
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ showScore hiba:', error);
+                    }
+                };
+                
+                console.log('✅ showScore sikeresen felülírva');
+                
+            }, 1000); // 1 másodperc várakozás
         });
-    });
-    
-    console.log('🔧 Emergency fixes loaded');
-});
 
-// VISITOR COUNTER INICIALIZÁLÁS
-window.initVisitorCounter = function() {
-    let visits = parseInt(localStorage.getItem('perfectcircle_visits') || '0');
-    visits++;
-    localStorage.setItem('perfectcircle_visits', visits.toString());
-    localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
-    
-    if (!localStorage.getItem('perfectcircle_first_visit')) {
-        localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
-    }
-    
-    const visitCountElement = document.getElementById('visitCount');
-    if (visitCountElement) {
-        visitCountElement.textContent = visits;
-    }
-    
-    console.log('👥 Látogatásszámláló:', visits);
-};
+        // EGYÉB SEGÉDFÜGGVÉNYEK
+        window.updateStats = function() {
+            console.log('📊 updateStats called');
+            
+            if (window.ScoreManager) {
+                const stats = window.ScoreManager.getStats();
+                
+                const currentScore = document.getElementById('currentScore');
+                const bestScore = document.getElementById('bestScore');
+                const gamesPlayed = document.getElementById('gamesPlayed');
+                const averageScore = document.getElementById('averageScore');
+                
+                if (currentScore) currentScore.textContent = stats.currentScore || 0;
+                if (bestScore) bestScore.textContent = stats.best || 0;
+                if (gamesPlayed) gamesPlayed.textContent = stats.games || 0;
+                if (averageScore) averageScore.textContent = Math.round(stats.average) || 0;
+                
+                console.log('✅ Statisztikák frissítve:', stats);
+            } else {
+                console.log('⚠️ ScoreManager nem elérhető');
+            }
+        };
 
-// Visitor counter indítása
-window.initVisitorCounter();
-</script>
+        window.showVisitStats = function() {
+            const visitCount = localStorage.getItem('perfectcircle_visits') || 0;
+            const firstVisit = localStorage.getItem('perfectcircle_first_visit');
+            const lastVisit = localStorage.getItem('perfectcircle_last_visit');
+            
+            let message = `👥 Látogatási statisztikák:\n\n`;
+            message += `🔢 Összes látogatás: ${visitCount}\n`;
+            
+            if (firstVisit) {
+                const firstDate = new Date(firstVisit);
+                message += `🆕 Első látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
+            }
+            
+            if (lastVisit) {
+                const lastDate = new Date(lastVisit);
+                message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}`;
+            }
+            
+            alert(message);
+        };
+
+        window.setDifficulty = function(level) {
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`[data-difficulty="${level}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            localStorage.setItem('perfectcircle_difficulty', level);
+            
+            if (window.gameEngine && window.gameEngine.setDifficulty) {
+                window.gameEngine.setDifficulty(level);
+            }
+            
+            console.log(`✅ Nehézség beállítva: ${level}`);
+        };
+
+        // VISITOR COUNTER INICIALIZÁLÁS
+        window.initVisitorCounter = function() {
+            let visits = parseInt(localStorage.getItem('perfectcircle_visits') || '0');
+            visits++;
+            localStorage.setItem('perfectcircle_visits', visits.toString());
+            localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
+            
+            if (!localStorage.getItem('perfectcircle_first_visit')) {
+                localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
+            }
+            
+            const visitCountElement = document.getElementById('visitCount');
+            if (visitCountElement) {
+                visitCountElement.textContent = visits;
+            }
+            
+            console.log('👥 Látogatásszámláló:', visits);
+        };
+
+        // Visitor counter indítása
+        window.initVisitorCounter();
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -507,7 +518,7 @@ window.initVisitorCounter();
                         if (window.perfectCircleApp && window.perfectCircleApp.loadLocalLeaderboard) {
                             window.perfectCircleApp.loadLocalLeaderboard();
                         } else {
-                            list.innerHTML = '<div class="score-entry">📱 Helyi eredmények betöltése...</div>';
+                            window.refreshLeaderboard();
                         }
                     }
                 });
@@ -598,15 +609,12 @@ window.initVisitorCounter();
                             alert('Helyi eredmények törölve! ✅');
                             
                             // Statisztikák frissítése
-                            if (window.perfectCircleApp && window.perfectCircleApp.updateStats) {
-                                window.perfectCircleApp.updateStats();
+                            if (window.updateStats) {
+                                window.updateStats();
                             }
                             
                             // Leaderboard frissítése
-                            const list = document.getElementById('leaderboardList');
-                            if (list) {
-                                list.innerHTML = '<div class="score-entry"><span>Még nincsenek eredmények</span></div>';
-                            }
+                            window.refreshLeaderboard();
                         } else {
                             alert('ScoreManager nem elérhető! ❌');
                         }
@@ -671,7 +679,7 @@ window.initVisitorCounter();
             
             if (listContainer) {
                 if (type === 'local') {
-                    listContainer.innerHTML = '<div class="score-entry">📱 Helyi eredmények betöltése...</div>';
+                    window.refreshLeaderboard();
                 } else {
                     listContainer.innerHTML = '<div class="score-entry">🌍 Globális eredmények betöltése...</div>';
                 }
@@ -684,6 +692,7 @@ window.initVisitorCounter();
                 if (window.ScoreManager && window.ScoreManager.clearScores) {
                     window.ScoreManager.clearScores();
                     alert('Helyi eredmények törölve!');
+                    window.refreshLeaderboard();
                 } else {
                     alert('ScoreManager nem elérhető!');
                 }
