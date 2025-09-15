@@ -1,3 +1,18 @@
+// ✅ GLOBÁLIS LEADERBOARD TÍPUS KÖVETÉSE
+window.currentLeaderboardType = 'local';
+
+// ✅ MEGAKADÁLYOZZUK A HELYI LEADERBOARD AUTOMATIKUS FRISSÍTÉSÉT GLOBÁLIS MÓDBAN
+const originalRefreshLeaderboard = window.refreshLeaderboard;
+if (originalRefreshLeaderboard) {
+    window.refreshLeaderboard = function() {
+        if (window.currentLeaderboardType === 'global') {
+            console.log('⚠️ Globális módban vagyunk, refreshLeaderboard kihagyva');
+            return;
+        }
+        return originalRefreshLeaderboard.apply(this, arguments);
+    };
+}
+
 // Fő alkalmazás inicializáló és koordinátor - INTEGRÁCIÓS VERZIÓ
 // Csak a szükséges összekötő funkciókat tartalmazza
 
@@ -736,6 +751,10 @@ window.switchLeaderboard = (type) => {
         statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
     }
     
+    // ✅ MEGAKADÁLYOZZUK AZ AUTOMATIKUS HELYI FRISSÍTÉST
+    // Jelöljük meg hogy most globális módban vagyunk
+    window.currentLeaderboardType = type;
+    
     // Megfelelő leaderboard betöltése
     if (type === 'local') {
         // Helyi leaderboard
@@ -746,6 +765,7 @@ window.switchLeaderboard = (type) => {
         }
     } else if (type === 'global') {
         // Globális leaderboard - közvetlen hívás
+        console.log('🌍 Globális leaderboard betöltése kezdése...');
         window.loadGlobalLeaderboard();
     }
 };
@@ -865,6 +885,12 @@ window.loadGlobalLeaderboard = async function() {
 
 window.loadLocalLeaderboard = (highlightId = null) => {
     console.log('📱 Globális loadLocalLeaderboard hívás');
+    
+    // ✅ ELLENŐRIZZÜK HOGY MOST GLOBÁLIS MÓDBAN VAGYUNK-E
+    if (window.currentLeaderboardType === 'global') {
+        console.log('⚠️ Globális módban vagyunk, helyi leaderboard betöltés kihagyva');
+        return;
+    }
     
     if (window.refreshLeaderboard) {
         window.refreshLeaderboard();
@@ -1014,21 +1040,29 @@ window.showScore = async (score, analysis, transformationName = '') => {
                 console.log('👤 ⚠️ Nincs érvényes játékos név, globális mentés kihagyva');
             }
 
-            // ✅ 3. HELYI LEADERBOARD FRISSÍTÉSE
+            // ✅ 3. HELYI LEADERBOARD FRISSÍTÉSE - JAVÍTOTT VERZIÓ
             console.log('🔄 Helyi leaderboard frissítése...');
             setTimeout(() => {
-                if (app && app.leaderboardManager) {
-                    const currentView = app.leaderboardManager.getCurrentView ? 
-                                       app.leaderboardManager.getCurrentView() : 'local';
-                    if (currentView === 'local') {
-                        if (typeof app.leaderboardManager.loadLocalLeaderboard === 'function') {
-                            app.leaderboardManager.loadLocalLeaderboard(savedScore?.id);
-                        } else if (typeof app.leaderboardManager.refreshLocalLeaderboard === 'function') {
-                            app.leaderboardManager.refreshLocalLeaderboard();
+                // ✅ CSAK AKKOR FRISSÍTSÜK A HELYI LEADERBOARD-OT HA HELYI MÓDBAN VAGYUNK
+                const currentType = window.currentLeaderboardType || 'local';
+                console.log('🔍 Jelenlegi leaderboard típus:', currentType);
+                
+                if (currentType === 'local') {
+                    if (app && app.leaderboardManager) {
+                        const currentView = app.leaderboardManager.getCurrentView ? 
+                                           app.leaderboardManager.getCurrentView() : 'local';
+                        if (currentView === 'local') {
+                            if (typeof app.leaderboardManager.loadLocalLeaderboard === 'function') {
+                                app.leaderboardManager.loadLocalLeaderboard(savedScore?.id);
+                            } else if (typeof app.leaderboardManager.refreshLocalLeaderboard === 'function') {
+                                app.leaderboardManager.refreshLocalLeaderboard();
+                            }
                         }
+                    } else {
+                        app?.displayFallbackLeaderboard();
                     }
                 } else {
-                    app?.displayFallbackLeaderboard();
+                    console.log('🌍 Globális módban vagyunk, helyi leaderboard frissítés kihagyva');
                 }
             }, 100);
 
@@ -1068,7 +1102,12 @@ window.addEventListener('load', function() {
                 },
                 
                 getCurrentView: function() {
-                    // Ellenőrizzük melyik tab aktív
+                    // ✅ ELŐSZÖR A GLOBÁLIS VÁLTOZÓT ELLENŐRIZZÜK
+                    if (window.currentLeaderboardType) {
+                        return window.currentLeaderboardType;
+                    }
+                    
+                    // Majd ellenőrizzük melyik tab aktív
                     const localTab = document.getElementById('localTab');
                     const globalTab = document.getElementById('globalTab');
                     
@@ -1155,37 +1194,31 @@ function safeInit() {
     }
 }
 
-// Alkalmazás indítása
+// Alkalmazás indítása - JAVÍTOTT VERZIÓ
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', safeInit);
+    document.addEventListener('DOMContentLoaded', () => {
+        // ✅ ALAPÉRTELMEZETT LEADERBOARD TÍPUS BEÁLLÍTÁSA
+        window.currentLeaderboardType = 'local';
+        safeInit();
+    });
 } else {
+    // ✅ ALAPÉRTELMEZETT LEADERBOARD TÍPUS BEÁLLÍTÁSA
+    window.currentLeaderboardType = 'local';
     safeInit();
 }
 
 // ✅ BŐVÍTETT HIBAKERESÉSI FÜGGVÉNY
 window.debugLeaderboard = () => {
     console.log('🔍 === LEADERBOARD HIBAKERESÉS ===');
+    console.log('- currentLeaderboardType:', window.currentLeaderboardType);
     console.log('- perfectCircleApp:', !!window.perfectCircleApp);
     console.log('- leaderboardManager:', !!window.perfectCircleApp?.leaderboardManager);
     console.log('- Meglévő LeaderboardManager osztály:', !!window.LeaderboardManager);
-    console.log('- Meglévő leaderboardManager példány:', !!window.leaderboardManager);
     console.log('- switchLeaderboard függvény:', typeof window.switchLeaderboard);
     console.log('- loadGlobalLeaderboard függvény:', typeof window.loadGlobalLeaderboard);
     console.log('- refreshLeaderboard függvény:', typeof window.refreshLeaderboard);
-    console.log('- saveScoreToFirebase függvény:', typeof window.saveScoreToFirebase);
     console.log('- firebaseAPI:', !!window.firebaseAPI);
     console.log('- firebaseAPI.isReady:', window.firebaseAPI?.isReady?.());
-    
-    if (window.perfectCircleApp?.leaderboardManager) {
-        const lm = window.perfectCircleApp.leaderboardManager;
-        console.log('- LeaderboardManager metódusok:');
-        console.log('  - switchLeaderboard:', typeof lm.switchLeaderboard);
-        console.log('  - loadLocalLeaderboard:', typeof lm.loadLocalLeaderboard);
-        console.log('  - loadGlobalLeaderboard:', typeof lm.loadGlobalLeaderboard);
-        console.log('  - saveGlobalScore:', typeof lm.saveGlobalScore);
-        console.log('  - submitScore:', typeof lm.submitScore);
-        console.log('  - getCurrentView:', typeof lm.getCurrentView);
-    }
     
     // Tab állapot ellenőrzése
     const localTab = document.getElementById('localTab');
