@@ -72,6 +72,131 @@
             color: #666;
             margin-top: 2px;
         }
+
+        /* Score animáció stílusok */
+        .score-animation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .score-big-reveal {
+            font-size: 4em;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            animation: scoreReveal 2.5s ease;
+        }
+
+        .score-perfect { color: #FFD700; text-shadow: 0 0 20px #FFD700; }
+        .score-excellent { color: #4CAF50; text-shadow: 0 0 15px #4CAF50; }
+        .score-good { color: #2196F3; text-shadow: 0 0 10px #2196F3; }
+        .score-fair { color: #FF9800; text-shadow: 0 0 10px #FF9800; }
+        .score-poor { color: #F44336; text-shadow: 0 0 10px #F44336; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scoreReveal {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .score-grade-badge {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            animation: badgeAppear 0.5s ease;
+        }
+
+        @keyframes badgeAppear {
+            from { transform: scale(0) rotate(180deg); opacity: 0; }
+            to { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .score-particles {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .score-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: particleExplode 1.5s ease-out forwards;
+        }
+
+        @keyframes particleExplode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall 3s linear forwards;
+            z-index: 9997;
+        }
+
+        @keyframes confettiFall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        .score-fireworks {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9996;
+        }
+
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: fireworkExplode 1s ease-out forwards;
+        }
+
+        @keyframes fireworkExplode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(20); opacity: 0; }
+        }
+
+        .score-revealed {
+            animation: scoreDisplayReveal 1s ease;
+        }
+
+        @keyframes scoreDisplayReveal {
+            0% { transform: scale(0.8) rotateY(-90deg); opacity: 0; }
+            50% { transform: scale(1.1) rotateY(0deg); opacity: 1; }
+            100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+        }
     </style>
 </head>
 
@@ -261,16 +386,67 @@
         // Globális nyelvi adatok tárolója
         window.languageData = {};
         
-        // Magyar nyelv beágyazása
+        // Magyar nyelv beágyazása (egyszerűsített verzió)
         window.languageData.hu = {
-            // ... (az előző teljes magyar fordítás)
+            title: "Perfect Circle - Rajzolj Tökéletes Kört!",
+            subtitle: "Rajzolj a lehető legtökéletesebb kört egyetlen mozdulattal!",
+            instructions: {
+                title: "Hogyan játssz:",
+                text: "Kattints és húzd az egeret (vagy érintsd és húzd az ujjad) hogy egy kört rajzolj. Minél tökéletesebb a köröd, annál több pontot kapsz! A kör varázslatos módon át fog változni! ✨"
+            },
+            buttons: {
+                startDrawing: "🎯 Rajzolás Kezdése",
+                clear: "🗑️ Törlés",
+                help: "❓ Segítség",
+                save: "💾 Mentés",
+                clearScores: "🗑️ Helyi Eredmények Törlése"
+            },
+            player: {
+                label: "👤 Játékos név:",
+                placeholder: "Add meg a neved"
+            },
+            difficulty: {
+                label: "Nehézség:",
+                easy: "Könnyű 😊",
+                hard: "Nehéz 🌀"
+            },
+            stats: {
+                currentScore: "Jelenlegi Pontszám",
+                bestScore: "Legjobb Eredmény",
+                gamesPlayed: "Játékok Száma",
+                averageScore: "Átlag Pontszám"
+            },
+            leaderboard: {
+                title: "🏆 Ranglista",
+                localResults: "📱 Helyi eredmények",
+                noResults: "Még nincsenek eredmények"
+            },
+            common: {
+                points: "pont"
+            },
+            scoreTitle: {
+                result: "Eredmény"
+            },
+            transformation: {
+                magic: "✨ Varázslat történik... ✨"
+            },
+            firebase: {
+                connecting: "🟡 Kapcsolódás...",
+                offlineNotice: "⚠️ <strong>Offline mód:</strong> A globális ranglista nem elérhető. Az eredmények helyben mentődnek."
+            },
+            visitors: {
+                label: "Látogatások:"
+            },
+            dev: {
+                version: "v2.0",
+                debug: "Debug"
+            }
         };
     </script>
 
     <!-- THUMBNAIL GENERATOR BEÁGYAZVA -->
     <script>
         // js/utils/thumbnailGenerator.js - BEÁGYAZVA
-
         window.ThumbnailGenerator = {
             
             // Canvas tartalom mentése thumbnail-ként
@@ -445,6 +621,272 @@
         console.log('✅ ThumbnailGenerator betöltve');
     </script>
 
+    <!-- SCORE ANIMATOR -->
+    <script>
+        window.ScoreAnimator = {
+            
+            // Főbb animáció indítása
+            animateScore: function(score, breakdown, transformationName = '') {
+                console.log('🎉 Score animáció indítása:', score);
+                
+                try {
+                    // Score kategória meghatározása
+                    const category = this.getScoreCategory(score);
+                    
+                    // Nagy score felfedés
+                    this.showBigScoreReveal(score, category);
+                    
+                    // Részletek animálása
+                    setTimeout(() => {
+                        this.animateScoreBreakdown(breakdown);
+                    }, 1500);
+                    
+                    // Egyéb effektek
+                    setTimeout(() => {
+                        this.addScoreEffects(score, category);
+                    }, 500);
+                    
+                    // Score display animálása
+                    setTimeout(() => {
+                        this.animateScoreDisplay(score, category);
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('❌ Score animáció hiba:', error);
+                }
+            },
+            
+            // Score kategória meghatározása
+            getScoreCategory: function(score) {
+                if (score >= 95) return { name: 'perfect', text: 'TÖKÉLETES!', emoji: '🏆' };
+                if (score >= 85) return { name: 'excellent', text: 'KIVÁLÓ!', emoji: '⭐' };
+                if (score >= 70) return { name: 'good', text: 'JÓ!', emoji: '👍' };
+                if (score >= 50) return { name: 'fair', text: 'ELFOGADHATÓ', emoji: '👌' };
+                return { name: 'poor', text: 'GYAKOROLJ MÉG!', emoji: '💪' };
+            },
+            
+            // Nagy score felfedés
+            showBigScoreReveal: function(score, category) {
+                // Overlay létrehozása
+                const overlay = document.createElement('div');
+                overlay.className = 'score-animation-overlay';
+                
+                // Score szöveg
+                const scoreText = document.createElement('div');
+                scoreText.className = `score-big-reveal score-${category.name}`;
+                scoreText.innerHTML = `
+                    <div style="font-size: 0.3em; margin-bottom: 10px;">${category.emoji} ${category.text} ${category.emoji}</div>
+                    <div>${Math.round(score)}</div>
+                    <div style="font-size: 0.4em; margin-top: 10px;">PONT</div>
+                `;
+                
+                overlay.appendChild(scoreText);
+                document.body.appendChild(overlay);
+                
+                // Hang lejátszása (ha van AudioManager)
+                if (window.AudioManager && window.AudioManager.playScoreReveal) {
+                    window.AudioManager.playScoreReveal(score);
+                }
+                
+                // Eltávolítás
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        overlay.parentNode.removeChild(overlay);
+                    }
+                }, 3000);
+            },
+            
+            // Score breakdown animálása
+            animateScoreBreakdown: function(breakdown) {
+                const scoreBreakdown = document.getElementById('scoreBreakdown');
+                if (!scoreBreakdown || !breakdown) return;
+                
+                // Elemek animálása egyenként
+                const items = scoreBreakdown.querySelectorAll('div');
+                items.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-50px)';
+                    item.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateX(0)';
+                    }, index * 200);
+                });
+            },
+            
+            // Score display animálása
+            animateScoreDisplay: function(score, category) {
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                if (!scoreDisplay) return;
+                
+                // CSS class hozzáadása
+                scoreDisplay.classList.add('score-revealed');
+                
+                // Badge hozzáadása
+                this.addScoreBadge(scoreDisplay, category);
+                
+                // Class eltávolítása
+                setTimeout(() => {
+                    scoreDisplay.classList.remove('score-revealed');
+                }, 2000);
+            },
+            
+            // Score badge hozzáadása
+            addScoreBadge: function(container, category) {
+                // Meglévő badge eltávolítása
+                const existingBadge = container.querySelector('.score-grade-badge');
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+                
+                // Új badge
+                const badge = document.createElement('div');
+                badge.className = 'score-grade-badge';
+                badge.textContent = category.emoji + ' ' + category.text;
+                
+                container.style.position = 'relative';
+                container.appendChild(badge);
+                
+                // Badge eltávolítása
+                setTimeout(() => {
+                    if (badge.parentNode) {
+                        badge.parentNode.removeChild(badge);
+                    }
+                }, 3000);
+            },
+            
+            // Egyéb effektek
+            addScoreEffects: function(score, category) {
+                // Particle effekt
+                this.createParticles(score);
+                
+                // Confetti nagy score esetén
+                if (score >= 80) {
+                    this.createConfetti();
+                }
+                
+                // Tűzijáték tökéletes score esetén
+                if (score >= 95) {
+                    this.createFireworks();
+                }
+            },
+            
+            // Particle effekt
+            createParticles: function(score) {
+                const container = document.createElement('div');
+                container.className = 'score-particles';
+                
+                const particleCount = Math.min(score / 2, 50);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'score-particle';
+                    
+                    // Random pozíció és irány
+                    const angle = (Math.PI * 2 * i) / particleCount;
+                    const distance = 100 + Math.random() * 100;
+                    const dx = Math.cos(angle) * distance;
+                    const dy = Math.sin(angle) * distance;
+                    
+                    particle.style.setProperty('--dx', dx + 'px');
+                    particle.style.setProperty('--dy', dy + 'px');
+                    particle.style.backgroundColor = this.getRandomColor();
+                    particle.style.animationDelay = Math.random() * 0.5 + 's';
+                    
+                    container.appendChild(particle);
+                }
+                
+                document.body.appendChild(container);
+                
+                // Eltávolítás
+                setTimeout(() => {
+                    if (container.parentNode) {
+                        container.parentNode.removeChild(container);
+                    }
+                }, 2000);
+            },
+            
+            // Confetti létrehozása
+            createConfetti: function() {
+                const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
+                
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + '%';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 2 + 's';
+                        
+                        document.body.appendChild(confetti);
+                        
+                        setTimeout(() => {
+                            if (confetti.parentNode) {
+                                confetti.parentNode.removeChild(confetti);
+                            }
+                        }, 3000);
+                    }, i * 50);
+                }
+            },
+            
+            // Tűzijáték
+            createFireworks: function() {
+                const colors = ['#FFD700', '#FF1744', '#00E676', '#2196F3', '#FF9800'];
+                
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const container = document.createElement('div');
+                        container.className = 'score-fireworks';
+                        
+                        const centerX = Math.random() * window.innerWidth;
+                        const centerY = Math.random() * window.innerHeight * 0.5 + window.innerHeight * 0.2;
+                        
+                        for (let j = 0; j < 20; j++) {
+                            const firework = document.createElement('div');
+                            firework.className = 'firework';
+                            firework.style.left = centerX + 'px';
+                            firework.style.top = centerY + 'px';
+                            firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                            firework.style.animationDelay = Math.random() * 0.5 + 's';
+                            
+                            container.appendChild(firework);
+                        }
+                        
+                        document.body.appendChild(container);
+                        
+                        setTimeout(() => {
+                            if (container.parentNode) {
+                                container.parentNode.removeChild(container);
+                            }
+                        }, 1500);
+                    }, i * 300);
+                }
+            },
+            
+            // Random szín
+            getRandomColor: function() {
+                const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            },
+            
+            // Vibráció (mobil)
+            vibrate: function(score) {
+                if (navigator.vibrate) {
+                    if (score >= 95) {
+                        navigator.vibrate([200, 100, 200, 100, 200]);
+                    } else if (score >= 80) {
+                        navigator.vibrate([100, 50, 100]);
+                    } else if (score >= 60) {
+                        navigator.vibrate(100);
+                    }
+                }
+            }
+        };
+
+        console.log('✅ ScoreAnimator betöltve');
+    </script>
+
     <script src="js/i18n/languageDetector.js"></script>
     <script src="js/i18n/i18nManager.js"></script>
     
@@ -469,6 +911,153 @@
 
     <!-- Main App Script UTOLJÁRA -->
     <script src="js/app.js" type="module"></script>
+
+    <!-- FIREBASE GLOBÁLIS LEADERBOARD TÁMOGATÁS -->
+    <script>
+        // Várakozás a Firebase API-ra
+        function waitForFirebaseAPI() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 100;
+                
+                const checkAPI = () => {
+                    attempts++;
+                    
+                    if (window.firebaseAPI && typeof window.firebaseAPI.isReady === 'function') {
+                        console.log('✅ Firebase API elérhető globális leaderboard-hoz!');
+                        resolve(true);
+                    } else if (attempts >= maxAttempts) {
+                        console.error('❌ Firebase API timeout!');
+                        resolve(false);
+                    } else {
+                        setTimeout(checkAPI, 100);
+                    }
+                };
+                checkAPI();
+            });
+        }
+
+        // Globális leaderboard betöltése
+        window.loadGlobalLeaderboard = async function() {
+            console.log('🌍 Globális leaderboard betöltése...');
+            
+            const leaderboardList = document.getElementById('leaderboardList');
+            const leaderboardStatus = document.getElementById('leaderboardStatus');
+            
+            if (!leaderboardList) return;
+            
+            // Loading állapot
+            leaderboardList.innerHTML = '<div class="score-entry">🔄 Globális eredmények betöltése...</div>';
+            if (leaderboardStatus) {
+                leaderboardStatus.textContent = '🌍 Globális eredmények betöltése...';
+            }
+            
+            try {
+                // Várunk a Firebase API-ra
+                const apiReady = await waitForFirebaseAPI();
+                
+                if (!apiReady || !window.firebaseAPI.isReady()) {
+                    throw new Error('Firebase nem elérhető');
+                }
+                
+                // Globális eredmények lekérése
+                const globalScores = await window.firebaseAPI.getTopScores(20);
+                
+                console.log('✅ Globális eredmények betöltve:', globalScores.length);
+                
+                // Status frissítés
+                if (leaderboardStatus) {
+                    leaderboardStatus.textContent = `🌍 ${globalScores.length} globális eredmény`;
+                }
+                
+                // Lista megjelenítése
+                if (globalScores.length === 0) {
+                    leaderboardList.innerHTML = `
+                        <div class="score-entry">
+                            <span>Még nincsenek globális eredmények</span>
+                        </div>
+                    `;
+                } else {
+                    leaderboardList.innerHTML = globalScores.map((score, index) => {
+                        // Dátum formázása
+                        let dateText = 'Ma';
+                        if (score.timestamp && score.timestamp.seconds) {
+                            const date = new Date(score.timestamp.seconds * 1000);
+                            dateText = date.toLocaleDateString('hu-HU');
+                        } else if (score.date) {
+                            dateText = score.date;
+                        }
+                        
+                        // Thumbnail kezelése
+                        const thumbnailHTML = score.thumbnail ? 
+                            `<div class="thumbnail-container">
+                                <img src="${score.thumbnail}" 
+                                     class="leaderboard-thumbnail" 
+                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" 
+                                     onclick="window.ThumbnailGenerator.showThumbnailModal('${score.thumbnail}')"
+                                     title="Kattints a nagyításhoz">
+                            </div>` : 
+                            `<div class="thumbnail-container">
+                                <div class="no-thumbnail" style="width: 40px; height: 40px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">🌍</div>
+                            </div>`;
+                        
+                        return `
+                            <div class="leaderboard-entry" data-score-id="${score.id}">
+                                ${thumbnailHTML}
+                                <div class="entry-content">
+                                    <div class="entry-main">
+                                        <span class="rank" style="font-weight: bold; color: #666; min-width: 30px;">#${index + 1}</span>
+                                        <span class="name" style="font-weight: 500; color: #333; margin-right: 8px;">${score.playerName || 'Névtelen'}</span>
+                                        <span class="score" style="font-weight: bold; color: #4CAF50; margin-left: auto;">${score.score} pont</span>
+                                    </div>
+                                    <div class="entry-details">
+                                        <span style="color: #888;">🌍 ${dateText}</span>
+                                        ${score.transformation ? ` • <span style="color: #666;">🎨 ${score.transformation}</span>` : ''}
+                                        ${score.difficulty && score.difficulty !== 'easy' ? ` • <span style="color: #ff9800;">🌀 ${score.difficulty}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+            } catch (error) {
+                console.error('❌ Globális leaderboard betöltési hiba:', error);
+                
+                // Hiba megjelenítése
+                leaderboardList.innerHTML = `
+                    <div class="score-entry" style="color: #f44336;">
+                        <span>❌ Hiba a globális eredmények betöltésekor</span>
+                        <div style="font-size: 12px; margin-top: 5px; color: #666;">
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
+                
+                if (leaderboardStatus) {
+                    leaderboardStatus.textContent = '❌ Globális eredmények nem elérhetők';
+                }
+            }
+        };
+
+        // Firebase score mentés globálisan
+        window.saveScoreToFirebase = async function(scoreData) {
+            try {
+                if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+                    console.log('⚠️ Firebase nem elérhető, score nem mentve globálisan');
+                    return null;
+                }
+                
+                const result = await window.firebaseAPI.saveScore(scoreData);
+                console.log('✅ Score mentve Firebase-be:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Firebase score mentési hiba:', error);
+                return null;
+            }
+        };
+    </script>
 
     <!-- Inicializálás -->
     <script>
@@ -584,135 +1173,138 @@
         setInterval(window.refreshLeaderboard, 2000);
         console.log('✅ Automatikus leaderboard frissítő beállítva');
 
-        // SHOWSCORE FELÜLÍRÁSA THUMBNAIL TÁMOGATÁSSAL
+        // SHOWSCORE FELÜLÍRÁSA FIREBASE MENTÉSSEL
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
-                console.log('🔄 showScore felülírása thumbnail támogatással...');
+                console.log('🔄 showScore felülírása Firebase támogatással...');
                 
-                // Eredeti showScore mentése
-                const originalShowScore = window.showScore;
-                
-                // ÚJ showScore függvény
-// A showScore függvényt módosítsd így:
-window.showScore = async function(score, analysis, transformationName = '') {
-    console.log('🏆 ÚJ showScore hívva thumbnaillal:', { score, analysis, transformationName });
-    
-    try {
-        // Score validálás
-        const roundedScore = Math.round(Number(score));
-        if (isNaN(roundedScore)) {
-            console.error('❌ Érvénytelen score:', score);
-            return;
-        }
-        
-        // SCORE ANIMÁCIÓ INDÍTÁSA - AZONNAL!
-        if (window.ScoreAnimator) {
-            window.ScoreAnimator.animateScore(roundedScore, analysis, transformationName);
-            window.ScoreAnimator.vibrate(roundedScore);
-        }
-        
-        // UI elemek (kicsit később)
-        setTimeout(() => {
-            const elements = {
-                scoreDisplay: document.getElementById('scoreDisplay'),
-                finalScore: document.getElementById('finalScore'),
-                currentScore: document.getElementById('currentScore'),
-                scoreBreakdown: document.getElementById('scoreBreakdown')
-            };
-            
-            // Score megjelenítés
-            if (elements.finalScore) elements.finalScore.textContent = roundedScore;
-            if (elements.currentScore) elements.currentScore.textContent = roundedScore;
-            
-            // Breakdown megjelenítés
-            if (elements.scoreBreakdown && analysis) {
-                let breakdownHTML = '';
-                if (analysis.shape !== undefined) breakdownHTML += `<div>🔵 Köralak: ${Math.round(analysis.shape)}/40</div>`;
-                if (analysis.closure !== undefined) breakdownHTML += `<div>🔗 Záródás: ${Math.round(analysis.closure)}/20</div>`;
-                if (analysis.smoothness !== undefined) breakdownHTML += `<div>🌊 Egyenletesség: ${Math.round(analysis.smoothness)}/25</div>`;
-                if (analysis.size !== undefined) breakdownHTML += `<div>📏 Méret: ${Math.round(analysis.size)}/15</div>`;
-                elements.scoreBreakdown.innerHTML = breakdownHTML;
-            }
-            
-            // Score display megjelenítése
-            if (elements.scoreDisplay) {
-                elements.scoreDisplay.style.display = 'block';
-                elements.scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 2500); // 2.5 másodperc után jelennek meg a részletek
-        
-        // THUMBNAIL KÉSZÍTÉSE ÉS MENTÉS
-        if (roundedScore > 0 && window.ScoreManager && window.ThumbnailGenerator) {
-            console.log('💾 Score mentése thumbnaillal...');
-            
-            // Várunk egy kicsit, hogy a transzformáció befejeződjön
-            const thumbnail = await window.ThumbnailGenerator.captureTransformationThumbnail(1000);
-            
-            const difficulty = window.gameEngine?.getDifficulty() || 'easy';
-            
-            // Score mentés...
-            let savedScore;
-            if (window.ScoreManager.saveScore.length >= 5) {
-                savedScore = window.ScoreManager.saveScore(
-                    roundedScore,
-                    analysis,
-                    difficulty,
-                    transformationName,
-                    thumbnail
-                );
-            } else {
-                savedScore = window.ScoreManager.saveScore(
-                    roundedScore,
-                    analysis,
-                    difficulty,
-                    transformationName
-                );
-                
-                if (thumbnail && savedScore && savedScore.id) {
-                    const scores = window.ScoreManager.getScores();
-                    const scoreIndex = scores.findIndex(s => s.id === savedScore.id);
-                    if (scoreIndex !== -1) {
-                        scores[scoreIndex].thumbnail = thumbnail;
-                        localStorage.setItem('perfectcircle_scores', JSON.stringify(scores));
+                // ÚJ showScore függvény Firebase mentéssel
+                window.showScore = async function(score, analysis, transformationName = '') {
+                    console.log('🏆 ÚJ showScore hívva Firebase mentéssel:', { score, analysis, transformationName });
+                    
+                    try {
+                        // Score validálás
+                        const roundedScore = Math.round(Number(score));
+                        if (isNaN(roundedScore)) {
+                            console.error('❌ Érvénytelen score:', score);
+                            return;
+                        }
+                        
+                        // SCORE ANIMÁCIÓ INDÍTÁSA
+                        if (window.ScoreAnimator) {
+                            window.ScoreAnimator.animateScore(roundedScore, analysis, transformationName);
+                            window.ScoreAnimator.vibrate(roundedScore);
+                        }
+                        
+                        // UI elemek frissítése
+                        setTimeout(() => {
+                            const elements = {
+                                scoreDisplay: document.getElementById('scoreDisplay'),
+                                finalScore: document.getElementById('finalScore'),
+                                currentScore: document.getElementById('currentScore'),
+                                scoreBreakdown: document.getElementById('scoreBreakdown')
+                            };
+                            
+                            if (elements.finalScore) elements.finalScore.textContent = roundedScore;
+                            if (elements.currentScore) elements.currentScore.textContent = roundedScore;
+                            
+                            if (elements.scoreBreakdown && analysis) {
+                                let breakdownHTML = '';
+                                if (analysis.shape !== undefined) breakdownHTML += `<div>🔵 Köralak: ${Math.round(analysis.shape)}/40</div>`;
+                                if (analysis.closure !== undefined) breakdownHTML += `<div>🔗 Záródás: ${Math.round(analysis.closure)}/20</div>`;
+                                if (analysis.smoothness !== undefined) breakdownHTML += `<div>🌊 Egyenletesség: ${Math.round(analysis.smoothness)}/25</div>`;
+                                if (analysis.size !== undefined) breakdownHTML += `<div>📏 Méret: ${Math.round(analysis.size)}/15</div>`;
+                                elements.scoreBreakdown.innerHTML = breakdownHTML;
+                            }
+                            
+                            if (elements.scoreDisplay) {
+                                elements.scoreDisplay.style.display = 'block';
+                                elements.scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }, 2500);
+                        
+                        // THUMBNAIL KÉSZÍTÉSE ÉS MENTÉS
+                        if (roundedScore > 0 && window.ScoreManager && window.ThumbnailGenerator) {
+                            console.log('💾 Score mentése thumbnaillal és Firebase-be...');
+                            
+                            const thumbnail = await window.ThumbnailGenerator.captureTransformationThumbnail(1000);
+                            const difficulty = window.gameEngine?.getDifficulty() || 'easy';
+                            const playerName = document.getElementById('playerName')?.value?.trim() || 'Névtelen';
+                            
+                            // Helyi mentés
+                            let savedScore;
+                            if (window.ScoreManager.saveScore.length >= 5) {
+                                savedScore = window.ScoreManager.saveScore(
+                                    roundedScore,
+                                    analysis,
+                                    difficulty,
+                                    transformationName,
+                                    thumbnail
+                                );
+                            } else {
+                                savedScore = window.ScoreManager.saveScore(
+                                    roundedScore,
+                                    analysis,
+                                    difficulty,
+                                    transformationName
+                                );
+                                
+                                if (thumbnail && savedScore && savedScore.id) {
+                                    const scores = window.ScoreManager.getScores();
+                                    const scoreIndex = scores.findIndex(s => s.id === savedScore.id);
+                                    if (scoreIndex !== -1) {
+                                        scores[scoreIndex].thumbnail = thumbnail;
+                                        localStorage.setItem('perfectcircle_scores', JSON.stringify(scores));
+                                    }
+                                }
+                            }
+                            
+                            // Firebase mentés
+                            const firebaseData = {
+                                playerName: playerName,
+                                score: roundedScore,
+                                difficulty: difficulty,
+                                transformation: transformationName,
+                                thumbnail: thumbnail
+                            };
+                            
+                            const firebaseResult = await window.saveScoreToFirebase(firebaseData);
+                            if (firebaseResult) {
+                                console.log('✅ Score mentve Firebase-be is:', firebaseResult);
+                            }
+                            
+                            console.log('✅ Score mentve thumbnaillal:', savedScore);
+                            
+                            // Thumbnail megjelenítése
+                            setTimeout(() => {
+                                const scoreDisplay = document.getElementById('scoreDisplay');
+                                if (thumbnail && scoreDisplay) {
+                                    window.ThumbnailGenerator.displayThumbnail(thumbnail, 'scoreDisplay', 'current-score-thumbnail');
+                                }
+                            }, 3000);
+                            
+                            // LEADERBOARD FRISSÍTÉSE
+                            setTimeout(() => {
+                                window.refreshLeaderboard();
+                                console.log('🔄 Leaderboard frissítve showScore után');
+                            }, 100);
+                            
+                            // Statisztikák frissítése
+                            setTimeout(() => {
+                                if (window.updateStats) {
+                                    window.updateStats();
+                                }
+                            }, 200);
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ showScore hiba:', error);
                     }
-                }
-            }
-            
-            console.log('✅ Score mentve thumbnaillal:', savedScore);
-            
-            // Thumbnail megjelenítése a score display-ben (később)
-            setTimeout(() => {
-                const elements = {
-                    scoreDisplay: document.getElementById('scoreDisplay')
                 };
-                if (thumbnail && elements.scoreDisplay) {
-                    window.ThumbnailGenerator.displayThumbnail(thumbnail, 'scoreDisplay', 'current-score-thumbnail');
-                }
-            }, 3000);
-            
-            // LEADERBOARD AZONNALI FRISSÍTÉSE
-            setTimeout(() => {
-                window.refreshLeaderboard();
-                console.log('🔄 Leaderboard frissítve showScore után');
-            }, 100);
-            
-            // Statisztikák frissítése
-            setTimeout(() => {
-                if (window.updateStats) {
-                    window.updateStats();
-                }
-            }, 200);
-        }
-        
-    } catch (error) {
-        console.error('❌ showScore hiba:', error);
-    }
-};
-
                 
-                console.log('✅ showScore sikeresen felülírva thumbnail támogatással');
+                console.log('✅ showScore sikeresen felülírva Firebase támogatással');
                 
-            }, 1000); // 1 másodperc várakozás
+            }, 1000);
         });
 
         // EGYÉB SEGÉDFÜGGVÉNYEK
@@ -808,22 +1400,13 @@ window.showScore = async function(score, analysis, transformationName = '') {
                 localTab.addEventListener('click', function() {
                     console.log('Local tab clicked');
                     
-                    // Tab váltás
                     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Lista frissítés
-                    const list = document.getElementById('leaderboardList');
                     const status = document.getElementById('leaderboardStatus');
-                    
                     if (status) status.textContent = '📱 Helyi eredmények';
-                    if (list) {
-                        if (window.perfectCircleApp && window.perfectCircleApp.loadLocalLeaderboard) {
-                            window.perfectCircleApp.loadLocalLeaderboard();
-                        } else {
-                            window.refreshLeaderboard();
-                        }
-                    }
+                    
+                    window.refreshLeaderboard();
                 });
             }
             
@@ -831,22 +1414,11 @@ window.showScore = async function(score, analysis, transformationName = '') {
                 globalTab.addEventListener('click', function() {
                     console.log('Global tab clicked');
                     
-                    // Tab váltás
                     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Lista frissítés
-                    const list = document.getElementById('leaderboardList');
-                    const status = document.getElementById('leaderboardStatus');
-                    
-                    if (status) status.textContent = '🌍 Globális eredmények';
-                    if (list) {
-                        if (window.perfectCircleApp && window.perfectCircleApp.loadGlobalLeaderboard) {
-                            window.perfectCircleApp.loadGlobalLeaderboard();
-                        } else {
-                            list.innerHTML = '<div class="score-entry">🌍 Globális eredmények betöltése...</div>';
-                        }
-                    }
+                    // Globális leaderboard betöltése
+                    window.loadGlobalLeaderboard();
                 });
             }
             
@@ -984,7 +1556,7 @@ window.showScore = async function(score, analysis, transformationName = '') {
                 if (type === 'local') {
                     window.refreshLeaderboard();
                 } else {
-                    listContainer.innerHTML = '<div class="score-entry">🌍 Globális eredmények betöltése...</div>';
+                    window.loadGlobalLeaderboard();
                 }
             }
         };
@@ -1002,271 +1574,6 @@ window.showScore = async function(score, analysis, transformationName = '') {
             }
         };
     </script>
-    <!-- SCORE ANIMATOR -->
-<script>
-window.ScoreAnimator = {
-    
-    // Főbb animáció indítása
-    animateScore: function(score, breakdown, transformationName = '') {
-        console.log('🎉 Score animáció indítása:', score);
-        
-        try {
-            // Score kategória meghatározása
-            const category = this.getScoreCategory(score);
-            
-            // Nagy score felfedés
-            this.showBigScoreReveal(score, category);
-            
-            // Részletek animálása
-            setTimeout(() => {
-                this.animateScoreBreakdown(breakdown);
-            }, 1500);
-            
-            // Egyéb effektek
-            setTimeout(() => {
-                this.addScoreEffects(score, category);
-            }, 500);
-            
-            // Score display animálása
-            setTimeout(() => {
-                this.animateScoreDisplay(score, category);
-            }, 2000);
-            
-        } catch (error) {
-            console.error('❌ Score animáció hiba:', error);
-        }
-    },
-    
-    // Score kategória meghatározása
-    getScoreCategory: function(score) {
-        if (score >= 95) return { name: 'perfect', text: 'TÖKÉLETES!', emoji: '🏆' };
-        if (score >= 85) return { name: 'excellent', text: 'KIVÁLÓ!', emoji: '⭐' };
-        if (score >= 70) return { name: 'good', text: 'JÓ!', emoji: '👍' };
-        if (score >= 50) return { name: 'fair', text: 'ELFOGADHATÓ', emoji: '👌' };
-        return { name: 'poor', text: 'GYAKOROLJ MÉG!', emoji: '💪' };
-    },
-    
-    // Nagy score felfedés
-    showBigScoreReveal: function(score, category) {
-        // Overlay létrehozása
-        const overlay = document.createElement('div');
-        overlay.className = 'score-animation-overlay';
-        
-        // Score szöveg
-        const scoreText = document.createElement('div');
-        scoreText.className = `score-big-reveal score-${category.name}`;
-        scoreText.innerHTML = `
-            <div style="font-size: 0.3em; margin-bottom: 10px;">${category.emoji} ${category.text} ${category.emoji}</div>
-            <div>${Math.round(score)}</div>
-            <div style="font-size: 0.4em; margin-top: 10px;">PONT</div>
-        `;
-        
-        overlay.appendChild(scoreText);
-        document.body.appendChild(overlay);
-        
-        // Hang lejátszása (ha van AudioManager)
-        if (window.AudioManager && window.AudioManager.playScoreReveal) {
-            window.AudioManager.playScoreReveal(score);
-        }
-        
-        // Eltávolítás
-        setTimeout(() => {
-            if (overlay.parentNode) {
-                overlay.parentNode.removeChild(overlay);
-            }
-        }, 3000);
-    },
-    
-    // Score breakdown animálása
-    animateScoreBreakdown: function(breakdown) {
-        const scoreBreakdown = document.getElementById('scoreBreakdown');
-        if (!scoreBreakdown || !breakdown) return;
-        
-        // Elemek animálása egyenként
-        const items = scoreBreakdown.querySelectorAll('div');
-        items.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(-50px)';
-            item.style.transition = 'all 0.5s ease';
-            
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-            }, index * 200);
-        });
-    },
-    
-    // Score display animálása
-    animateScoreDisplay: function(score, category) {
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        if (!scoreDisplay) return;
-        
-        // CSS class hozzáadása
-        scoreDisplay.classList.add('score-revealed');
-        
-        // Badge hozzáadása
-        this.addScoreBadge(scoreDisplay, category);
-        
-        // Class eltávolítása
-        setTimeout(() => {
-            scoreDisplay.classList.remove('score-revealed');
-        }, 2000);
-    },
-    
-    // Score badge hozzáadása
-    addScoreBadge: function(container, category) {
-        // Meglévő badge eltávolítása
-        const existingBadge = container.querySelector('.score-grade-badge');
-        if (existingBadge) {
-            existingBadge.remove();
-        }
-        
-        // Új badge
-        const badge = document.createElement('div');
-        badge.className = 'score-grade-badge';
-        badge.textContent = category.emoji + ' ' + category.text;
-        
-        container.style.position = 'relative';
-        container.appendChild(badge);
-        
-        // Badge eltávolítása
-        setTimeout(() => {
-            if (badge.parentNode) {
-                badge.parentNode.removeChild(badge);
-            }
-        }, 3000);
-    },
-    
-    // Egyéb effektek
-    addScoreEffects: function(score, category) {
-        // Particle effekt
-        this.createParticles(score);
-        
-        // Confetti nagy score esetén
-        if (score >= 80) {
-            this.createConfetti();
-        }
-        
-        // Tűzijáték tökéletes score esetén
-        if (score >= 95) {
-            this.createFireworks();
-        }
-    },
-    
-    // Particle effekt
-    createParticles: function(score) {
-        const container = document.createElement('div');
-        container.className = 'score-particles';
-        
-        const particleCount = Math.min(score / 2, 50);
-        
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'score-particle';
-            
-            // Random pozíció és irány
-            const angle = (Math.PI * 2 * i) / particleCount;
-            const distance = 100 + Math.random() * 100;
-            const dx = Math.cos(angle) * distance;
-            const dy = Math.sin(angle) * distance;
-            
-            particle.style.setProperty('--dx', dx + 'px');
-            particle.style.setProperty('--dy', dy + 'px');
-            particle.style.backgroundColor = this.getRandomColor();
-            particle.style.animationDelay = Math.random() * 0.5 + 's';
-            
-            container.appendChild(particle);
-        }
-        
-        document.body.appendChild(container);
-        
-        // Eltávolítás
-        setTimeout(() => {
-            if (container.parentNode) {
-                container.parentNode.removeChild(container);
-            }
-        }, 2000);
-    },
-    
-    // Confetti létrehozása
-    createConfetti: function() {
-        const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
-        
-        for (let i = 0; i < 50; i++) {
-            setTimeout(() => {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDelay = Math.random() * 2 + 's';
-                
-                document.body.appendChild(confetti);
-                
-                setTimeout(() => {
-                    if (confetti.parentNode) {
-                        confetti.parentNode.removeChild(confetti);
-                    }
-                }, 3000);
-            }, i * 50);
-        }
-    },
-    
-    // Tűzijáték
-    createFireworks: function() {
-        const colors = ['#FFD700', '#FF1744', '#00E676', '#2196F3', '#FF9800'];
-        
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                const container = document.createElement('div');
-                container.className = 'score-fireworks';
-                
-                const centerX = Math.random() * window.innerWidth;
-                const centerY = Math.random() * window.innerHeight * 0.5 + window.innerHeight * 0.2;
-                
-                for (let j = 0; j < 20; j++) {
-                    const firework = document.createElement('div');
-                    firework.className = 'firework';
-                    firework.style.left = centerX + 'px';
-                    firework.style.top = centerY + 'px';
-                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    firework.style.animationDelay = Math.random() * 0.5 + 's';
-                    
-                    container.appendChild(firework);
-                }
-                
-                document.body.appendChild(container);
-                
-                setTimeout(() => {
-                    if (container.parentNode) {
-                        container.parentNode.removeChild(container);
-                    }
-                }, 1500);
-            }, i * 300);
-        }
-    },
-    
-    // Random szín
-    getRandomColor: function() {
-        const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    },
-    
-    // Vibráció (mobil)
-    vibrate: function(score) {
-        if (navigator.vibrate) {
-            if (score >= 95) {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-            } else if (score >= 80) {
-                navigator.vibrate([100, 50, 100]);
-            } else if (score >= 60) {
-                navigator.vibrate(100);
-            }
-        }
-    }
-};
-
-console.log('✅ ScoreAnimator betöltve');
-</script>
 
 </body>
 </html>
