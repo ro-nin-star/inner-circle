@@ -139,14 +139,11 @@ class PerfectCircleApp {
 
         try {
             await this.waitForI18nManager();
-
-            if (window.i18nManager && typeof window.i18nManager.init === 'function') {
-                await window.i18nManager.init();
-                this.currentLanguage = window.i18nManager.getCurrentLanguage();
+            if (this.i18nManager && typeof this.i18nManager.init === 'function') {
+                this.i18nManager.setApp(this); // Dependency injection
+                await this.i18nManager.init();
+                this.currentLanguage = this.i18nManager.getCurrentLanguage();
                 console.log(`✅ I18n inicializálva - Nyelv: ${this.currentLanguage}`);
-            } else {
-                console.warn('⚠️ I18n Manager nem elérhető - folytatás alapértelmezett szövegekkel');
-                this.currentLanguage = 'hu';
             }
 
             if (window.i18nManager) {
