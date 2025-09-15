@@ -894,6 +894,161 @@
         console.log('✅ ScoreAnimator betöltve');
     </script>
 
+    <!-- ✅ BEÁGYAZOTT VISITOR COUNTER -->
+    <script>
+        // ✅ BEÁGYAZOTT VISITOR COUNTER OSZTÁLY
+        if (!window.VisitorCounter) {
+            console.log('🔧 VisitorCounter beágyazása...');
+            
+            class VisitorCounter {
+                static STORAGE_KEY = 'perfectcircle_visits';
+                static SESSION_KEY = 'perfectcircle_session';
+                static currentCount = 0;
+                static globalCount = 0;
+                
+                static async init() {
+                    console.log('👁️ Beágyazott VisitorCounter inicializálása...');
+                    
+                    try {
+                        // Helyi látogatásszám frissítése
+                        this.currentCount = this.updateLocalVisitCount();
+                        
+                        // Firebase látogatás mentése (ha elérhető)
+                        if (window.firebaseAPI && window.firebaseAPI.isReady && window.firebaseAPI.isReady()) {
+                            await this.saveVisitToFirebase();
+                            await this.loadGlobalVisitCount();
+                        } else {
+                            console.log('📴 Firebase nem elérhető, csak helyi számláló');
+                        }
+                        
+                        console.log('✅ Beágyazott VisitorCounter inicializálva');
+                        return true;
+                        
+                    } catch (error) {
+                        console.error('❌ Beágyazott VisitorCounter hiba:', error);
+                        throw error;
+                    }
+                }
+                
+                static updateLocalVisitCount() {
+                    let localVisits = parseInt(localStorage.getItem(this.STORAGE_KEY) || '0');
+                    localVisits++;
+                    localStorage.setItem(this.STORAGE_KEY, localVisits.toString());
+                    
+                    // Időpontok mentése
+                    if (!localStorage.getItem('perfectcircle_first_visit')) {
+                        localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
+                    }
+                    localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
+                    
+                    // DOM frissítés
+                    const visitElement = document.getElementById('visitCount');
+                    if (visitElement) {
+                        visitElement.textContent = localVisits.toLocaleString('hu-HU');
+                    }
+                    
+                    console.log(`📊 Helyi látogatások: ${localVisits}`);
+                    return localVisits;
+                }
+                
+                static async saveVisitToFirebase() {
+                    if (!window.firebaseAPI || !window.firebaseAPI.saveVisit) {
+                        console.log('📴 Firebase saveVisit nem elérhető');
+                        return;
+                    }
+                    
+                    try {
+                        const visitData = {
+                            timestamp: new Date().toISOString(),
+                            date: new Date().toLocaleDateString('hu-HU'),
+                            time: new Date().toLocaleTimeString('hu-HU'),
+                            sessionId: this.getSessionId(),
+                            userAgent: navigator.userAgent.substring(0, 200),
+                            language: navigator.language,
+                            screen: `${screen.width}x${screen.height}`,
+                            viewport: `${window.innerWidth}x${window.innerHeight}`,
+                            referrer: (document.referrer || 'közvetlen').substring(0, 200),
+                            url: window.location.href,
+                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                            platform: navigator.platform
+                        };
+                        
+                        await window.firebaseAPI.saveVisit(visitData);
+                        console.log('✅ Látogatás mentve Firebase-be');
+                        
+                    } catch (error) {
+                        console.error('❌ Firebase látogatás mentési hiba:', error);
+                    }
+                }
+                
+                static async loadGlobalVisitCount() {
+                    if (!window.firebaseAPI || !window.firebaseAPI.getVisitCount) {
+                        console.log('📴 Firebase getVisitCount nem elérhető');
+                        return;
+                    }
+                    
+                    try {
+                        const globalCount = await window.firebaseAPI.getVisitCount();
+                        this.globalCount = globalCount;
+                        console.log(`🌍 Globális látogatások: ${globalCount}`);
+                        
+                    } catch (error) {
+                        console.error('❌ Globális látogatásszám lekérési hiba:', error);
+                    }
+                }
+                
+                static getSessionId() {
+                    let sessionId = sessionStorage.getItem(this.SESSION_KEY);
+                    if (!sessionId) {
+                        sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                        sessionStorage.setItem(this.SESSION_KEY, sessionId);
+                    }
+                    return sessionId;
+                }
+                
+                static getCurrentCount() {
+                    return this.currentCount;
+                }
+                
+                static getGlobalCount() {
+                    return this.globalCount;
+                }
+                
+                static showStats() {
+                    const localVisits = localStorage.getItem(this.STORAGE_KEY) || 0;
+                    const firstVisit = localStorage.getItem('perfectcircle_first_visit');
+                    const lastVisit = localStorage.getItem('perfectcircle_last_visit');
+                    
+                    let message = `👥 Látogatási statisztikák:\n\n`;
+                    message += `🔢 Helyi látogatások: ${localVisits}\n`;
+                    
+                    if (this.globalCount > 0) {
+                        message += `🌍 Globális látogatások: ${this.globalCount.toLocaleString('hu-HU')}\n`;
+                    }
+                    
+                    if (firstVisit) {
+                        const firstDate = new Date(firstVisit);
+                        message += `🆕 Első látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
+                    }
+                    
+                    if (lastVisit) {
+                        const lastDate = new Date(lastVisit);
+                        message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}\n`;
+                    }
+                    
+                    const sessionId = this.getSessionId();
+                    message += `🆔 Session ID: ${sessionId.substring(0, 8)}...`;
+                    
+                    alert(message);
+                }
+            }
+            
+            // Globális export
+            window.VisitorCounter = VisitorCounter;
+            console.log('✅ Beágyazott VisitorCounter létrehozva');
+        }
+    </script>
+
     <script src="js/i18n/languageDetector.js"></script>
     <script src="js/i18n/i18nManager.js"></script>
     
@@ -1391,6 +1546,90 @@
         });
     </script>
 
+    <!-- ✅ VISITOR COUNTER INICIALIZÁLÁS -->
+    <script>
+        // ✅ VISITOR COUNTER INICIALIZÁLÁS - JAVÍTOTT VERZIÓ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 VisitorCounter inicializálás indítása...');
+            
+            // Várjunk egy kicsit, hogy minden script betöltődjön
+            setTimeout(() => {
+                initVisitorCounterWithRetry();
+            }, 2000);
+        });
+        
+        function initVisitorCounterWithRetry() {
+            let attempts = 0;
+            const maxAttempts = 20; // Csökkentve
+            
+            const tryInit = () => {
+                attempts++;
+                console.log(`🔄 VisitorCounter kísérlet ${attempts}/${maxAttempts}...`);
+                
+                // Ellenőrizzük hogy létezik-e a VisitorCounter
+                if (window.VisitorCounter) {
+                    console.log('✅ VisitorCounter megtalálva!');
+                    console.log('- Típus:', typeof window.VisitorCounter);
+                    console.log('- Init metódus:', typeof window.VisitorCounter.init);
+                    
+                    if (typeof window.VisitorCounter.init === 'function') {
+                        console.log('🚀 VisitorCounter.init() hívása...');
+                        
+                        window.VisitorCounter.init()
+                            .then(() => {
+                                console.log('✅ VisitorCounter sikeresen inicializálva!');
+                            })
+                            .catch(error => {
+                                console.error('❌ VisitorCounter init hiba:', error);
+                                startFallbackCounter();
+                            });
+                        return;
+                    } else {
+                        console.error('❌ VisitorCounter.init nem függvény!');
+                    }
+                }
+                
+                // Ha még nem érhető el és van még kísérlet
+                if (attempts < maxAttempts) {
+                    setTimeout(tryInit, 200);
+                } else {
+                    console.warn('⚠️ VisitorCounter nem található, fallback indítása...');
+                    startFallbackCounter();
+                }
+            };
+            
+            tryInit();
+        }
+        
+        function startFallbackCounter() {
+            console.log('🔄 Fallback visitor counter indítása...');
+            
+            try {
+                let visits = parseInt(localStorage.getItem('perfectcircle_visits') || '0');
+                visits++;
+                localStorage.setItem('perfectcircle_visits', visits.toString());
+                localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
+                
+                if (!localStorage.getItem('perfectcircle_first_visit')) {
+                    localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
+                }
+                
+                const visitCountElement = document.getElementById('visitCount');
+                if (visitCountElement) {
+                    visitCountElement.textContent = visits;
+                    console.log('✅ Visitor count frissítve DOM-ban:', visits);
+                } else {
+                    console.error('❌ visitCount elem nem található!');
+                }
+                
+                console.log('👥 Fallback látogatásszámláló inicializálva:', visits);
+                
+            } catch (error) {
+                console.error('❌ Fallback counter hiba:', error);
+            }
+        }
+    </script>
+
     <!-- EGYÉB SEGÉDFÜGGVÉNYEK -->
     <script>
         window.updateStats = function() {
@@ -1415,37 +1654,36 @@
             }
         };
 
-window.showVisitStats = function() {
-    console.log('📊 Látogatási statisztikák lekérése...');
-    
-    if (window.VisitorCounter && typeof window.VisitorCounter.showStats === 'function') {
-        // Firebase-alapú statisztikák
-        window.VisitorCounter.showStats();
-    } else {
-        // Fallback helyi statisztikák
-        const visitCount = localStorage.getItem('perfectcircle_visits') || 0;
-        const firstVisit = localStorage.getItem('perfectcircle_first_visit');
-        const lastVisit = localStorage.getItem('perfectcircle_last_visit');
-        
-        let message = `👥 Helyi látogatási statisztikák:\n\n`;
-        message += `🔢 Helyi látogatások: ${visitCount}\n`;
-        
-        if (firstVisit) {
-            const firstDate = new Date(firstVisit);
-            message += `🆕 Első helyi látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
-        }
-        
-        if (lastVisit) {
-            const lastDate = new Date(lastVisit);
-            message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}\n\n`;
-        }
-        
-        message += `⚠️ Firebase látogatásszámláló nem elérhető.`;
-        
-        alert(message);
-    }
-};
-
+        window.showVisitStats = function() {
+            console.log('📊 Látogatási statisztikák lekérése...');
+            
+            if (window.VisitorCounter && typeof window.VisitorCounter.showStats === 'function') {
+                // Firebase-alapú statisztikák
+                window.VisitorCounter.showStats();
+            } else {
+                // Fallback helyi statisztikák
+                const visitCount = localStorage.getItem('perfectcircle_visits') || 0;
+                const firstVisit = localStorage.getItem('perfectcircle_first_visit');
+                const lastVisit = localStorage.getItem('perfectcircle_last_visit');
+                
+                let message = `👥 Helyi látogatási statisztikák:\n\n`;
+                message += `🔢 Helyi látogatások: ${visitCount}\n`;
+                
+                if (firstVisit) {
+                    const firstDate = new Date(firstVisit);
+                    message += `🆕 Első helyi látogatás: ${firstDate.toLocaleDateString('hu-HU')}\n`;
+                }
+                
+                if (lastVisit) {
+                    const lastDate = new Date(lastVisit);
+                    message += `🕐 Utolsó látogatás: ${lastDate.toLocaleDateString('hu-HU')} ${lastDate.toLocaleTimeString('hu-HU')}\n\n`;
+                }
+                
+                message += `⚠️ Firebase látogatásszámláló nem elérhető.`;
+                
+                alert(message);
+            }
+        };
 
         window.setDifficulty = function(level) {
             document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
@@ -1460,8 +1698,48 @@ window.showVisitStats = function() {
             
             console.log(`✅ Nehézség beállítva: ${level}`);
         };
+    </script>
 
-        // VISITOR COUNTER INICIALIZÁLÁS
+    <!-- ✅ VISITOR COUNTER DEBUG -->
+    <script>
+        // ✅ VISITOR COUNTER DEBUG
+        window.debugVisitorCounter = function() {
+            console.log('🔍 === VISITOR COUNTER DEBUG ===');
+            console.log('- window.VisitorCounter:', !!window.VisitorCounter);
+            console.log('- VisitorCounter típusa:', typeof window.VisitorCounter);
+            console.log('- VisitorCounter.init:', typeof window.VisitorCounter?.init);
+            
+            if (window.VisitorCounter) {
+                console.log('- VisitorCounter metódusok:', Object.getOwnPropertyNames(window.VisitorCounter));
+            }
+            
+            // Script fájlok ellenőrzése
+            const scripts = Array.from(document.querySelectorAll('script[src]'));
+            const visitorScript = scripts.find(s => s.src.includes('visitorCounter'));
+            console.log('- VisitorCounter script betöltve:', !!visitorScript);
+            
+            if (visitorScript) {
+                console.log('- Script src:', visitorScript.src);
+                console.log('- Script loaded:', !visitorScript.hasAttribute('async') || visitorScript.readyState === 'complete');
+            }
+            
+            // Helyi adatok
+            const localVisits = localStorage.getItem('perfectcircle_visits');
+            console.log('- Helyi látogatások:', localVisits);
+            
+            // DOM elem
+            const visitElement = document.getElementById('visitCount');
+            console.log('- Visit count elem:', !!visitElement);
+            console.log('- Jelenlegi érték:', visitElement?.textContent);
+            
+            console.log('=== DEBUG VÉGE ===');
+        };
+        
+        // Automatikus debug 3 másodperc után
+        setTimeout(() => {
+            console.log('🔍 Automatikus VisitorCounter debug...');
+            window.debugVisitorCounter();
+        }, 3000);
     </script>
 
     <!-- EMERGENCY BUTTON HANDLERS -->
@@ -1620,82 +1898,6 @@ window.showVisitStats = function() {
             }
         };
     </script>
-<script>
-    // ✅ FIREBASE VISITOR COUNTER INICIALIZÁLÁS
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔄 Firebase VisitorCounter inicializálás...');
-        
-        // Várakozás a Firebase API-ra és VisitorCounter-re
-        let attempts = 0;
-        const maxAttempts = 100;
-        
-        const initVisitorCounter = () => {
-            attempts++;
-            
-            if (window.VisitorCounter && typeof window.VisitorCounter.init === 'function') {
-                console.log('✅ VisitorCounter megtalálva, inicializálás...');
-                
-                // VisitorCounter inicializálása
-                window.VisitorCounter.init()
-                    .then(() => {
-                        console.log('✅ Firebase VisitorCounter sikeresen inicializálva');
-                        
-                        // Visitor count frissítése a DOM-ban
-                        setTimeout(() => {
-                            const visitCountElement = document.getElementById('visitCount');
-                            if (visitCountElement && window.VisitorCounter.getCurrentCount) {
-                                const count = window.VisitorCounter.getCurrentCount();
-                                if (count !== null && count !== undefined) {
-                                    visitCountElement.textContent = count;
-                                    console.log('✅ Visitor count frissítve DOM-ban:', count);
-                                }
-                            }
-                        }, 1000);
-                    })
-                    .catch(error => {
-                        console.error('❌ VisitorCounter inicializálási hiba:', error);
-                        
-                        // Fallback helyi számláló
-                        initLocalVisitorCounter();
-                    });
-                    
-            } else if (attempts >= maxAttempts) {
-                console.warn('⚠️ VisitorCounter nem található, fallback használata...');
-                
-                // Fallback helyi számláló
-                initLocalVisitorCounter();
-                
-            } else {
-                console.log(`🔄 VisitorCounter várakozás... (${attempts}/${maxAttempts})`);
-                setTimeout(initVisitorCounter, 100);
-            }
-        };
-        
-        // Helyi fallback számláló
-        const initLocalVisitorCounter = () => {
-            console.log('🔄 Helyi visitor counter fallback...');
-            
-            let visits = parseInt(localStorage.getItem('perfectcircle_visits') || '0');
-            visits++;
-            localStorage.setItem('perfectcircle_visits', visits.toString());
-            localStorage.setItem('perfectcircle_last_visit', new Date().toISOString());
-            
-            if (!localStorage.getItem('perfectcircle_first_visit')) {
-                localStorage.setItem('perfectcircle_first_visit', new Date().toISOString());
-            }
-            
-            const visitCountElement = document.getElementById('visitCount');
-            if (visitCountElement) {
-                visitCountElement.textContent = visits;
-            }
-            
-            console.log('👥 Helyi látogatásszámláló:', visits);
-        };
-        
-        // Inicializálás indítása
-        setTimeout(initVisitorCounter, 2000); // 2 másodperc várakozás a Firebase betöltésére
-    });
-</script>
 
 </body>
 </html>
