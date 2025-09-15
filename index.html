@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- ✅ GLOBÁLIS LEADERBOARD TÍPUS KÖVETÉSE - HTML SZINTEN -->
+    <script>
+        window.currentLeaderboardType = 'local';
+        console.log('🔧 HTML szintű leaderboard típus beállítva:', window.currentLeaderboardType);
+    </script>
+    
     <style>
         /* Thumbnail stílusok */
         .score-thumbnail, .leaderboard-thumbnail {
@@ -937,9 +944,12 @@
             });
         }
 
-        // Globális leaderboard betöltése
+        // ✅ JAVÍTOTT GLOBÁLIS LEADERBOARD BETÖLTÉSE
         window.loadGlobalLeaderboard = async function() {
             console.log('🌍 Globális leaderboard betöltése...');
+            
+            // ✅ AZONNAL BEÁLLÍTJUK A TÍPUST
+            window.currentLeaderboardType = 'global';
             
             const leaderboardList = document.getElementById('leaderboardList');
             const leaderboardStatus = document.getElementById('leaderboardStatus');
@@ -965,6 +975,12 @@
                 
                 console.log('✅ Globális eredmények betöltve:', globalScores.length);
                 
+                // ✅ ELLENŐRIZZÜK HOGY MÉG MINDIG GLOBÁLIS MÓDBAN VAGYUNK
+                if (window.currentLeaderboardType !== 'global') {
+                    console.log('⚠️ Már nem globális módban vagyunk, leállítás...');
+                    return;
+                }
+                
                 // Status frissítés
                 if (leaderboardStatus) {
                     leaderboardStatus.textContent = `🌍 ${globalScores.length} globális eredmény`;
@@ -974,7 +990,7 @@
                 if (globalScores.length === 0) {
                     leaderboardList.innerHTML = `
                         <div class="score-entry">
-                            <span>Még nincsenek globális eredmények</span>
+                            <span>🌍 Még nincsenek globális eredmények</span>
                         </div>
                     `;
                 } else {
@@ -1002,7 +1018,7 @@
                             </div>`;
                         
                         return `
-                            <div class="leaderboard-entry" data-score-id="${score.id}">
+                            <div class="leaderboard-entry global-entry" data-score-id="${score.id}">
                                 ${thumbnailHTML}
                                 <div class="entry-content">
                                     <div class="entry-main">
@@ -1023,6 +1039,12 @@
                 
             } catch (error) {
                 console.error('❌ Globális leaderboard betöltési hiba:', error);
+                
+                // ✅ ELLENŐRIZZÜK HOGY MÉG MINDIG GLOBÁLIS MÓDBAN VAGYUNK
+                if (window.currentLeaderboardType !== 'global') {
+                    console.log('⚠️ Már nem globális módban vagyunk, hiba megjelenítés kihagyva...');
+                    return;
+                }
                 
                 // Hiba megjelenítése
                 leaderboardList.innerHTML = `
@@ -1104,11 +1126,17 @@
         });
     </script>
 
-    <!-- EMERGENCY BUTTON HANDLERS -->
+    <!-- ✅ JAVÍTOTT LEADERBOARD FÜGGVÉNYEK -->
     <script>
-        // AUTOMATIKUS LEADERBOARD FRISSÍTŐ THUMBNAILOKKAL
+        // ✅ AUTOMATIKUS LEADERBOARD FRISSÍTŐ THUMBNAILOKKAL - VÉDETT VERZIÓ
         window.refreshLeaderboard = function() {
             try {
+                // ✅ ELLENŐRIZZÜK A LEADERBOARD TÍPUST
+                if (window.currentLeaderboardType === 'global') {
+                    console.log('🛡️ VÉDELEM: refreshLeaderboard blokkolva globális módban');
+                    return;
+                }
+                
                 const leaderboardList = document.getElementById('leaderboardList');
                 const leaderboardStatus = document.getElementById('leaderboardStatus');
                 
@@ -1143,7 +1171,7 @@
                             </div>`;
                         
                         return `
-                            <div class="leaderboard-entry" data-score-id="${score.id}">
+                            <div class="leaderboard-entry local-entry" data-score-id="${score.id}">
                                 ${thumbnailHTML}
                                 <div class="entry-content">
                                     <div class="entry-main">
@@ -1169,11 +1197,62 @@
             }
         };
 
-        // Automatikus frissítés indítása
-        setInterval(window.refreshLeaderboard, 2000);
-        console.log('✅ Automatikus leaderboard frissítő beállítva');
+        // ✅ FELTÉTELES AUTOMATIKUS FRISSÍTÉS
+        let refreshInterval = null;
+        
+        function startLocalRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                if (window.currentLeaderboardType === 'local') {
+                    window.refreshLeaderboard();
+                }
+            }, 3000); // 3 másodpercenként
+            console.log('✅ Helyi leaderboard automatikus frissítő elindítva');
+        }
+        
+        function stopLocalRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                console.log('🛑 Helyi leaderboard automatikus frissítő leállítva');
+            }
+        }
 
-        // SHOWSCORE FELÜLÍRÁSA FIREBASE MENTÉSSEL
+        // ✅ JAVÍTOTT SWITCHLEADERBOARD FÜGGVÉNY
+        window.switchLeaderboard = function(type) {
+            console.log('🔄 HTML switchLeaderboard hívás:', type);
+            
+            // ✅ AZONNAL BEÁLLÍTJUK A TÍPUST
+            window.currentLeaderboardType = type;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const targetTab = document.getElementById(type + 'Tab');
+            if (targetTab) targetTab.classList.add('active');
+            
+            const listContainer = document.getElementById('leaderboardList');
+            const statusContainer = document.getElementById('leaderboardStatus');
+            
+            if (statusContainer) {
+                statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
+            }
+            
+            if (listContainer) {
+                if (type === 'local') {
+                    startLocalRefresh(); // Helyi frissítő bekapcsolása
+                    window.refreshLeaderboard();
+                } else {
+                    stopLocalRefresh(); // Helyi frissítő kikapcsolása
+                    window.loadGlobalLeaderboard();
+                }
+            }
+        };
+
+        // Indítás
+        setTimeout(startLocalRefresh, 2000);
+    </script>
+
+    <!-- SHOWSCORE FELÜLÍRÁSA FIREBASE MENTÉSSEL -->
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 console.log('🔄 showScore felülírása Firebase támogatással...');
@@ -1283,10 +1362,14 @@
                                 }
                             }, 3000);
                             
-                            // LEADERBOARD FRISSÍTÉSE
+                            // ✅ LEADERBOARD FRISSÍTÉSE - CSAK HELYI MÓDBAN
                             setTimeout(() => {
-                                window.refreshLeaderboard();
-                                console.log('🔄 Leaderboard frissítve showScore után');
+                                if (window.currentLeaderboardType === 'local') {
+                                    window.refreshLeaderboard();
+                                    console.log('🔄 Helyi leaderboard frissítve showScore után');
+                                } else {
+                                    console.log('🌍 Globális módban vagyunk, helyi leaderboard frissítés kihagyva');
+                                }
                             }, 100);
                             
                             // Statisztikák frissítése
@@ -1306,8 +1389,10 @@
                 
             }, 1000);
         });
+    </script>
 
-        // EGYÉB SEGÉDFÜGGVÉNYEK
+    <!-- EGYÉB SEGÉDFÜGGVÉNYEK -->
+    <script>
         window.updateStats = function() {
             console.log('📊 updateStats called');
             
@@ -1388,6 +1473,7 @@
         window.initVisitorCounter();
     </script>
 
+    <!-- EMERGENCY BUTTON HANDLERS -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔧 Emergency button handlers loading...');
@@ -1399,26 +1485,14 @@
             if (localTab) {
                 localTab.addEventListener('click', function() {
                     console.log('Local tab clicked');
-                    
-                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const status = document.getElementById('leaderboardStatus');
-                    if (status) status.textContent = '📱 Helyi eredmények';
-                    
-                    window.refreshLeaderboard();
+                    window.switchLeaderboard('local');
                 });
             }
             
             if (globalTab) {
                 globalTab.addEventListener('click', function() {
                     console.log('Global tab clicked');
-                    
-                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Globális leaderboard betöltése
-                    window.loadGlobalLeaderboard();
+                    window.switchLeaderboard('global');
                 });
             }
             
@@ -1489,7 +1563,9 @@
                             }
                             
                             // Leaderboard frissítése
-                            window.refreshLeaderboard();
+                            if (window.currentLeaderboardType === 'local') {
+                                window.refreshLeaderboard();
+                            }
                         } else {
                             alert('ScoreManager nem elérhető! ❌');
                         }
@@ -1538,36 +1614,15 @@
             }
         };
 
-        window.switchLeaderboard = function(type) {
-            console.log('Global switchLeaderboard called:', type);
-            
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            const targetTab = document.getElementById(type + 'Tab');
-            if (targetTab) targetTab.classList.add('active');
-            
-            const listContainer = document.getElementById('leaderboardList');
-            const statusContainer = document.getElementById('leaderboardStatus');
-            
-            if (statusContainer) {
-                statusContainer.textContent = type === 'local' ? '📱 Helyi eredmények' : '🌍 Globális eredmények';
-            }
-            
-            if (listContainer) {
-                if (type === 'local') {
-                    window.refreshLeaderboard();
-                } else {
-                    window.loadGlobalLeaderboard();
-                }
-            }
-        };
-
         window.clearAllScores = function() {
             console.log('Global clearAllScores called');
             if (confirm('Biztosan törölni szeretnéd az összes helyi eredményt?')) {
                 if (window.ScoreManager && window.ScoreManager.clearScores) {
                     window.ScoreManager.clearScores();
                     alert('Helyi eredmények törölve!');
-                    window.refreshLeaderboard();
+                    if (window.currentLeaderboardType === 'local') {
+                        window.refreshLeaderboard();
+                    }
                 } else {
                     alert('ScoreManager nem elérhető!');
                 }
