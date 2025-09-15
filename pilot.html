@@ -271,11 +271,30 @@
             margin: 20px 0;
             font-size: 0.9em;
         }
+
+        .offline-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .offline-notice.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <!-- Firebase Status -->
     <div class="firebase-status connecting" id="firebaseStatus" onclick="showFirebaseInfo()">🟡 Connecting...</div>
+
+    <!-- Offline Notice -->
+    <div class="offline-notice" id="offlineNotice">
+        <strong>⚠️ Offline mód:</strong> A Firebase kapcsolat nem elérhető.
+    </div>
 
     <div class="container">
         <h1>🎯 Perfect Circle - Firebase Adatok</h1>
@@ -344,9 +363,6 @@
     <script src="js/firebase/firebase-config.js" type="module"></script>
 
     <script type="module">
-        // Várunk a firebase-config.js betöltésére
-        console.log('🔄 Várakozás a Firebase config betöltésére...');
-
         // Globális változók
         let allScores = [];
         let filteredScores = [];
@@ -354,12 +370,20 @@
         // Várakozás a Firebase API elérhetőségére
         function waitForFirebaseAPI() {
             return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 100; // 10 másodperc
+                
                 const checkAPI = () => {
-                    if (window.firebaseAPI && window.firebaseAPI.isReady) {
+                    attempts++;
+                    
+                    if (window.firebaseAPI && typeof window.firebaseAPI.isReady === 'function') {
                         console.log('✅ Firebase API elérhető!');
                         resolve(true);
+                    } else if (attempts >= maxAttempts) {
+                        console.error('❌ Firebase API timeout!');
+                        resolve(false);
                     } else {
-                        console.log('⏳ Várakozás Firebase API-ra...');
+                        console.log(`⏳ Várakozás Firebase API-ra... (${attempts}/${maxAttempts})`);
                         setTimeout(checkAPI, 100);
                     }
                 };
@@ -367,63 +391,75 @@
             });
         }
 
-        // Státusz frissítő függvény
-        function updateFirebaseStatus(status, message) {
+        // Helyi státusz frissítő függvény (nem zavarja a config-ot)
+        function updateLocalFirebaseStatus(status, message) {
             const statusEl = document.getElementById('firebaseStatus');
             const statusTextEl = document.getElementById('firebaseStatusText');
             const infoEl = document.getElementById('firebaseInfo');
             
-            statusEl.className = `firebase-status ${status}`;
-            
-            switch(status) {
-                case 'online':
-                    statusEl.innerHTML = '🟢 Online';
-                    if (statusTextEl) statusTextEl.textContent = 'Online';
-                    if (infoEl) infoEl.innerHTML = `<strong>✅ Firebase működik!</strong> ${message || ''}`;
-                    break;
-                case 'offline':
-                    statusEl.innerHTML = '🔴 Offline';
-                    if (statusTextEl) statusTextEl.textContent = 'Offline';
-                    if (infoEl) infoEl.innerHTML = `<strong>❌ Firebase offline!</strong> ${message || ''}`;
-                    break;
-                case 'connecting':
-                    statusEl.innerHTML = '🟡 Connecting...';
-                    if (statusTextEl) statusTextEl.textContent = 'Connecting';
-                    if (infoEl) infoEl.innerHTML = `<strong>🔄 Firebase kapcsolódás...</strong> ${message || ''}`;
-                    break;
-                case 'error':
-                    statusEl.innerHTML = '❌ Error';
-                    if (statusTextEl) statusTextEl.textContent = 'Error';
-                    if (infoEl) infoEl.innerHTML = `<strong>🚫 Firebase hiba!</strong> ${message || ''}`;
-                    break;
+            if (statusEl) {
+                statusEl.className = `firebase-status ${status}`;
+                
+                switch(status) {
+                    case 'online':
+                        statusEl.innerHTML = '🟢 Online';
+                        if (statusTextEl) statusTextEl.textContent = 'Online';
+                        if (infoEl) infoEl.innerHTML = `<strong>✅ Firebase működik!</strong> ${message || ''}`;
+                        break;
+                    case 'offline':
+                        statusEl.innerHTML = '🔴 Offline';
+                        if (statusTextEl) statusTextEl.textContent = 'Offline';
+                        if (infoEl) infoEl.innerHTML = `<strong>❌ Firebase offline!</strong> ${message || ''}`;
+                        break;
+                    case 'connecting':
+                        statusEl.innerHTML = '🟡 Connecting...';
+                        if (statusTextEl) statusTextEl.textContent = 'Connecting';
+                        if (infoEl) infoEl.innerHTML = `<strong>🔄 Firebase kapcsolódás...</strong> ${message || ''}`;
+                        break;
+                    case 'error':
+                        statusEl.innerHTML = '❌ Error';
+                        if (statusTextEl) statusTextEl.textContent = 'Error';
+                        if (infoEl) infoEl.innerHTML = `<strong>🚫 Firebase hiba!</strong> ${message || ''}`;
+                        break;
+                }
             }
             
-            console.log(`🔥 Firebase: ${status} - ${message || ''}`);
+            console.log(`🔥 Firebase Viewer: ${status} - ${message || ''}`);
         }
 
         // Firebase inicializálás
         async function initializeFirebase() {
-            updateFirebaseStatus('connecting', 'Várakozás Firebase API-ra...');
+            updateLocalFirebaseStatus('connecting', 'Várakozás Firebase API-ra...');
             
             try {
                 // Várunk a Firebase API betöltésére
-                await waitForFirebaseAPI();
+                const apiLoaded = await waitForFirebaseAPI();
                 
-                // Ellenőrizzük hogy a Firebase készen áll-e
+                if (!apiLoaded) {
+                    throw new Error('Firebase API betöltési timeout');
+                }
+                
+                // Várunk amíg a Firebase készen áll
+                let attempts = 0;
+                while (!window.firebaseAPI.isReady() && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
                 if (window.firebaseAPI.isReady()) {
-                    updateFirebaseStatus('online', 'Firebase config betöltve');
+                    updateLocalFirebaseStatus('online', 'Firebase config betöltve');
                     console.log('✅ Firebase sikeresen működik a config fájlból!');
                     
                     // Automatikus adatbetöltés
                     await loadScores();
                     return true;
                 } else {
-                    throw new Error('Firebase API nem elérhető');
+                    throw new Error('Firebase inicializálási timeout');
                 }
                 
             } catch (error) {
                 console.error('❌ Firebase hiba:', error);
-                updateFirebaseStatus('error', error.message);
+                updateLocalFirebaseStatus('error', error.message);
                 return false;
             }
         }
@@ -434,7 +470,7 @@
             hideError();
             
             try {
-                updateFirebaseStatus('connecting', 'Kapcsolat tesztelése...');
+                updateLocalFirebaseStatus('connecting', 'Kapcsolat tesztelése...');
                 
                 if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
                     throw new Error('Firebase API nem elérhető');
@@ -443,7 +479,7 @@
                 // Teszt lekérdezés
                 const scores = await window.firebaseAPI.getTopScores(5);
                 
-                updateFirebaseStatus('online', `Teszt sikeres! ${scores.length} dokumentum`);
+                updateLocalFirebaseStatus('online', `Teszt sikeres! ${scores.length} dokumentum`);
                 
                 // Teszt eredmények megjelenítése
                 const container = document.getElementById('scoresContainer');
@@ -468,7 +504,7 @@ ${JSON.stringify(scores[0], null, 2)}
                 
             } catch (error) {
                 console.error('❌ Firebase teszt hiba:', error);
-                updateFirebaseStatus('error', error.message);
+                updateLocalFirebaseStatus('error', error.message);
                 showError(`Firebase teszt hiba: ${error.message}`);
                 showLoading(false);
             }
@@ -536,15 +572,32 @@ ${JSON.stringify(scores[0], null, 2)}
             }
         }
 
-        // Legfrissebb eredmények - mivel a config fájlban nincs ilyen függvény, használjuk a getTopScores-t
+        // Legfrissebb eredmények
         async function loadRecentScores() {
+            if (!window.firebaseAPI || !window.firebaseAPI.isReady()) {
+                showError('Firebase nem elérhető.');
+                return;
+            }
+            
             showLoading(true);
             hideError();
             
             try {
-                // Mivel nincs külön recent függvény, használjuk a top scores-t
-                await loadTopScores(50);
-                console.log(`✅ Legfrissebb eredmények betöltve (top 50)`);
+                // Használjuk a getTopScores-t mivel nincs külön recent függvény a config-ban
+                const scores = await window.firebaseAPI.getTopScores(50);
+                
+                filteredScores = scores.map(score => ({
+                    ...score,
+                    date: score.timestamp ? new Date(score.timestamp.seconds * 1000) : new Date()
+                }));
+                
+                // Dátum szerint rendezés (legfrissebb előre)
+                filteredScores.sort((a, b) => b.date - a.date);
+                
+                displayScores(filteredScores);
+                showLoading(false);
+                
+                console.log(`✅ ${filteredScores.length} legfrissebb eredmény betöltve`);
                 
             } catch (error) {
                 console.error('❌ Legfrissebb eredmények betöltési hiba:', error);
@@ -662,7 +715,7 @@ ${JSON.stringify(scores[0], null, 2)}
             console.log(`📥 ${filteredScores.length} eredmény exportálva`);
         }
 
-        // Firebase info megjelenítő
+        // Firebase info megjelenítő - felülírjuk a config verzióját
         window.showFirebaseInfo = () => {
             const status = window.firebaseAPI && window.firebaseAPI.isReady() ? 'Online ✅' : 'Offline ❌';
             const info = `
@@ -718,6 +771,7 @@ ${!window.firebaseAPI || !window.firebaseAPI.isReady() ? `
 
         // Automatikus inicializálás
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOM betöltve, Firebase inicializálás...');
             initializeFirebase();
         });
 
