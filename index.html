@@ -333,14 +333,24 @@ window.GameModeManager = {
         }
     },
     
-    initDrawingMode: function() {
-        console.log('🎨 Rajz mód inicializálása...');
-        document.body.classList.add('drawing-mode-active');
-        this.createDrawingModeUI();
-        this.startNewChallenge();
-        this.setupDrawingDetection();
-        this.blockOriginalShowScore();
-    },
+initDrawingMode: function() {
+    console.log('🎨 Rajz mód inicializálása...');
+    
+    // ✅ CANVAS TELJES TISZTÍTÁSA
+    this.clearAllCanvas();
+    
+    // ✅ GAMEENGINE LEÁLLÍTÁSA
+    if (window.gameEngine && window.gameEngine.reset) {
+        window.gameEngine.reset();
+    }
+    
+    document.body.classList.add('drawing-mode-active');
+    this.createDrawingModeUI();
+    this.startNewChallenge();
+    this.setupDrawingDetection();
+    this.blockOriginalShowScore();
+},
+
     
     initCircleMode: function() {
         console.log('🎯 Verseny mód inicializálása...');
@@ -348,27 +358,84 @@ window.GameModeManager = {
         this.removeDrawingModeUI();
         this.restoreOriginalShowScore();
     },
-    
-    blockOriginalShowScore: function() {
-        if (!this.originalShowScore) {
-            this.originalShowScore = window.showScore;
-        }
+    clearAllCanvas: function() {
+    // Fő canvas
+    const canvas = document.getElementById('gameCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        window.showScore = function(score, analysis, transformationName = '') {
-            console.log('🚫 showScore blokkolva rajz módban:', score);
-            return;
-        };
+        // ✅ CANVAS RESET
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+    }
+    
+    // Ideális kör canvas
+    const idealCanvas = document.getElementById('idealCircleCanvas');
+    if (idealCanvas) {
+        const idealCtx = idealCanvas.getContext('2d');
+        idealCtx.clearRect(0, 0, idealCanvas.width, idealCanvas.height);
+    }
+    
+    // Transzformáció overlay elrejtése
+    const transformationOverlay = document.getElementById('transformationOverlay');
+    if (transformationOverlay) {
+        transformationOverlay.style.display = 'none';
+    }
+    
+    console.log('🧹 Minden canvas megtisztítva');
+},
+restoreOriginalShowScore: function() {
+    if (this.originalShowScore) {
+        window.showScore = this.originalShowScore;
+        console.log('🔄 Eredeti showScore visszaállítva');
+    }
+    
+    // ✅ CANVAS ESEMÉNYEK VISSZAÁLLÍTÁSA
+    const canvas = document.getElementById('gameCanvas');
+    if (canvas) {
+        canvas.style.pointerEvents = 'auto';
+    }
+    
+    // ✅ GAMEENGINE ÚJRAINDÍTÁSA
+    if (window.gameEngine && window.gameEngine.init) {
+        setTimeout(() => {
+            window.gameEngine.init();
+        }, 100);
+    }
+},
+
+blockOriginalShowScore: function() {
+    if (!this.originalShowScore) {
+        this.originalShowScore = window.showScore;
+    }
+    
+    // ✅ ÚJ: gameEngine rajzolás blokkolása is
+    if (!this.originalGameEngineEvents && window.gameEngine) {
+        this.originalGameEngineEvents = true;
         
-        console.log('🚫 Eredeti showScore blokkolva rajz módban');
-    },
-    
-    restoreOriginalShowScore: function() {
-        if (this.originalShowScore) {
-            window.showScore = this.originalShowScore;
-            console.log('🔄 Eredeti showScore visszaállítva');
+        // Blokkolja a gameEngine canvas eseményeit
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            // Eltávolítja az összes gameEngine eseménykezelőt
+            canvas.style.pointerEvents = 'none';
+            
+            // Majd visszaadja csak a rajz mód eseményeit
+            setTimeout(() => {
+                canvas.style.pointerEvents = 'auto';
+            }, 100);
         }
-    },
+    }
     
+    window.showScore = function(score, analysis, transformationName = '') {
+        console.log('🚫 showScore blokkolva rajz módban:', score);
+        return;
+    };
+    
+    console.log('🚫 Eredeti showScore és gameEngine blokkolva rajz módban');
+},
+
     createDrawingModeUI: function() {
         if (document.getElementById('shapeChallenge')) return;
         

@@ -1762,3 +1762,11 @@ button:hover {
     color: #666;
     font-size: 0.9em;
 }
+/* Rajz módban elrejti a verseny mód elemeit */
+.drawing-mode-active .transformation-overlay {
+    display: none !important;
+}
+
+.drawing-mode-active .canvas-overlay {
+    display: none !important;
+}
