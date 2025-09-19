@@ -1,188 +1,110 @@
-/* Mobil betűtípus javítások */
+/* Touch optimalizálás rajz módhoz */
+#gameCanvas {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.canvas-container {
+    touch-action: none;
+    overflow: hidden;
+}
+
+/* Rajz mód aktív állapotban */
+.drawing-mode-active #gameCanvas {
+    cursor: crosshair;
+}
+
+/* Mobil optimalizálás */
 @media (max-width: 768px) {
-    /* Általános betűtípus beállítások */
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        font-size: 16px; /* Alapértelmezett 16px mobilon */
-        line-height: 1.4;
+    #gameCanvas {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 400px;
+        aspect-ratio: 1;
     }
     
-    /* Címek */
-    h1 {
-        font-size: 24px !important;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-    
-    h2 {
-        font-size: 20px !important;
-        font-weight: 600;
-    }
-    
-    h3 {
-        font-size: 18px !important;
-        font-weight: 600;
-    }
-    
-    h4 {
-        font-size: 16px !important;
-        font-weight: 600;
-    }
-    
-    /* Szövegek */
-    .subtitle {
-        font-size: 14px !important;
-        line-height: 1.3;
-    }
-    
-    .instructions {
-        font-size: 14px !important;
-        line-height: 1.4;
-    }
-    
-    /* Gombok */
-    button {
-        font-family: inherit;
-        font-size: 16px !important;
-        font-weight: 500;
-        padding: 12px 16px;
-        line-height: 1.2;
-    }
-    
-    .difficulty-btn {
-        font-size: 14px !important;
-        padding: 10px 12px;
-    }
-    
-    /* Input mezők */
-    input[type="text"] {
-        font-family: inherit;
-        font-size: 16px !important; /* iOS zoom megakadályozása */
-        line-height: 1.2;
-    }
-    
-    /* Statisztikák */
-    .stat-label {
-        font-size: 12px !important;
-        font-weight: 500;
-    }
-    
-    .stat-value {
-        font-size: 18px !important;
-        font-weight: 700;
-    }
-    
-    /* Leaderboard */
-    .leaderboard-entry {
-        font-size: 14px !important;
-    }
-    
-    .leaderboard-entry .name {
-        font-weight: 500;
-    }
-    
-    .leaderboard-entry .score {
-        font-weight: 700;
-        font-size: 15px !important;
-    }
-    
-    /* Score megjelenítés */
-    .score-display {
-        font-size: 14px !important;
-    }
-    
-    .score-number {
-        font-size: 28px !important;
-        font-weight: 700;
-    }
-    
-    /* Részletes instrukciók */
-    .detailed-instructions {
-        font-size: 14px !important;
-        line-height: 1.4;
-    }
-    
-    .detailed-instructions ul li {
-        font-size: 13px !important;
-        line-height: 1.3;
-        margin-bottom: 4px;
-    }
-    
-    /* Firebase status */
-    .firebase-status {
-        font-size: 12px !important;
-        font-weight: 500;
-    }
-    
-    /* Nyelv váltó */
-    .language-selector {
-        font-size: 14px !important;
-    }
-    
-    /* Látogatásszámláló */
-    .visitor-counter {
-        font-size: 12px !important;
-    }
-    
-    /* Dev info */
-    .dev-info {
-        font-size: 11px !important;
-    }
-    
-    /* Offline notice */
-    .offline-notice {
-        font-size: 13px !important;
-        line-height: 1.3;
+    .canvas-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
     }
 }
 
-/* Tablet méret (768px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        font-size: 15px;
-    }
-    
-    h1 {
-        font-size: 28px !important;
-    }
-    
-    button {
-        font-size: 15px !important;
-    }
+/* Rajz mód UI stílusok */
+.shape-challenge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
 
-/* Desktop betűtípus megtartása */
-@media (min-width: 1025px) {
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        font-size: 14px;
-    }
+.current-shape {
+    font-size: 3em;
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Speciális mobilos javítások */
-@media (max-width: 480px) {
-    /* Extra kis képernyőkre */
-    .game-container {
-        padding: 10px;
+.challenge-timer {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+}
+
+.challenge-progress {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.drawing-instructions {
+    margin-top: 15px;
+    opacity: 0.9;
+}
+
+/* Mobil touch debug */
+@media (max-width: 768px) {
+    .canvas-container {
+        position: relative;
     }
     
-    .player-difficulty-row {
-        flex-direction: column;
-        gap: 15px;
+    .canvas-container::before {
+        content: "📱 Touch rajzolás aktív";
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: #666;
+        background: rgba(255,255,255,0.9);
+        padding: 2px 8px;
+        border-radius: 4px;
+        z-index: 10;
     }
     
-    .controls {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .controls button {
-        flex: 1;
-        min-width: 120px;
-        font-size: 14px !important;
-        padding: 10px 8px;
+    .drawing-mode-active .canvas-container::before {
+        content: "🎨 Rajzolj az ujjaddal!";
+        color: #4CAF50;
+        font-weight: bold;
     }
 }
