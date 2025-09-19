@@ -2623,20 +2623,7 @@ window.saveScoreToFirebase = async function(scoreData) {
                     window.switchLeaderboard('global');
                 });
             }
-            
-            // Start gomb
-            const startBtn = document.getElementById('startBtn');
-            if (startBtn) {
-                startBtn.addEventListener('click', function() {
-                    console.log('Start button clicked');
-                    if (window.gameEngine && typeof window.gameEngine.startDrawing === 'function') {
-                        window.gameEngine.startDrawing();
-                    } else {
-                        console.log('GameEngine not ready');
-                    }
-                });
-            }
-            
+
             // Clear gomb
             const clearBtn = document.getElementById('clearBtn');
             if (clearBtn) {
