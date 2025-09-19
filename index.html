@@ -333,24 +333,14 @@ window.GameModeManager = {
         }
     },
     
-initDrawingMode: function() {
-    console.log('🎨 Rajz mód inicializálása...');
-    
-    // ✅ CANVAS TELJES TISZTÍTÁSA
-    this.clearAllCanvas();
-    
-    // ✅ GAMEENGINE LEÁLLÍTÁSA
-    if (window.gameEngine && window.gameEngine.reset) {
-        window.gameEngine.reset();
-    }
-    
-    document.body.classList.add('drawing-mode-active');
-    this.createDrawingModeUI();
-    this.startNewChallenge();
-    this.setupDrawingDetection();
-    this.blockOriginalShowScore();
-},
-
+    initDrawingMode: function() {
+        console.log('🎨 Rajz mód inicializálása...');
+        document.body.classList.add('drawing-mode-active');
+        this.createDrawingModeUI();
+        this.startNewChallenge();
+        this.setupDrawingDetection();
+        this.blockOriginalShowScore();
+    },
     
     initCircleMode: function() {
         console.log('🎯 Verseny mód inicializálása...');
@@ -358,84 +348,27 @@ initDrawingMode: function() {
         this.removeDrawingModeUI();
         this.restoreOriginalShowScore();
     },
-    clearAllCanvas: function() {
-    // Fő canvas
-    const canvas = document.getElementById('gameCanvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // ✅ CANVAS RESET
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-    }
     
-    // Ideális kör canvas
-    const idealCanvas = document.getElementById('idealCircleCanvas');
-    if (idealCanvas) {
-        const idealCtx = idealCanvas.getContext('2d');
-        idealCtx.clearRect(0, 0, idealCanvas.width, idealCanvas.height);
-    }
-    
-    // Transzformáció overlay elrejtése
-    const transformationOverlay = document.getElementById('transformationOverlay');
-    if (transformationOverlay) {
-        transformationOverlay.style.display = 'none';
-    }
-    
-    console.log('🧹 Minden canvas megtisztítva');
-},
-restoreOriginalShowScore: function() {
-    if (this.originalShowScore) {
-        window.showScore = this.originalShowScore;
-        console.log('🔄 Eredeti showScore visszaállítva');
-    }
-    
-    // ✅ CANVAS ESEMÉNYEK VISSZAÁLLÍTÁSA
-    const canvas = document.getElementById('gameCanvas');
-    if (canvas) {
-        canvas.style.pointerEvents = 'auto';
-    }
-    
-    // ✅ GAMEENGINE ÚJRAINDÍTÁSA
-    if (window.gameEngine && window.gameEngine.init) {
-        setTimeout(() => {
-            window.gameEngine.init();
-        }, 100);
-    }
-},
-
-blockOriginalShowScore: function() {
-    if (!this.originalShowScore) {
-        this.originalShowScore = window.showScore;
-    }
-    
-    // ✅ ÚJ: gameEngine rajzolás blokkolása is
-    if (!this.originalGameEngineEvents && window.gameEngine) {
-        this.originalGameEngineEvents = true;
-        
-        // Blokkolja a gameEngine canvas eseményeit
-        const canvas = document.getElementById('gameCanvas');
-        if (canvas) {
-            // Eltávolítja az összes gameEngine eseménykezelőt
-            canvas.style.pointerEvents = 'none';
-            
-            // Majd visszaadja csak a rajz mód eseményeit
-            setTimeout(() => {
-                canvas.style.pointerEvents = 'auto';
-            }, 100);
+    blockOriginalShowScore: function() {
+        if (!this.originalShowScore) {
+            this.originalShowScore = window.showScore;
         }
-    }
+        
+        window.showScore = function(score, analysis, transformationName = '') {
+            console.log('🚫 showScore blokkolva rajz módban:', score);
+            return;
+        };
+        
+        console.log('🚫 Eredeti showScore blokkolva rajz módban');
+    },
     
-    window.showScore = function(score, analysis, transformationName = '') {
-        console.log('🚫 showScore blokkolva rajz módban:', score);
-        return;
-    };
+    restoreOriginalShowScore: function() {
+        if (this.originalShowScore) {
+            window.showScore = this.originalShowScore;
+            console.log('🔄 Eredeti showScore visszaállítva');
+        }
+    },
     
-    console.log('🚫 Eredeti showScore és gameEngine blokkolva rajz módban');
-},
-
     createDrawingModeUI: function() {
         if (document.getElementById('shapeChallenge')) return;
         
@@ -564,12 +497,14 @@ setupDrawingDetection: function() {
     
     let isDrawing = false;
     let drawnPoints = [];
+    let lastDrawnPoint = null;
     
-    // ✅ EGÉR ESEMÉNYEK - PONTOK
+    // ✅ JAVÍTOTT EGÉR ESEMÉNYEK
     canvas.addEventListener('mousedown', (e) => {
         if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
             isDrawing = true;
             drawnPoints = [];
+            lastDrawnPoint = null;
             
             const rect = canvas.getBoundingClientRect();
             const point = {
@@ -578,15 +513,8 @@ setupDrawingDetection: function() {
             };
             
             drawnPoints.push(point);
-            
-            // PONT RAJZOLÁSA
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            console.log('🎨 Egér pontrajzolás kezdése');
+            lastDrawnPoint = point;
+            console.log('🎨 Egér rajzolás kezdése');
         }
     });
     
@@ -600,19 +528,28 @@ setupDrawingDetection: function() {
             
             drawnPoints.push(point);
             
-            // ✅ PONTOK RAJZOLÁSA (NEM VONALAK!)
+            // Rajzolás a canvas-ra
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-            ctx.fill();
+            if (lastDrawnPoint) {
+                ctx.beginPath();
+                ctx.moveTo(lastDrawnPoint.x, lastDrawnPoint.y);
+                ctx.lineTo(point.x, point.y);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+            
+            lastDrawnPoint = point;
         }
     });
     
     canvas.addEventListener('mouseup', () => {
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            console.log('🏁 Egér pontrajzolás befejezve, pontok:', drawnPoints.length);
+            lastDrawnPoint = null;
+            console.log('🏁 Egér rajzolás befejezve, pontok:', drawnPoints.length);
             
             setTimeout(() => {
                 this.evaluateDrawing(drawnPoints);
@@ -620,12 +557,13 @@ setupDrawingDetection: function() {
         }
     });
     
-    // ✅ TOUCH ESEMÉNYEK - PONTOK
+    // ✅ JAVÍTOTT TOUCH ESEMÉNYEK
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
             isDrawing = true;
             drawnPoints = [];
+            lastDrawnPoint = null;
             
             const rect = canvas.getBoundingClientRect();
             const touch = e.touches[0];
@@ -635,15 +573,8 @@ setupDrawingDetection: function() {
             };
             
             drawnPoints.push(point);
-            
-            // PONT RAJZOLÁSA
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            console.log('🎨 Touch pontrajzolás kezdése:', point);
+            lastDrawnPoint = point;
+            console.log('🎨 Touch rajzolás kezdése:', point);
         }
     }, { passive: false });
     
@@ -659,12 +590,20 @@ setupDrawingDetection: function() {
             
             drawnPoints.push(point);
             
-            // ✅ PONTOK RAJZOLÁSA (NEM VONALAK!)
+            // ✅ JAVÍTOTT RAJZOLÁS TOUCH-HEZ
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
-            ctx.fill();
+            if (lastDrawnPoint) {
+                ctx.beginPath();
+                ctx.moveTo(lastDrawnPoint.x, lastDrawnPoint.y);
+                ctx.lineTo(point.x, point.y);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 4; // Vastagabb vonal touch-hez
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+            
+            lastDrawnPoint = point;
         }
     }, { passive: false });
     
@@ -672,7 +611,8 @@ setupDrawingDetection: function() {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            console.log('🏁 Touch pontrajzolás befejezve, pontok:', drawnPoints.length);
+            lastDrawnPoint = null;
+            console.log('🏁 Touch rajzolás befejezve, pontok:', drawnPoints.length);
             
             setTimeout(() => {
                 this.evaluateDrawing(drawnPoints);
@@ -680,17 +620,18 @@ setupDrawingDetection: function() {
         }
     }, { passive: false });
     
+    // ✅ TOUCH CANCEL ESEMÉNY
     canvas.addEventListener('touchcancel', (e) => {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            console.log('❌ Touch pontrajzolás megszakítva');
+            lastDrawnPoint = null;
+            console.log('❌ Touch rajzolás megszakítva');
         }
     }, { passive: false });
     
-    console.log('✅ Pontrajzolás beállítva rajz módhoz');
+    console.log('✅ Javított rajzolás figyelés beállítva (touch optimalizált)');
 },
-
 
     
     startTimer: function() {
@@ -2682,7 +2623,20 @@ window.saveScoreToFirebase = async function(scoreData) {
                     window.switchLeaderboard('global');
                 });
             }
-
+            
+            // Start gomb
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    console.log('Start button clicked');
+                    if (window.gameEngine && typeof window.gameEngine.startDrawing === 'function') {
+                        window.gameEngine.startDrawing();
+                    } else {
+                        console.log('GameEngine not ready');
+                    }
+                });
+            }
+            
             // Clear gomb
             const clearBtn = document.getElementById('clearBtn');
             if (clearBtn) {
