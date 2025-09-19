@@ -497,68 +497,10 @@ setupDrawingDetection: function() {
     
     let isDrawing = false;
     let drawnPoints = [];
-    let lastDrawnPoint = null;
     
-    // ✅ JAVÍTOTT EGÉR ESEMÉNYEK
-    canvas.addEventListener('mousedown', (e) => {
-        if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
-            isDrawing = true;
-            drawnPoints = [];
-            lastDrawnPoint = null;
-            
-            const rect = canvas.getBoundingClientRect();
-            const point = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-            
-            drawnPoints.push(point);
-            lastDrawnPoint = point;
-            console.log('🎨 Egér rajzolás kezdése');
-        }
-    });
+    // ✅ HIBRID MEGOLDÁS - PONTOK GYŰJTÉSE + VIZUÁLIS VONALRAJZOLÁS
     
-    canvas.addEventListener('mousemove', (e) => {
-        if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
-            const rect = canvas.getBoundingClientRect();
-            const point = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-            
-            drawnPoints.push(point);
-            
-            // Rajzolás a canvas-ra
-            const ctx = canvas.getContext('2d');
-            if (lastDrawnPoint) {
-                ctx.beginPath();
-                ctx.moveTo(lastDrawnPoint.x, lastDrawnPoint.y);
-                ctx.lineTo(point.x, point.y);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-            }
-            
-            lastDrawnPoint = point;
-        }
-    });
-    
-    canvas.addEventListener('mouseup', () => {
-        if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
-            isDrawing = false;
-            lastDrawnPoint = null;
-            console.log('🏁 Egér rajzolás befejezve, pontok:', drawnPoints.length);
-            
-            setTimeout(() => {
-                this.evaluateDrawing(drawnPoints);
-            }, 300);
-        }
-    });
-    
-    // ✅ JAVÍTOTT TOUCH ESEMÉNYEK
-// Touch események - ANDROID OPTIMALIZÁLT
+    // Touch események
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
@@ -572,9 +514,10 @@ setupDrawingDetection: function() {
                 y: touch.clientY - rect.top
             };
             
+            // ✅ PONT HOZZÁADÁSA AZ ELEMZÉSHEZ
             drawnPoints.push(point);
             
-            // ✅ CANVAS CONTEXT ELŐKÉSZÍTÉSE
+            // ✅ VIZUÁLIS RAJZOLÁS ELŐKÉSZÍTÉSE
             const ctx = canvas.getContext('2d');
             ctx.beginPath();
             ctx.moveTo(point.x, point.y);
@@ -597,9 +540,12 @@ setupDrawingDetection: function() {
                 y: touch.clientY - rect.top
             };
             
-            drawnPoints.push(point);
+            // ✅ MINDEN 3. PONT HOZZÁADÁSA (OPTIMALIZÁLÁS)
+            if (drawnPoints.length === 0 || drawnPoints.length % 3 === 0) {
+                drawnPoints.push(point);
+            }
             
-            // ✅ FOLYAMATOS VONALRAJZOLÁS
+            // ✅ FOLYAMATOS VIZUÁLIS RAJZOLÁS
             const ctx = canvas.getContext('2d');
             ctx.lineTo(point.x, point.y);
             ctx.stroke();
@@ -661,7 +607,10 @@ setupDrawingDetection: function() {
                 y: e.clientY - rect.top
             };
             
-            drawnPoints.push(point);
+            // ✅ MINDEN 2. PONT HOZZÁADÁSA EGÉRHEZ
+            if (drawnPoints.length === 0 || drawnPoints.length % 2 === 0) {
+                drawnPoints.push(point);
+            }
             
             // Folyamatos vonalrajzolás
             const ctx = canvas.getContext('2d');
@@ -681,8 +630,9 @@ setupDrawingDetection: function() {
         }
     });
     
-    console.log('✅ Folyamatos vonalrajzolás beállítva (Android optimalizált)');
+    console.log('✅ Hibrid rajzolás beállítva (pontok + vonalak)');
 },
+
 
     
     startTimer: function() {
