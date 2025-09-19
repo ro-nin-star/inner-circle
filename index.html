@@ -2403,52 +2403,7 @@ window.saveScoreToFirebase = async function(scoreData) {
         });
     </script>
 <!-- RAJZ MÓD INTEGRÁCIÓ -->
-<script>
-// Eredeti showScore mentése
-const originalShowScore = window.showScore;
 
-// Módosított showScore rajz mód támogatással
-window.showScore = async function(score, analysis, transformationName = '') {
-    // Rajz mód kezelése
-    if (window.GameModeManager && window.GameModeManager.currentMode === 'drawing') {
-        const shapeScore = window.GameModeManager.evaluateShape(window.lastDrawnPoints || []);
-        
-        if (shapeScore !== null) {
-            // Rajz mód specifikus score kezelés
-            console.log('🎨 Rajz mód score:', shapeScore);
-            return;
-        }
-    }
-    
-    // Eredeti kör mód
-    if (originalShowScore) {
-        return originalShowScore(score, analysis, transformationName);
-    }
-};
-
-// Rajzolt pontok tárolása
-let lastDrawnPoints = [];
-window.lastDrawnPoints = lastDrawnPoints;
-
-// Canvas rajzolás figyelése (ha van gameEngine)
-if (window.gameEngine) {
-    const originalFinishDrawing = window.gameEngine.finishDrawing;
-    
-    window.gameEngine.finishDrawing = function() {
-        // Rajzolt pontok mentése
-        if (this.path && this.path.length > 0) {
-            window.lastDrawnPoints = [...this.path];
-        }
-        
-        // Eredeti függvény hívása
-        if (originalFinishDrawing) {
-            return originalFinishDrawing.call(this);
-        }
-    };
-}
-
-console.log('✅ Rajz mód integráció betöltve');
-</script>
 
     <!-- ✅ VISITOR COUNTER INICIALIZÁLÁS -->
     <script>
