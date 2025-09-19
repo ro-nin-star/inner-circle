@@ -108,6 +108,8 @@
             <button id="clearBtn" disabled data-i18n="buttons.clear">🗑️ Törlés</button>
             <button id="helpBtn" data-i18n="buttons.help">❓ Segítség</button>
             <button id="clearScoresBtn" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
+            <button id="guideBtn" onclick="window.toggleCanvasGuide?.()" data-i18n="buttons.guide">📍 Segédvonal</button>
+
         </div>
 
         <!-- Pontszám megjelenítő -->
@@ -205,6 +207,7 @@
 
     <!-- JavaScript fájlok betöltése -->
     <script>
+        
         // Globális nyelvi adatok tárolója
         window.languageData = {};
         
@@ -221,7 +224,9 @@
                 clear: "🗑️ Törlés",
                 help: "❓ Segítség",
                 save: "💾 Mentés",
-                clearScores: "🗑️ Helyi Eredmények Törlése"
+                clearScores: "🗑️ Helyi Eredmények Törlése",
+                guide: "📍 Segédvonal"  // ← Ez a sor hiányzik!
+
             },
             player: {
                 label: "Név:",
@@ -268,6 +273,7 @@
 
     <!-- THUMBNAIL GENERATOR BEÁGYAZVA -->
     <script>
+        
         // js/utils/thumbnailGenerator.js - BEÁGYAZVA
         window.ThumbnailGenerator = {
             

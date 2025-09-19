@@ -1,84 +1,188 @@
-/* Mobil optimalizálás */
-@media (max-width: 600px) {
-    .game-container {
-        padding: 15px;
-        margin: 8px;
-        border-radius: 30px;
+/* Mobil betűtípus javítások */
+@media (max-width: 768px) {
+    /* Általános betűtípus beállítások */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-size: 16px; /* Alapértelmezett 16px mobilon */
+        line-height: 1.4;
     }
     
+    /* Címek */
     h1 {
-        font-size: 1.8em;
+        font-size: 24px !important;
+        font-weight: 700;
+        line-height: 1.2;
     }
     
-    .game-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+    h2 {
+        font-size: 20px !important;
+        font-weight: 600;
     }
     
-    .stat {
-        padding: 10px;
-        border-radius: 20px;
+    h3 {
+        font-size: 18px !important;
+        font-weight: 600;
     }
     
+    h4 {
+        font-size: 16px !important;
+        font-weight: 600;
+    }
+    
+    /* Szövegek */
+    .subtitle {
+        font-size: 14px !important;
+        line-height: 1.3;
+    }
+    
+    .instructions {
+        font-size: 14px !important;
+        line-height: 1.4;
+    }
+    
+    /* Gombok */
+    button {
+        font-family: inherit;
+        font-size: 16px !important;
+        font-weight: 500;
+        padding: 12px 16px;
+        line-height: 1.2;
+    }
+    
+    .difficulty-btn {
+        font-size: 14px !important;
+        padding: 10px 12px;
+    }
+    
+    /* Input mezők */
+    input[type="text"] {
+        font-family: inherit;
+        font-size: 16px !important; /* iOS zoom megakadályozása */
+        line-height: 1.2;
+    }
+    
+    /* Statisztikák */
     .stat-label {
-        font-size: 0.75em;
+        font-size: 12px !important;
+        font-weight: 500;
     }
     
     .stat-value {
-        font-size: 1.3em;
+        font-size: 18px !important;
+        font-weight: 700;
     }
     
-    #gameCanvas {
-        width: 100%;
-        height: auto;
+    /* Leaderboard */
+    .leaderboard-entry {
+        font-size: 14px !important;
     }
-
-    .visitor-counter {
-        bottom: 10px;
-        right: 10px;
-        font-size: 0.75em;
-        padding: 6px 12px;
+    
+    .leaderboard-entry .name {
+        font-weight: 500;
     }
-
-    .player-name-input {
-        width: 150px;
-        margin: 5px;
+    
+    .leaderboard-entry .score {
+        font-weight: 700;
+        font-size: 15px !important;
     }
-
-    .leaderboard-tabs {
-        flex-wrap: wrap;
-        gap: 3px;
+    
+    /* Score megjelenítés */
+    .score-display {
+        font-size: 14px !important;
     }
-
-    .tab-btn {
-        font-size: 12px;
-        padding: 6px 12px;
+    
+    .score-number {
+        font-size: 28px !important;
+        font-weight: 700;
     }
-
+    
+    /* Részletes instrukciók */
+    .detailed-instructions {
+        font-size: 14px !important;
+        line-height: 1.4;
+    }
+    
+    .detailed-instructions ul li {
+        font-size: 13px !important;
+        line-height: 1.3;
+        margin-bottom: 4px;
+    }
+    
+    /* Firebase status */
     .firebase-status {
-        top: 10px;
-        right: 10px;
-        font-size: 0.65em;
-        padding: 4px 8px;
-        max-width: 120px;
+        font-size: 12px !important;
+        font-weight: 500;
+    }
+    
+    /* Nyelv váltó */
+    .language-selector {
+        font-size: 14px !important;
+    }
+    
+    /* Látogatásszámláló */
+    .visitor-counter {
+        font-size: 12px !important;
+    }
+    
+    /* Dev info */
+    .dev-info {
+        font-size: 11px !important;
+    }
+    
+    /* Offline notice */
+    .offline-notice {
+        font-size: 13px !important;
+        line-height: 1.3;
     }
 }
 
-@media (max-width: 400px) {
-    .game-stats {
-        grid-template-columns: 1fr;
+/* Tablet méret (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 15px;
     }
     
-    .stat {
-        padding: 8px;
+    h1 {
+        font-size: 28px !important;
     }
+    
+    button {
+        font-size: 15px !important;
+    }
+}
 
+/* Desktop betűtípus megtartása */
+@media (min-width: 1025px) {
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+    }
+}
+
+/* Speciális mobilos javítások */
+@media (max-width: 480px) {
+    /* Extra kis képernyőkre */
     .game-container {
-        border-radius: 25px;
+        padding: 10px;
     }
-
-    .visitor-counter {
-        font-size: 0.7em;
-        padding: 5px 10px;
+    
+    .player-difficulty-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .controls button {
+        flex: 1;
+        min-width: 120px;
+        font-size: 14px !important;
+        padding: 10px 8px;
     }
 }

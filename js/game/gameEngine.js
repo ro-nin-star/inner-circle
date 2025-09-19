@@ -256,6 +256,84 @@ transformCircle(centerX, centerY, radius) {
     }
 }
 
+
+// Adj hozzá ezt a kódot a gameEngine.js fájlhoz vagy közvetlenül a HTML-be:
+
+window.addCanvasGuide = function() {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Optimális kör középpontja és sugara
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const optimalRadius = Math.min(canvas.width, canvas.height) * 0.3; // 30% a canvas méretének
+    
+    // Segédvonal rajzolása
+    function drawGuide() {
+        ctx.save();
+        
+        // Halvány körök rajzolása
+        ctx.strokeStyle = 'rgba(100, 149, 237, 0.3)'; // Halvány kék
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]); // Szaggatott vonal
+        
+        // Belső optimális kör
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, optimalRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Külső határkör
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, optimalRadius * 1.3, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Középpont jelölése
+        ctx.fillStyle = 'rgba(100, 149, 237, 0.5)';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Szöveg
+        ctx.fillStyle = 'rgba(100, 149, 237, 0.7)';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Optimális terület', centerX, centerY - optimalRadius - 15);
+        
+        ctx.restore();
+    }
+    
+    // Segédvonal megjelenítése/elrejtése
+    let guideVisible = false;
+    
+    window.toggleCanvasGuide = function() {
+        guideVisible = !guideVisible;
+        
+        if (guideVisible) {
+            drawGuide();
+        } else {
+            // Canvas újrarajzolása segédvonal nélkül
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    };
+    
+    // Automatikus megjelenítés rajzolás előtt
+    const originalStartDrawing = window.gameEngine?.startDrawing;
+    if (originalStartDrawing) {
+        window.gameEngine.startDrawing = function() {
+            drawGuide();
+            setTimeout(() => {
+                originalStartDrawing.call(window.gameEngine);
+            }, 100);
+        };
+    }
+};
+
+// Inicializálás
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(window.addCanvasGuide, 1000);
+});
+
+
 // Globális hozzáférés
 window.gameEngine = new GameEngine();
 
