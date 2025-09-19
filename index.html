@@ -18,6 +18,50 @@
 </head>
 
 <body>
+
+<!-- JÁTÉKMÓD VÁLASZTÓ MODAL -->
+<div id="gameModeModal" class="game-mode-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🎯 Válassz Játékmódot!</h2>
+            <p>Melyik kihívást szeretnéd kipróbálni?</p>
+        </div>
+        
+        <div class="mode-selection">
+            <div class="mode-card" onclick="selectGameMode('circle')">
+                <div class="mode-icon">🎯</div>
+                <h3>Verseny Mód</h3>
+                <p>Rajzolj tökéletes köröket és versenyezz másokkal!</p>
+                <ul>
+                    <li>✨ Körrajzolás kihívás</li>
+                    <li>🏆 Globális ranglista</li>
+                    <li>🎨 Varázslatos transzformációk</li>
+                    <li>⚡ Gyors játékmenet</li>
+                </ul>
+                <button class="mode-select-btn">Verseny Indítása</button>
+            </div>
+            
+            <div class="mode-card" onclick="selectGameMode('drawing')">
+                <div class="mode-icon">🎨</div>
+                <h3>Rajz Mód</h3>
+                <p>Kövesd le különböző alakzatokat időre!</p>
+                <ul>
+                    <li>📐 Különböző alakzatok</li>
+                    <li>⏱️ Időmérés</li>
+                    <li>🎯 Progresszív nehézség</li>
+                    <li>🏅 Teljesítmény követés</li>
+                </ul>
+                <button class="mode-select-btn">Rajz Kezdése</button>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <p><small>💡 Bármikor válthat a módok között a beállításokban</small></p>
+        </div>
+    </div>
+</div>
+
+
     <!-- Játékos animált háttér elemek -->
     <div class="decoration-circle"></div>
     <div class="decoration-circle"></div>
@@ -109,6 +153,7 @@
             <button id="helpBtn" data-i18n="buttons.help">❓ Segítség</button>
             <button id="clearScoresBtn" data-i18n="buttons.clearScores">🗑️ Helyi Eredmények Törlése</button>
             <button id="guideBtn" onclick="window.toggleCanvasGuide?.()" data-i18n="buttons.guide">📍 Segédvonal</button>
+            <button id="switchModeBtn" onclick="window.GameModeManager?.showModeSelector()" data-i18n="buttons.switchMode">🔄 Mód Váltás</button>
 
         </div>
 
@@ -204,6 +249,952 @@
         <span data-i18n="dev.version">v2.1</span> | 
         <span onclick="window.debugGameEngine?.()" data-i18n="dev.debug">Debug</span>
     </div>
+<!-- JÁTÉKMÓD KEZELŐ -->
+<!-- JAVÍTOTT JÁTÉKMÓD KEZELŐ -->
+<!-- JAVÍTOTT JÁTÉKMÓD KEZELŐ - TIMER CSAK RAJZOLÁS KEZDÉSEKOR -->
+<script>
+// INTELLIGENS ALAKZAT FELISMERŐ JÁTÉKMÓD KEZELŐ
+window.GameModeManager = {
+    currentMode: 'circle',
+    drawingMode: {
+        currentLevel: 1,
+        currentShape: null,
+        startTime: null,
+        timeLimit: 30,
+        timer: null,
+        isActive: false,
+        shapes: [
+            { 
+                name: 'Négyzet', 
+                icon: '⬜', 
+                points: [[0.2,0.2], [0.8,0.2], [0.8,0.8], [0.2,0.8], [0.2,0.2]],
+                type: 'rectangle',
+                minCorners: 4,
+                expectedAngles: [90, 90, 90, 90]
+            },
+            { 
+                name: 'Háromszög', 
+                icon: '🔺', 
+                points: [[0.5,0.2], [0.8,0.8], [0.2,0.8], [0.5,0.2]],
+                type: 'triangle',
+                minCorners: 3,
+                expectedAngles: [60, 60, 60]
+            },
+            { 
+                name: 'Kör', 
+                icon: '⭕', 
+                points: [], // Kör esetén nincs szükség pontokra
+                type: 'circle',
+                minCorners: 0,
+                expectedAngles: []
+            },
+            { 
+                name: 'Csillag', 
+                icon: '⭐', 
+                points: [[0.5,0.1], [0.6,0.4], [0.9,0.4], [0.7,0.6], [0.8,0.9], [0.5,0.7], [0.2,0.9], [0.3,0.6], [0.1,0.4], [0.4,0.4], [0.5,0.1]],
+                type: 'star',
+                minCorners: 10,
+                expectedAngles: []
+            },
+            { 
+                name: 'Szív', 
+                icon: '❤️', 
+                points: [[0.5,0.3], [0.4,0.2], [0.3,0.2], [0.2,0.3], [0.2,0.4], [0.3,0.5], [0.5,0.8], [0.7,0.5], [0.8,0.4], [0.8,0.3], [0.7,0.2], [0.6,0.2], [0.5,0.3]],
+                type: 'heart',
+                minCorners: 0,
+                expectedAngles: []
+            }
+        ],
+        completedShapes: 0,
+        totalTime: 0
+    },
+    
+    showModeSelector: function() {
+        const modal = document.getElementById('gameModeModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    },
+    
+    selectMode: function(mode) {
+        console.log(`🔄 Mód váltás: ${mode}`);
+        this.currentMode = mode;
+        localStorage.setItem('perfectcircle_gamemode', mode);
+        
+        const modal = document.getElementById('gameModeModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        
+        if (mode === 'drawing') {
+            this.initDrawingMode();
+        } else {
+            this.initCircleMode();
+        }
+    },
+    
+    initDrawingMode: function() {
+        console.log('🎨 Rajz mód inicializálása...');
+        document.body.classList.add('drawing-mode-active');
+        this.createDrawingModeUI();
+        this.startNewChallenge();
+        this.setupDrawingDetection();
+        this.blockOriginalShowScore();
+    },
+    
+    initCircleMode: function() {
+        console.log('🎯 Verseny mód inicializálása...');
+        document.body.classList.remove('drawing-mode-active');
+        this.removeDrawingModeUI();
+        this.restoreOriginalShowScore();
+    },
+    
+    blockOriginalShowScore: function() {
+        if (!this.originalShowScore) {
+            this.originalShowScore = window.showScore;
+        }
+        
+        window.showScore = function(score, analysis, transformationName = '') {
+            console.log('🚫 showScore blokkolva rajz módban:', score);
+            return;
+        };
+        
+        console.log('🚫 Eredeti showScore blokkolva rajz módban');
+    },
+    
+    restoreOriginalShowScore: function() {
+        if (this.originalShowScore) {
+            window.showScore = this.originalShowScore;
+            console.log('🔄 Eredeti showScore visszaállítva');
+        }
+    },
+    
+    createDrawingModeUI: function() {
+        if (document.getElementById('shapeChallenge')) return;
+        
+        const statsContainer = document.querySelector('.stats-container');
+        if (!statsContainer) return;
+        
+        const challengeDiv = document.createElement('div');
+        challengeDiv.id = 'shapeChallenge';
+        challengeDiv.className = 'shape-challenge';
+        challengeDiv.innerHTML = `
+            <h3>🎨 Alakzat Kihívás</h3>
+            <div>Szint: <span id="currentLevel">1</span></div>
+            <div class="current-shape" id="currentShapeDisplay">⬜</div>
+            <div>Kövesd le: <span id="currentShapeName">Négyzet</span></div>
+            <div class="challenge-timer" id="challengeTimer">Kattints a "Rajzolás Kezdése" gombra!</div>
+            <div class="challenge-progress">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div>Teljesített: <span id="completedCount">0</span>/5</div>
+            <div class="drawing-instructions">
+                <small>💡 Rajzold le az alakzatot pontosan! A felismerés szigorú.</small>
+            </div>
+        `;
+        
+        statsContainer.insertAdjacentElement('afterend', challengeDiv);
+    },
+    
+    removeDrawingModeUI: function() {
+        const challengeDiv = document.getElementById('shapeChallenge');
+        if (challengeDiv) {
+            challengeDiv.remove();
+        }
+        
+        if (this.drawingMode.timer) {
+            clearInterval(this.drawingMode.timer);
+            this.drawingMode.timer = null;
+        }
+    },
+    
+    startNewChallenge: function() {
+        const shapeIndex = (this.drawingMode.currentLevel - 1) % this.drawingMode.shapes.length;
+        this.drawingMode.currentShape = this.drawingMode.shapes[shapeIndex];
+        this.drawingMode.isActive = false;
+        
+        this.updateChallengeUI();
+        
+        setTimeout(() => {
+            this.clearCanvas();
+            this.drawShapeGuide();
+        }, 100);
+        
+        console.log(`🎯 Új kihívás: ${this.drawingMode.currentShape.name}`);
+    },
+    
+    updateChallengeUI: function() {
+        const levelSpan = document.getElementById('currentLevel');
+        const shapeDisplay = document.getElementById('currentShapeDisplay');
+        const shapeName = document.getElementById('currentShapeName');
+        const completedCount = document.getElementById('completedCount');
+        const timerElement = document.getElementById('challengeTimer');
+        
+        if (levelSpan) levelSpan.textContent = this.drawingMode.currentLevel;
+        if (shapeDisplay) shapeDisplay.textContent = this.drawingMode.currentShape.icon;
+        if (shapeName) shapeName.textContent = this.drawingMode.currentShape.name;
+        if (completedCount) completedCount.textContent = this.drawingMode.completedShapes;
+        if (timerElement) timerElement.textContent = 'Kattints a "Rajzolás Kezdése" gombra!';
+        
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            startBtn.textContent = '🎯 Rajzolás Kezdése';
+            startBtn.disabled = false;
+        }
+    },
+    
+    clearCanvas: function() {
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    },
+    
+    drawShapeGuide: function() {
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const shape = this.drawingMode.currentShape;
+        
+        if (!shape) return;
+        
+        ctx.save();
+        ctx.strokeStyle = 'rgba(33, 150, 243, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 8]);
+        
+        ctx.beginPath();
+        
+        if (shape.type === 'circle') {
+            // Kör rajzolása
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.3;
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        } else if (shape.points && shape.points.length > 0) {
+            // Pontok alapján rajzolás
+            shape.points.forEach((point, index) => {
+                const x = point[0] * canvas.width;
+                const y = point[1] * canvas.height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+        }
+        
+        ctx.stroke();
+        ctx.restore();
+    },
+    
+    setupDrawingDetection: function() {
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
+        
+        let isDrawing = false;
+        let drawnPoints = [];
+        
+        // Egér események
+        canvas.addEventListener('mousedown', (e) => {
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
+                isDrawing = true;
+                drawnPoints = [];
+                const rect = canvas.getBoundingClientRect();
+                drawnPoints.push({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                });
+                console.log('🎨 Rajzolás kezdése');
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
+                const rect = canvas.getBoundingClientRect();
+                drawnPoints.push({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                });
+                
+                const ctx = canvas.getContext('2d');
+                if (drawnPoints.length > 1) {
+                    const lastPoint = drawnPoints[drawnPoints.length - 2];
+                    const currentPoint = drawnPoints[drawnPoints.length - 1];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(lastPoint.x, lastPoint.y);
+                    ctx.lineTo(currentPoint.x, currentPoint.y);
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
+                isDrawing = false;
+                console.log('🏁 Rajzolás befejezve, pontok:', drawnPoints.length);
+                
+                setTimeout(() => {
+                    this.evaluateDrawing(drawnPoints);
+                }, 300);
+            }
+        });
+        
+        // Touch események
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
+                isDrawing = true;
+                drawnPoints = [];
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                drawnPoints.push({
+                    x: touch.clientX - rect.left,
+                    y: touch.clientY - rect.top
+                });
+                console.log('🎨 Touch rajzolás kezdése');
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                drawnPoints.push({
+                    x: touch.clientX - rect.left,
+                    y: touch.clientY - rect.top
+                });
+                
+                const ctx = canvas.getContext('2d');
+                if (drawnPoints.length > 1) {
+                    const lastPoint = drawnPoints[drawnPoints.length - 2];
+                    const currentPoint = drawnPoints[drawnPoints.length - 1];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(lastPoint.x, lastPoint.y);
+                    ctx.lineTo(currentPoint.x, currentPoint.y);
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
+                isDrawing = false;
+                console.log('🏁 Touch rajzolás befejezve, pontok:', drawnPoints.length);
+                
+                setTimeout(() => {
+                    this.evaluateDrawing(drawnPoints);
+                }, 300);
+            }
+        });
+        
+        console.log('✅ Rajzolás figyelés beállítva');
+    },
+    
+    startTimer: function() {
+        if (this.drawingMode.timer) {
+            clearInterval(this.drawingMode.timer);
+        }
+        
+        this.drawingMode.startTime = Date.now();
+        this.drawingMode.isActive = true;
+        let timeLeft = this.drawingMode.timeLimit;
+        
+        const timerElement = document.getElementById('challengeTimer');
+        const progressBar = document.getElementById('progressBar');
+        const startBtn = document.getElementById('startBtn');
+        
+        if (startBtn) {
+            startBtn.textContent = '🎯 Rajzold le az alakzatot!';
+            startBtn.disabled = true;
+        }
+        
+        console.log('⏰ Timer elindítva!');
+        
+        this.drawingMode.timer = setInterval(() => {
+            timeLeft--;
+            
+            if (timerElement) {
+                timerElement.textContent = timeLeft + 's';
+                timerElement.style.color = timeLeft <= 10 ? '#f44336' : '#ff9800';
+            }
+            
+            if (progressBar) {
+                const progress = ((this.drawingMode.timeLimit - timeLeft) / this.drawingMode.timeLimit) * 100;
+                progressBar.style.width = progress + '%';
+            }
+            
+            if (timeLeft <= 0) {
+                this.timeUp();
+            }
+        }, 1000);
+    },
+    
+    timeUp: function() {
+        clearInterval(this.drawingMode.timer);
+        this.drawingMode.timer = null;
+        this.drawingMode.isActive = false;
+        
+        alert(`⏰ Idő lejárt!\n\nNem sikerült befejezni: ${this.drawingMode.currentShape.name}\n\nPróbáld újra!`);
+        
+        setTimeout(() => {
+            this.startNewChallenge();
+        }, 1000);
+    },
+    
+    evaluateDrawing: function(drawnPoints) {
+        if (!this.drawingMode.isActive) return;
+        
+        // Timer leállítása
+        if (this.drawingMode.timer) {
+            clearInterval(this.drawingMode.timer);
+            this.drawingMode.timer = null;
+        }
+        
+        this.drawingMode.isActive = false;
+        
+        if (drawnPoints.length < 10) {
+            this.showFailureMessage(0, 'Túl rövid rajz!', 'Rajzolj egy teljes alakzatot!');
+            return;
+        }
+        
+        // ✅ INTELLIGENS ALAKZAT FELISMERÉS
+        const analysis = this.analyzeShape(drawnPoints);
+        const score = this.calculateSmartScore(analysis);
+        
+        console.log(`📊 Alakzat analízis:`, analysis);
+        console.log(`📊 VÉGLEGES PONTSZÁM: ${score}`);
+        
+        this.updateGameStats(score);
+        this.showDrawingScoreDisplay(score, analysis);
+        
+        if (score >= 70) {
+            this.saveDrawingScore(score);
+            setTimeout(() => {
+                this.shapeCompleted(score);
+            }, 2000);
+        } else {
+            setTimeout(() => {
+                this.showFailureMessage(score, 'Nem sikerült!', analysis.feedback);
+            }, 2000);
+        }
+    },
+    
+    // ✅ INTELLIGENS ALAKZAT ANALÍZIS
+    analyzeShape: function(drawnPoints) {
+        const shape = this.drawingMode.currentShape;
+        const analysis = {
+            shapeType: shape.type,
+            shapeName: shape.name,
+            accuracy: 0,
+            feedback: '',
+            details: {}
+        };
+        
+        // Pontok simítása (zajszűrés)
+        const smoothedPoints = this.smoothPoints(drawnPoints);
+        
+        switch (shape.type) {
+            case 'rectangle':
+                return this.analyzeRectangle(smoothedPoints, analysis);
+            case 'triangle':
+                return this.analyzeTriangle(smoothedPoints, analysis);
+            case 'circle':
+                return this.analyzeCircle(smoothedPoints, analysis);
+            case 'star':
+                return this.analyzeStar(smoothedPoints, analysis);
+            case 'heart':
+                return this.analyzeHeart(smoothedPoints, analysis);
+            default:
+                analysis.accuracy = 0;
+                analysis.feedback = 'Ismeretlen alakzat';
+                return analysis;
+        }
+    },
+    
+    // Pontok simítása
+    smoothPoints: function(points) {
+        if (points.length < 3) return points;
+        
+        const smoothed = [points[0]];
+        
+        for (let i = 1; i < points.length - 1; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const next = points[i + 1];
+            
+            const smoothX = (prev.x + curr.x + next.x) / 3;
+            const smoothY = (prev.y + curr.y + next.y) / 3;
+            
+            smoothed.push({ x: smoothX, y: smoothY });
+        }
+        
+        smoothed.push(points[points.length - 1]);
+        return smoothed;
+    },
+    
+    // Négyzet analízis
+    analyzeRectangle: function(points, analysis) {
+        const corners = this.findCorners(points);
+        analysis.details.corners = corners.length;
+        
+        if (corners.length < 4) {
+            analysis.accuracy = Math.max(0, corners.length * 20);
+            analysis.feedback = `Csak ${corners.length} sarok található, 4 kell!`;
+            return analysis;
+        }
+        
+        // Szögek ellenőrzése
+        const angles = this.calculateAngles(corners);
+        const rightAngles = angles.filter(angle => Math.abs(angle - 90) < 15).length;
+        
+        // Oldalak hosszának ellenőrzése
+        const sides = this.calculateSideLengths(corners);
+        const avgSide = sides.reduce((a, b) => a + b, 0) / sides.length;
+        const sideVariation = Math.max(...sides) / Math.min(...sides);
+        
+        // Pontszámítás
+        let accuracy = 0;
+        accuracy += rightAngles * 15; // 15 pont sarokonként
+        accuracy += Math.max(0, 40 - (sideVariation - 1) * 100); // Oldalarány
+        
+        analysis.accuracy = Math.min(100, accuracy);
+        analysis.details.rightAngles = rightAngles;
+        analysis.details.sideVariation = sideVariation.toFixed(2);
+        
+        if (accuracy >= 70) {
+            analysis.feedback = 'Jó négyzet!';
+        } else {
+            analysis.feedback = `${rightAngles}/4 jó szög, oldalarány: ${sideVariation.toFixed(2)}`;
+        }
+        
+        return analysis;
+    },
+    
+    // Háromszög analízis
+    analyzeTriangle: function(points, analysis) {
+        const corners = this.findCorners(points);
+        analysis.details.corners = corners.length;
+        
+        if (corners.length < 3) {
+            analysis.accuracy = Math.max(0, corners.length * 25);
+            analysis.feedback = `Csak ${corners.length} sarok található, 3 kell!`;
+            return analysis;
+        }
+        
+        // Záródás ellenőrzése
+        const isClosed = this.isShapeClosed(points);
+        const closureBonus = isClosed ? 30 : 0;
+        
+        // Szögek összege (180° kell legyen)
+        const angles = this.calculateAngles(corners.slice(0, 3));
+        const angleSum = angles.reduce((a, b) => a + b, 0);
+        const angleSumAccuracy = Math.max(0, 40 - Math.abs(angleSum - 180) * 2);
+        
+        analysis.accuracy = Math.min(100, closureBonus + angleSumAccuracy + 30);
+        analysis.details.angleSum = Math.round(angleSum);
+        analysis.details.isClosed = isClosed;
+        
+        if (analysis.accuracy >= 70) {
+            analysis.feedback = 'Jó háromszög!';
+        } else {
+            analysis.feedback = `Szögösszeg: ${Math.round(angleSum)}° (180° kell)`;
+        }
+        
+        return analysis;
+    },
+    
+    // Kör analízis
+    analyzeCircle: function(points, analysis) {
+        if (points.length < 20) {
+            analysis.accuracy = 0;
+            analysis.feedback = 'Túl kevés pont a körhöz!';
+            return analysis;
+        }
+        
+        // Központ meghatározása
+        const center = this.findCenter(points);
+        
+        // Távolságok a központtól
+        const distances = points.map(p => 
+            Math.sqrt((p.x - center.x) ** 2 + (p.y - center.y) ** 2)
+        );
+        
+        const avgRadius = distances.reduce((a, b) => a + b, 0) / distances.length;
+        const radiusVariation = Math.max(...distances) / Math.min(...distances);
+        
+        // Záródás ellenőrzése
+        const isClosed = this.isShapeClosed(points);
+        
+        // Pontszámítás
+        let accuracy = 0;
+        accuracy += isClosed ? 40 : 0; // Záródás
+        accuracy += Math.max(0, 60 - (radiusVariation - 1) * 200); // Köralak
+        
+        analysis.accuracy = Math.min(100, accuracy);
+        analysis.details.radiusVariation = radiusVariation.toFixed(2);
+        analysis.details.isClosed = isClosed;
+        
+        if (accuracy >= 70) {
+            analysis.feedback = 'Jó kör!';
+        } else {
+            analysis.feedback = `Sugárváltozás: ${radiusVariation.toFixed(2)} (1.0 a tökéletes)`;
+        }
+        
+        return analysis;
+    },
+    
+    // Csillag és szív egyszerűsített analízis
+    analyzeStar: function(points, analysis) {
+        const corners = this.findCorners(points);
+        const minCorners = 8; // Csillaghoz minimum 8 sarok
+        
+        analysis.accuracy = Math.min(100, (corners.length / minCorners) * 80 + 20);
+        analysis.details.corners = corners.length;
+        analysis.feedback = corners.length >= minCorners ? 'Jó csillag!' : `${corners.length}/${minCorners} sarok`;
+        
+        return analysis;
+    },
+    
+    analyzeHeart: function(points, analysis) {
+        // Szív esetén egyszerűbb: záródás és forma komplexitás
+        const isClosed = this.isShapeClosed(points);
+        const complexity = points.length > 50 ? 60 : points.length;
+        
+        analysis.accuracy = (isClosed ? 40 : 0) + complexity;
+        analysis.details.isClosed = isClosed;
+        analysis.details.complexity = points.length;
+        analysis.feedback = isClosed ? 'Jó szív!' : 'A szív nincs lezárva!';
+        
+        return analysis;
+    },
+    
+    // Segédfüggvények
+    findCorners: function(points) {
+        if (points.length < 3) return [];
+        
+        const corners = [];
+        const angleThreshold = 30; // fok
+        
+        for (let i = 1; i < points.length - 1; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const next = points[i + 1];
+            
+            const angle1 = Math.atan2(curr.y - prev.y, curr.x - prev.x);
+            const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
+            
+            let angleDiff = Math.abs(angle2 - angle1) * 180 / Math.PI;
+            if (angleDiff > 180) angleDiff = 360 - angleDiff;
+            
+            if (angleDiff > angleThreshold) {
+                corners.push(curr);
+            }
+        }
+        
+        return corners;
+    },
+    
+    calculateAngles: function(corners) {
+        if (corners.length < 3) return [];
+        
+        const angles = [];
+        
+        for (let i = 0; i < corners.length; i++) {
+            const prev = corners[(i - 1 + corners.length) % corners.length];
+            const curr = corners[i];
+            const next = corners[(i + 1) % corners.length];
+            
+            const angle1 = Math.atan2(prev.y - curr.y, prev.x - curr.x);
+            const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
+            
+            let angle = Math.abs(angle2 - angle1) * 180 / Math.PI;
+            if (angle > 180) angle = 360 - angle;
+            
+            angles.push(angle);
+        }
+        
+        return angles;
+    },
+    
+    calculateSideLengths: function(corners) {
+        const sides = [];
+        
+        for (let i = 0; i < corners.length; i++) {
+            const curr = corners[i];
+            const next = corners[(i + 1) % corners.length];
+            
+            const length = Math.sqrt((next.x - curr.x) ** 2 + (next.y - curr.y) ** 2);
+            sides.push(length);
+        }
+        
+        return sides;
+    },
+    
+    findCenter: function(points) {
+        const sumX = points.reduce((sum, p) => sum + p.x, 0);
+        const sumY = points.reduce((sum, p) => sum + p.y, 0);
+        
+        return {
+            x: sumX / points.length,
+            y: sumY / points.length
+        };
+    },
+    
+    isShapeClosed: function(points) {
+        if (points.length < 3) return false;
+        
+        const first = points[0];
+        const last = points[points.length - 1];
+        const distance = Math.sqrt((last.x - first.x) ** 2 + (last.y - first.y) ** 2);
+        
+        return distance < 50; // 50 pixel tolerancia
+    },
+    
+    // ✅ OKOS PONTSZÁMÍTÁS
+    calculateSmartScore: function(analysis) {
+        let baseScore = analysis.accuracy;
+        
+        // Idő bónusz/büntetés
+        const elapsedTime = (Date.now() - this.drawingMode.startTime) / 1000;
+        let timeMultiplier = 1.0;
+        
+        if (elapsedTime < 10) {
+            timeMultiplier = 1.1; // 10% bónusz
+        } else if (elapsedTime > 25) {
+            timeMultiplier = 0.9; // 10% büntetés
+        }
+        
+        const finalScore = Math.max(0, Math.min(100, Math.round(baseScore * timeMultiplier)));
+        
+        console.log(`🧮 Okos pontszámítás:
+            - Alakzat pontosság: ${baseScore.toFixed(1)}
+            - Idő (${elapsedTime.toFixed(1)}s): ${timeMultiplier}x
+            - VÉGSŐ: ${finalScore}`);
+        
+        return finalScore;
+    },
+    
+    showDrawingScoreDisplay: function(score, analysis) {
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const finalScore = document.getElementById('finalScore');
+        const currentScore = document.getElementById('currentScore');
+        const scoreBreakdown = document.getElementById('scoreBreakdown');
+        
+        if (finalScore) finalScore.textContent = score;
+        if (currentScore) currentScore.textContent = score;
+        
+        if (scoreBreakdown && analysis) {
+            const elapsedTime = (Date.now() - this.drawingMode.startTime) / 1000;
+            
+            scoreBreakdown.innerHTML = `
+                <div>🎨 ${analysis.shapeName}: ${score}/100</div>
+                <div>⏱️ Idő: ${elapsedTime.toFixed(1)}s</div>
+                <div>🎯 Pontosság: ${analysis.accuracy.toFixed(1)}%</div>
+                <div>💬 ${analysis.feedback}</div>
+                ${analysis.details.corners ? `<div>📐 Sarkok: ${analysis.details.corners}</div>` : ''}
+                ${analysis.details.isClosed !== undefined ? `<div>🔗 Zárt: ${analysis.details.isClosed ? 'Igen' : 'Nem'}</div>` : ''}
+            `;
+        }
+        
+        if (scoreDisplay) {
+            scoreDisplay.style.display = 'block';
+            scoreDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        console.log(`📊 Score display frissítve: ${score} pont`);
+    },
+    
+    updateGameStats: function(score) {
+        try {
+            const currentScoreElement = document.getElementById('currentScore');
+            if (currentScoreElement) {
+                currentScoreElement.textContent = score;
+            }
+            
+            if (window.updateStats) {
+                setTimeout(() => {
+                    window.updateStats();
+                }, 100);
+            }
+            
+            console.log('📊 Statisztikák frissítve:', score);
+        } catch (error) {
+            console.error('❌ Statisztika frissítési hiba:', error);
+        }
+    },
+    
+    saveDrawingScore: function(score) {
+        try {
+            if (window.ScoreManager && window.ScoreManager.saveScore) {
+                const playerName = document.getElementById('playerName')?.value?.trim() || 'Névtelen';
+                const shapeName = this.drawingMode.currentShape.name;
+                
+                const analysis = {
+                    shape: score * 0.4,
+                    closure: score * 0.2,
+                    smoothness: score * 0.25,
+                    size: score * 0.15
+                };
+                
+                const savedScore = window.ScoreManager.saveScore(
+                    score,
+                    analysis,
+                    'drawing',
+                    `Rajz: ${shapeName}`
+                );
+                
+                console.log('💾 Rajz mód score mentve:', savedScore);
+                
+                setTimeout(() => {
+                    if (window.currentLeaderboardType === 'local' && window.refreshLeaderboard) {
+                        window.refreshLeaderboard();
+                    }
+                }, 200);
+            }
+        } catch (error) {
+            console.error('❌ Score mentési hiba:', error);
+        }
+    },
+    
+    showFailureMessage: function(score, message, details = '') {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(244, 67, 54, 0.9); display: flex; justify-content: center; align-items: center;
+            z-index: 10000; color: white; font-size: 2em; text-align: center;
+        `;
+        
+        overlay.innerHTML = `
+            <div>
+                <div style="font-size: 4em; margin-bottom: 20px;">❌</div>
+                <div>${message}</div>
+                <div style="font-size: 0.8em; margin-top: 10px;">${score}/100 pont</div>
+                <div style="font-size: 0.6em; margin-top: 5px;">Legalább 70 pont kell!</div>
+                ${details ? `<div style="font-size: 0.5em; margin-top: 10px;">${details}</div>` : ''}
+                <div style="font-size: 0.5em; margin-top: 15px;">Újra próbálkozás...</div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        setTimeout(() => {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+            this.startNewChallenge();
+        }, 4000);
+    },
+    
+    shapeCompleted: function(score) {
+        const elapsedTime = (Date.now() - this.drawingMode.startTime) / 1000;
+        this.drawingMode.totalTime += elapsedTime;
+        this.drawingMode.completedShapes++;
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(76, 175, 80, 0.9); display: flex; justify-content: center; align-items: center;
+            z-index: 10000; color: white; font-size: 2em; text-align: center;
+        `;
+        
+        overlay.innerHTML = `
+            <div>
+                <div style="font-size: 4em; margin-bottom: 20px;">✅</div>
+                <div>Alakzat Teljesítve!</div>
+                <div style="font-size: 0.8em; margin-top: 10px;">${score} pont</div>
+                <div style="font-size: 0.6em; margin-top: 5px;">${elapsedTime.toFixed(1)}s</div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        setTimeout(() => {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+            
+            if (this.drawingMode.completedShapes >= 5) {
+                this.levelCompleted();
+            } else {
+                this.drawingMode.currentLevel++;
+                this.startNewChallenge();
+            }
+        }, 3000);
+    },
+    
+    levelCompleted: function() {
+        const avgTime = (this.drawingMode.totalTime / 5).toFixed(1);
+        alert(`🏆 Szint Teljesítve!\n\n✅ 5/5 alakzat teljesítve\n⏱️ Átlag idő: ${avgTime}s\n\nKövetkező szint indul...`);
+        
+        this.drawingMode.completedShapes = 0;
+        this.drawingMode.totalTime = 0;
+        setTimeout(() => {
+            this.startNewChallenge();
+        }, 1000);
+    },
+    
+    init: function() {
+        const savedMode = localStorage.getItem('perfectcircle_gamemode');
+        
+        if (!savedMode) {
+            setTimeout(() => {
+                this.showModeSelector();
+            }, 1000);
+        } else {
+            this.currentMode = savedMode;
+            if (savedMode === 'drawing') {
+                setTimeout(() => {
+                    this.initDrawingMode();
+                }, 1000);
+            }
+        }
+    }
+};
+
+// Globális függvények
+window.selectGameMode = function(mode) {
+    window.GameModeManager.selectMode(mode);
+};
+
+// Start gomb override rajz módhoz
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', function() {
+                if (window.GameModeManager.currentMode === 'drawing') {
+                    if (!window.GameModeManager.drawingMode.isActive) {
+                        console.log('🎨 Rajz mód timer indítása');
+                        window.GameModeManager.startTimer();
+                    }
+                } else {
+                    // Normál kör játék
+                    if (window.gameEngine && window.gameEngine.startDrawing) {
+                        window.gameEngine.startDrawing();
+                    }
+                }
+            });
+        }
+        
+        window.GameModeManager.init();
+    }, 2000);
+});
+
+console.log('✅ Intelligens alakzat felismerő GameModeManager betöltve');
+</script>
+
 
     <!-- JavaScript fájlok betöltése -->
     <script>
@@ -225,7 +1216,9 @@
                 help: "❓ Segítség",
                 save: "💾 Mentés",
                 clearScores: "🗑️ Helyi Eredmények Törlése",
-                guide: "📍 Segédvonal"  // ← Ez a sor hiányzik!
+                guide: "📍 Segédvonal",
+                switchMode: "🔄 Mód Váltás" 
+
 
             },
             player: {
@@ -1377,6 +2370,53 @@ window.saveScoreToFirebase = async function(scoreData) {
             }, 1000);
         });
     </script>
+<!-- RAJZ MÓD INTEGRÁCIÓ -->
+<script>
+// Eredeti showScore mentése
+const originalShowScore = window.showScore;
+
+// Módosított showScore rajz mód támogatással
+window.showScore = async function(score, analysis, transformationName = '') {
+    // Rajz mód kezelése
+    if (window.GameModeManager && window.GameModeManager.currentMode === 'drawing') {
+        const shapeScore = window.GameModeManager.evaluateShape(window.lastDrawnPoints || []);
+        
+        if (shapeScore !== null) {
+            // Rajz mód specifikus score kezelés
+            console.log('🎨 Rajz mód score:', shapeScore);
+            return;
+        }
+    }
+    
+    // Eredeti kör mód
+    if (originalShowScore) {
+        return originalShowScore(score, analysis, transformationName);
+    }
+};
+
+// Rajzolt pontok tárolása
+let lastDrawnPoints = [];
+window.lastDrawnPoints = lastDrawnPoints;
+
+// Canvas rajzolás figyelése (ha van gameEngine)
+if (window.gameEngine) {
+    const originalFinishDrawing = window.gameEngine.finishDrawing;
+    
+    window.gameEngine.finishDrawing = function() {
+        // Rajzolt pontok mentése
+        if (this.path && this.path.length > 0) {
+            window.lastDrawnPoints = [...this.path];
+        }
+        
+        // Eredeti függvény hívása
+        if (originalFinishDrawing) {
+            return originalFinishDrawing.call(this);
+        }
+    };
+}
+
+console.log('✅ Rajz mód integráció betöltve');
+</script>
 
     <!-- ✅ VISITOR COUNTER INICIALIZÁLÁS -->
     <script>

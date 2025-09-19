@@ -1556,3 +1556,209 @@ button:hover {
         display: block;         /* Blokként viselkedjen, hogy a gombok alá kerüljön */
     }
 }
+
+/* JÁTÉKMÓD VÁLASZTÓ MODAL */
+.game-mode-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    color: white;
+    text-align: center;
+}
+
+.modal-header h2 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.modal-header p {
+    font-size: 1.2em;
+    opacity: 0.9;
+    margin-bottom: 30px;
+}
+
+.mode-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.mode-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.mode-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+}
+
+.mode-card h3 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.mode-card p {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+.mode-card ul {
+    text-align: left;
+    margin: 20px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.mode-card li {
+    padding: 5px 0;
+    font-size: 0.95em;
+    opacity: 0.8;
+}
+
+.mode-select-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.mode-select-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-footer {
+    margin-top: 30px;
+    opacity: 0.7;
+}
+
+/* RAJZ MÓD SPECIFIKUS ELEMEK */
+.drawing-mode-active {
+    background: linear-gradient(135deg, #2196F3, #21CBF3);
+}
+
+.drawing-mode-active .game-container h1::after {
+    content: " - Rajz Mód 🎨";
+    font-size: 0.6em;
+    color: #2196F3;
+}
+
+.shape-challenge {
+    background: rgba(33, 150, 243, 0.1);
+    border: 2px solid #2196F3;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.shape-challenge h3 {
+    color: #2196F3;
+    margin-bottom: 15px;
+}
+
+.current-shape {
+    font-size: 3em;
+    margin: 20px 0;
+    display: block;
+}
+
+.challenge-timer {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff9800;
+    margin: 10px 0;
+}
+
+.challenge-progress {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+/* MOBIL OPTIMALIZÁLÁS */
+@media (max-width: 768px) {
+    .mode-selection {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .mode-card {
+        padding: 20px;
+    }
+    
+    .modal-header h2 {
+        font-size: 2em;
+    }
+    
+    .mode-icon {
+        font-size: 3em;
+    }
+}
+.drawing-instructions {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: 8px;
+    font-style: italic;
+}
+
+.drawing-instructions small {
+    color: #666;
+    font-size: 0.9em;
+}
