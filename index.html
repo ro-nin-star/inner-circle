@@ -497,14 +497,12 @@ setupDrawingDetection: function() {
     
     let isDrawing = false;
     let drawnPoints = [];
-    let lastDrawnPoint = null;
     
-    // ✅ JAVÍTOTT EGÉR ESEMÉNYEK
+    // ✅ EGÉR ESEMÉNYEK - PONTOK
     canvas.addEventListener('mousedown', (e) => {
         if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
             isDrawing = true;
             drawnPoints = [];
-            lastDrawnPoint = null;
             
             const rect = canvas.getBoundingClientRect();
             const point = {
@@ -513,8 +511,15 @@ setupDrawingDetection: function() {
             };
             
             drawnPoints.push(point);
-            lastDrawnPoint = point;
-            console.log('🎨 Egér rajzolás kezdése');
+            
+            // PONT RAJZOLÁSA
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            console.log('🎨 Egér pontrajzolás kezdése');
         }
     });
     
@@ -528,28 +533,19 @@ setupDrawingDetection: function() {
             
             drawnPoints.push(point);
             
-            // Rajzolás a canvas-ra
+            // ✅ PONTOK RAJZOLÁSA (NEM VONALAK!)
             const ctx = canvas.getContext('2d');
-            if (lastDrawnPoint) {
-                ctx.beginPath();
-                ctx.moveTo(lastDrawnPoint.x, lastDrawnPoint.y);
-                ctx.lineTo(point.x, point.y);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-            }
-            
-            lastDrawnPoint = point;
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+            ctx.fill();
         }
     });
     
     canvas.addEventListener('mouseup', () => {
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            lastDrawnPoint = null;
-            console.log('🏁 Egér rajzolás befejezve, pontok:', drawnPoints.length);
+            console.log('🏁 Egér pontrajzolás befejezve, pontok:', drawnPoints.length);
             
             setTimeout(() => {
                 this.evaluateDrawing(drawnPoints);
@@ -557,13 +553,12 @@ setupDrawingDetection: function() {
         }
     });
     
-    // ✅ JAVÍTOTT TOUCH ESEMÉNYEK
+    // ✅ TOUCH ESEMÉNYEK - PONTOK
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive) {
             isDrawing = true;
             drawnPoints = [];
-            lastDrawnPoint = null;
             
             const rect = canvas.getBoundingClientRect();
             const touch = e.touches[0];
@@ -573,8 +568,15 @@ setupDrawingDetection: function() {
             };
             
             drawnPoints.push(point);
-            lastDrawnPoint = point;
-            console.log('🎨 Touch rajzolás kezdése:', point);
+            
+            // PONT RAJZOLÁSA
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            console.log('🎨 Touch pontrajzolás kezdése:', point);
         }
     }, { passive: false });
     
@@ -590,20 +592,12 @@ setupDrawingDetection: function() {
             
             drawnPoints.push(point);
             
-            // ✅ JAVÍTOTT RAJZOLÁS TOUCH-HEZ
+            // ✅ PONTOK RAJZOLÁSA (NEM VONALAK!)
             const ctx = canvas.getContext('2d');
-            if (lastDrawnPoint) {
-                ctx.beginPath();
-                ctx.moveTo(lastDrawnPoint.x, lastDrawnPoint.y);
-                ctx.lineTo(point.x, point.y);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 4; // Vastagabb vonal touch-hez
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-            }
-            
-            lastDrawnPoint = point;
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+            ctx.fill();
         }
     }, { passive: false });
     
@@ -611,8 +605,7 @@ setupDrawingDetection: function() {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            lastDrawnPoint = null;
-            console.log('🏁 Touch rajzolás befejezve, pontok:', drawnPoints.length);
+            console.log('🏁 Touch pontrajzolás befejezve, pontok:', drawnPoints.length);
             
             setTimeout(() => {
                 this.evaluateDrawing(drawnPoints);
@@ -620,18 +613,17 @@ setupDrawingDetection: function() {
         }
     }, { passive: false });
     
-    // ✅ TOUCH CANCEL ESEMÉNY
     canvas.addEventListener('touchcancel', (e) => {
         e.preventDefault();
         if (this.currentMode === 'drawing' && this.drawingMode.isActive && isDrawing) {
             isDrawing = false;
-            lastDrawnPoint = null;
-            console.log('❌ Touch rajzolás megszakítva');
+            console.log('❌ Touch pontrajzolás megszakítva');
         }
     }, { passive: false });
     
-    console.log('✅ Javított rajzolás figyelés beállítva (touch optimalizált)');
+    console.log('✅ Pontrajzolás beállítva rajz módhoz');
 },
+
 
     
     startTimer: function() {
