@@ -88,20 +88,7 @@
         position: relative;
     }
     
-    .canvas-container::before {
-        content: "📱 Touch rajzolás aktív";
-        position: absolute;
-        top: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        color: #666;
-        background: rgba(255,255,255,0.9);
-        padding: 2px 8px;
-        border-radius: 4px;
-        z-index: 10;
-    }
-    
+
     .drawing-mode-active .canvas-container::before {
         content: "🎨 Rajzolj az ujjaddal!";
         color: #4CAF50;
