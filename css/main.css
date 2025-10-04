@@ -1770,3 +1770,101 @@ button:hover {
 .drawing-mode-active .canvas-overlay {
     display: none !important;
 }
+/* Autós játék promó a modal tetején */
+.external-game-promo {
+    margin-bottom: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.external-game-promo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.racing-game-link {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 0;
+}
+
+.promo-content {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.racing-game-link:hover .promo-content {
+    background: rgba(255,255,255,0.2);
+}
+
+.promo-icon {
+    font-size: 2.5em;
+    margin-right: 15px;
+    animation: drive 2s infinite ease-in-out;
+}
+
+.promo-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.promo-text strong {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 3px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.promo-text span {
+    font-size: 0.95em;
+    opacity: 0.9;
+    font-style: italic;
+}
+
+.promo-arrow {
+    font-size: 1.4em;
+    transition: transform 0.3s ease;
+}
+
+.racing-game-link:hover .promo-arrow {
+    transform: translateX(5px) scale(1.1);
+}
+
+/* Autó animáció */
+@keyframes drive {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(8px);
+    }
+}
+
+/* Responsive a modal-ban */
+@media (max-width: 768px) {
+    .promo-content {
+        padding: 12px 15px;
+    }
+    
+    .promo-icon {
+        font-size: 2em;
+        margin-right: 12px;
+    }
+    
+    .promo-text strong {
+        font-size: 1.1em;
+    }
+    
+    .promo-text span {
+        font-size: 0.85em;
+    }
+}
